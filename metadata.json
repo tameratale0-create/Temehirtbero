@@ -1,0 +1,6 @@
+{
+  "name": "የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ - Shashemene City Education Bureau",
+  "description": "የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ እና የትምህርት ቤቶች ኦንላይን እና ኦፍላይን አስተዳደር መተግበሪያ (Afaan Oromoo, አማርኛ, English)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
