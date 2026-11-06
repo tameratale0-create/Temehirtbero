@@ -61,6 +61,22 @@ export const ShashemeneEducationBureauEmblem: React.FC<ShashemeneEducationBureau
         {/* Circular Text Paths */}
         <path id="shashCircleTop" d="M 32 120 A 88 88 0 0 1 208 120" />
         <path id="shashCircleBottom" d="M 208 120 A 88 88 0 0 1 32 120" />
+
+        {/* Golden Typography Gradients (ወርቃማ የፅሁፍ ቀለም) */}
+        <linearGradient id="shashGoldText" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="55%" stopColor="#facc15" />
+          <stop offset="85%" stopColor="#eab308" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </linearGradient>
+
+        <linearGradient id="shashCurvedGoldText" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="35%" stopColor="#facc15" />
+          <stop offset="70%" stopColor="#eab308" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </linearGradient>
       </defs>
 
       {/* Outer Golden Border with Beaded Rim */}
@@ -162,25 +178,41 @@ export const ShashemeneEducationBureauEmblem: React.FC<ShashemeneEducationBureau
           x="0"
           y="4"
           textAnchor="middle"
-          fill="#fef08a"
-          fontSize="8"
-          fontWeight="bold"
-          letterSpacing="0.8"
+          fill="url(#shashGoldText)"
+          stroke="#78350f"
+          strokeWidth="0.3"
+          fontSize="8.2"
+          fontWeight="900"
+          letterSpacing="1"
           fontFamily="system-ui, sans-serif"
         >
           SHASHEMENE
         </text>
       </g>
 
-      {/* Circular Afaan Oromoo & Amharic Typography */}
+      {/* Circular Afaan Oromoo & Amharic Typography (ወርቃማ የፅሁፍ ቀለም) */}
       {showText && (
         <>
-          <text fill="#ffffff" fontSize="7.2" fontWeight="bold" letterSpacing="0.6">
+          <text
+            fill="url(#shashCurvedGoldText)"
+            stroke="#451a03"
+            strokeWidth="0.35"
+            fontSize="7.4"
+            fontWeight="900"
+            letterSpacing="0.6"
+          >
             <textPath href="#shashCircleTop" startOffset="50%" textAnchor="middle">
               BIIROO BARNOOTAA BULCHIINSA MAGAALAA SHASHAMANNEE
             </textPath>
           </text>
-          <text fill="#fef08a" fontSize="7.8" fontWeight="bold" letterSpacing="0.5">
+          <text
+            fill="url(#shashCurvedGoldText)"
+            stroke="#451a03"
+            strokeWidth="0.35"
+            fontSize="8"
+            fontWeight="900"
+            letterSpacing="0.5"
+          >
             <textPath href="#shashCircleBottom" startOffset="50%" textAnchor="middle">
               የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ
             </textPath>

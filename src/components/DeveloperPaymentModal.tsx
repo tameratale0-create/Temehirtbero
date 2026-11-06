@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ShieldCheck,
   CreditCard,
@@ -18,7 +18,8 @@ import {
   ArrowRight,
   ExternalLink,
   RotateCcw,
-  Eye
+  Eye,
+  Landmark
 } from 'lucide-react';
 import { School, DeveloperPaymentReceipt, DeveloperPaymentConfig } from '../types';
 import { StorageService } from '../utils/storage';
@@ -41,7 +42,52 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
   const config: DeveloperPaymentConfig = StorageService.getDeveloperConfig();
   const existingReceipt = StorageService.getDeveloperPaymentBySchoolId(school?.id || '');
 
-  const [selectedBank, setSelectedBank] = useState<string>('cbe');
+  const activeBankAccounts = useMemo(() => {
+    if (config.bankAccounts && config.bankAccounts.length > 0) {
+      return config.bankAccounts.filter((b) => b.isActive !== false);
+    }
+    return [
+      {
+        id: 'cbe',
+        bankName: 'የኢትዮጵያ ንግድ ባንክ (Commercial Bank of Ethiopia - CBE)',
+        accountNumber: config.cbeAccount,
+        accountHolder: config.accountHolder,
+        branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
+        isActive: true
+      },
+      {
+        id: 'telebirr',
+        bankName: 'ቴሌብር (Telebirr)',
+        accountNumber: config.telebirrNumber,
+        accountHolder: config.accountHolder,
+        branchOrPhone: '+251 91 188 4590',
+        isActive: true
+      },
+      {
+        id: 'awash',
+        bankName: 'አዋሽ ባንክ (Awash Bank)',
+        accountNumber: config.awashAccount,
+        accountHolder: config.accountHolder,
+        branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
+        isActive: true
+      },
+      {
+        id: 'dashen',
+        bankName: 'ዳሸን ባንክ (Dashen Bank)',
+        accountNumber: config.dashenAccount,
+        accountHolder: config.accountHolder,
+        branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
+        isActive: true
+      }
+    ];
+  }, [config]);
+
+  const [selectedBank, setSelectedBank] = useState<string>(() => {
+    if (config.bankAccounts && config.bankAccounts.length > 0) {
+      return config.bankAccounts[0].id;
+    }
+    return 'cbe';
+  });
   const [transactionRef, setTransactionRef] = useState<string>('');
   const [payerName, setPayerName] = useState<string>(school?.principalName || '');
   const [payerPhone, setPayerPhone] = useState<string>(school?.phone || '+251 9');
@@ -76,7 +122,7 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
     const randomRef = `FT${Math.floor(10000000000 + Math.random() * 90000000000)}`;
     setTransactionRef(randomRef);
     setReceiptImage(
-      selectedBank === 'telebirr'
+      selectedBank.includes('telebirr') || selectedBank === 'telebirr'
         ? 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&auto=format&fit=crop&q=80'
         : 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=80'
     );
@@ -91,14 +137,10 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
 
     setIsSubmitting(true);
 
-    const bankNameFormatted =
-      selectedBank === 'cbe'
-        ? 'የኢትዮጵያ ንግድ ባንክ (Commercial Bank of Ethiopia)'
-        : selectedBank === 'telebirr'
-        ? 'ቴሌብር (Telebirr)'
-        : selectedBank === 'awash'
-        ? 'አዋሽ ባንክ (Awash Bank)'
-        : 'ዳሸን ባንክ (Dashen Bank)';
+    const matchedBank = activeBankAccounts.find(
+      (b) => b.id === selectedBank || b.accountNumber === selectedBank || b.bankName === selectedBank
+    );
+    const bankNameFormatted = matchedBank ? matchedBank.bankName : selectedBank;
 
     const newReceipt: DeveloperPaymentReceipt = {
       id: existingReceipt?.id || `dev-rec-${Date.now()}`,
@@ -236,6 +278,42 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
           </div>
         )}
 
+        {/* Developer Enterprise & Creator Card */}
+        <div className="p-3.5 bg-gradient-to-r from-slate-900 to-amber-950 rounded-2xl text-white border border-amber-500/30 shadow-xs space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-400 block">
+                የሲስተም አበልፃጊ እና የቴክኖሎጂ ባለቤት (Software Creator)
+              </span>
+              <h4 className="text-xs sm:text-sm font-black text-white">
+                ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)
+              </h4>
+              <p className="text-[11px] text-amber-200/90 font-medium">
+                እህት ድርጅት፡ <strong>ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)</strong>
+              </p>
+            </div>
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] text-slate-300 block">ዋና ቀዳሚ ፕሮግራመር / ዲዛይነር፡</span>
+              <span className="text-xs font-black text-amber-300">ታምራት አሌ (Tamerat Ale)</span>
+              <span className="text-[10px] text-slate-400 block">📍 ሻሸመኔ (Shashemene)</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1">
+            <div className="flex items-center gap-3">
+              <span className="text-slate-300">ቀጥታ ስልኮች፡</span>
+              <a href="tel:+251911029070" className="font-mono font-bold text-emerald-300 hover:underline">
+                +251 91 102 9070
+              </a>
+              <span className="text-slate-500">/</span>
+              <a href="tel:+251701370299" className="font-mono font-bold text-sky-300 hover:underline">
+                +251 70 137 0299
+              </a>
+            </div>
+            <span className="text-[10px] font-mono text-amber-300/80">tameratale09@gmail.com</span>
+          </div>
+        </div>
+
         {/* Developer Bank Accounts Cards */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -249,131 +327,44 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* CBE */}
-            <div
-              onClick={() => setSelectedBank('cbe')}
-              className={`p-3 rounded-2xl border transition-all cursor-pointer text-left ${
-                selectedBank === 'cbe'
-                  ? 'border-purple-600 bg-purple-50/70 ring-2 ring-purple-600/30'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-purple-900">
-                  የኢትዮጵያ ንግድ ባንክ (CBE)
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopy(config.cbeAccount, 'cbe');
-                  }}
-                  className="text-[10px] text-purple-700 hover:text-purple-950 flex items-center gap-0.5 font-bold"
+            {activeBankAccounts.map((acc) => {
+              const isSelected = selectedBank === acc.id || selectedBank === acc.accountNumber;
+              return (
+                <div
+                  key={acc.id}
+                  onClick={() => setSelectedBank(acc.id)}
+                  className={`p-3 rounded-2xl border transition-all cursor-pointer text-left ${
+                    isSelected
+                      ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/30'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
                 >
-                  {copiedKey === 'cbe' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'cbe' ? 'ተቀድቷል' : 'ቅዳ'}</span>
-                </button>
-              </div>
-              <div className="font-mono text-xs font-black text-slate-900 mt-1">
-                {config.cbeAccount}
-              </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">
-                ስም፡ <strong>{config.accountHolder}</strong>
-              </div>
-            </div>
-
-            {/* Telebirr */}
-            <div
-              onClick={() => setSelectedBank('telebirr')}
-              className={`p-3 rounded-2xl border transition-all cursor-pointer text-left ${
-                selectedBank === 'telebirr'
-                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/30'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-blue-900">ቴሌብር (Telebirr)</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopy(config.telebirrNumber, 'telebirr');
-                  }}
-                  className="text-[10px] text-blue-700 hover:text-blue-950 flex items-center gap-0.5 font-bold"
-                >
-                  {copiedKey === 'telebirr' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'telebirr' ? 'ተቀድቷል' : 'ቅዳ'}</span>
-                </button>
-              </div>
-              <div className="font-mono text-xs font-black text-slate-900 mt-1">
-                {config.telebirrNumber}
-              </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">
-                ስም፡ <strong>{config.accountHolder}</strong>
-              </div>
-            </div>
-
-            {/* Awash Bank */}
-            <div
-              onClick={() => setSelectedBank('awash')}
-              className={`p-3 rounded-2xl border transition-all cursor-pointer text-left ${
-                selectedBank === 'awash'
-                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/30'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-800">አዋሽ ባንክ (Awash Bank)</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopy(config.awashAccount, 'awash');
-                  }}
-                  className="text-[10px] text-blue-700 hover:text-blue-950 flex items-center gap-0.5 font-bold"
-                >
-                  {copiedKey === 'awash' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'awash' ? 'ተቀድቷል' : 'ቅዳ'}</span>
-                </button>
-              </div>
-              <div className="font-mono text-xs font-black text-slate-900 mt-1">
-                {config.awashAccount}
-              </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">
-                ስም፡ <strong>{config.accountHolder}</strong>
-              </div>
-            </div>
-
-            {/* Dashen Bank */}
-            <div
-              onClick={() => setSelectedBank('dashen')}
-              className={`p-3 rounded-2xl border transition-all cursor-pointer text-left ${
-                selectedBank === 'dashen'
-                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/30'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-800">ዳሸን ባንክ (Dashen Bank)</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopy(config.dashenAccount, 'dashen');
-                  }}
-                  className="text-[10px] text-blue-700 hover:text-blue-950 flex items-center gap-0.5 font-bold"
-                >
-                  {copiedKey === 'dashen' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'dashen' ? 'ተቀድቷል' : 'ቅዳ'}</span>
-                </button>
-              </div>
-              <div className="font-mono text-xs font-black text-slate-900 mt-1">
-                {config.dashenAccount}
-              </div>
-              <div className="text-[10px] text-slate-500 mt-0.5">
-                ስም፡ <strong>{config.accountHolder}</strong>
-              </div>
-            </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-900 truncate">
+                      {acc.bankName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopy(acc.accountNumber, acc.id);
+                      }}
+                      className="text-[10px] text-amber-700 hover:text-amber-950 flex items-center gap-0.5 font-bold cursor-pointer shrink-0 ml-1"
+                    >
+                      {copiedKey === acc.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedKey === acc.id ? 'ተቀድቷል' : 'ቅዳ'}</span>
+                    </button>
+                  </div>
+                  <div className="font-mono text-xs font-black text-slate-900 mt-1">
+                    {acc.accountNumber}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5 flex items-center justify-between">
+                    <span>ስም፡ <strong className="text-slate-700">{acc.accountHolder}</strong></span>
+                    {acc.branchOrPhone && <span className="text-slate-400">📍 {acc.branchOrPhone}</span>}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -482,9 +473,12 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
           )}
 
           {/* Footer Controls */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
             <div className="text-[11px] text-slate-500">
-              አበልፃጊ እገዛ፡ <strong className="font-mono">{config.developerPhone}</strong>
+              አበልፃጊ እገዛ (ውሽዬ ሶፍትዌር)፡{' '}
+              <strong className="font-mono text-slate-800">
+                {config.developerPhone} / {config.secondaryPhone || '+251 70 137 0299'}
+              </strong>
             </div>
 
             <div className="flex items-center gap-2">

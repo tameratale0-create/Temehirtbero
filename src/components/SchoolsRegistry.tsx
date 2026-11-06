@@ -115,6 +115,11 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold">
+              <Eye className="w-4 h-4 text-emerald-700" />
+              <span>ከትምህርት ቤቶች የተላኩ (ማየት ብቻ - Read-Only)</span>
+            </div>
+
             <button
               type="button"
               onClick={() => window.print()}

@@ -2294,22 +2294,30 @@ export const initialSubmissions: ExamSubmission[] = [
 export const initialDeveloperConfig: DeveloperPaymentConfig = {
   feeAmount: 5000,
   currency: 'ETB',
-  accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
+  accountHolder: 'ታምራት አሌ (Tamerat Ale)',
   cbeAccount: '1000192837465',
-  telebirrNumber: '0911884590',
+  telebirrNumber: '0911029070',
   awashAccount: '01320894567800',
   dashenAccount: '5129038475612',
   abyssiniaAccount: '88492019482',
   coopAccount: '100098471923',
-  developerPhone: '+251 91 188 4590',
+  developerPhone: '+251 91 102 9070',
+  secondaryPhone: '+251 70 137 0299',
   developerEmail: 'tameratale09@gmail.com',
+  parentCompany: 'ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)',
+  sisterCompany: 'ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)',
+  leadProgrammer: 'ታምራት አሌ (Tamerat Ale)',
+  backendEngineer: 'ታምራት አሌ (Tamerat Ale)',
+  frontendEngineer: 'ታምራት አሌ (Tamerat Ale)',
+  designer: 'ታምራት አሌ (Tamerat Ale)',
+  address: 'ሻሸመኔ፣ ኢትዮጵያ (Shashemene, Ethiopia)',
   instructionsAm: 'ክፍያውን በንግድ ባንክ ወይም በቴሌብር ከፈጸሙ በኋላ የደረሰኙን ወይም የስሊፑን ፎቶ / ስክሪንሾት እና የትራንዛክሽን ቁጥር (Transaction Reference) በማስገባት ይላኩ። በአበልፃጊው በ10 ደቂቃ ውስጥ ተረጋግጦ ይከፈታል!',
   bankAccounts: [
     {
       id: 'bank-1',
       bankName: 'የኢትዮጵያ ንግድ ባንክ (Commercial Bank of Ethiopia - CBE)',
       accountNumber: '1000192837465',
-      accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
+      accountHolder: 'ታምራት አሌ (Tamerat Ale)',
       branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
       isActive: true,
       notes: 'ዋና የክፍያ መቀበያ ሂሳብ'
@@ -2317,9 +2325,9 @@ export const initialDeveloperConfig: DeveloperPaymentConfig = {
     {
       id: 'bank-2',
       bankName: 'ቴሌብር (Telebirr)',
-      accountNumber: '0911884590',
-      accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
-      branchOrPhone: '+251 91 188 4590',
+      accountNumber: '0911029070',
+      accountHolder: 'ታምራት አሌ (Tamerat Ale)',
+      branchOrPhone: '+251 91 102 9070 / +251 70 137 0299',
       isActive: true,
       notes: 'ፈጣን የሞባይል ክፍያ'
     },
@@ -2327,7 +2335,7 @@ export const initialDeveloperConfig: DeveloperPaymentConfig = {
       id: 'bank-3',
       bankName: 'አዋሽ ባንክ (Awash Bank)',
       accountNumber: '01320894567800',
-      accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
+      accountHolder: 'ታምራት አሌ (Tamerat Ale)',
       branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
       isActive: true
     },
@@ -2335,7 +2343,7 @@ export const initialDeveloperConfig: DeveloperPaymentConfig = {
       id: 'bank-4',
       bankName: 'ዳሸን ባንክ (Dashen Bank)',
       accountNumber: '5129038475612',
-      accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
+      accountHolder: 'ታምራት አሌ (Tamerat Ale)',
       branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
       isActive: true
     },
@@ -2343,7 +2351,7 @@ export const initialDeveloperConfig: DeveloperPaymentConfig = {
       id: 'bank-5',
       bankName: 'አቢሲንያ ባንክ (Bank of Abyssinia)',
       accountNumber: '88492019482',
-      accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
+      accountHolder: 'ታምራት አሌ (Tamerat Ale)',
       branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
       isActive: true
     },
@@ -2351,7 +2359,7 @@ export const initialDeveloperConfig: DeveloperPaymentConfig = {
       id: 'bank-6',
       bankName: 'ኦሮሚያ ህብረት ስራ ባንክ (Cooperative Bank of Oromia - Coop)',
       accountNumber: '100098471923',
-      accountHolder: 'ታምራት ዓለ (Tamerat Ale)',
+      accountHolder: 'ታምራት አሌ (Tamerat Ale)',
       branchOrPhone: 'ሻሸመኔ ቅርንጫፍ',
       isActive: true
     }

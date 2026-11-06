@@ -11,7 +11,8 @@ import {
   GraduationCap,
   Sparkles,
   BookOpen,
-  KeyRound
+  KeyRound,
+  Code2
 } from 'lucide-react';
 import { Language, AppUserSession } from '../types';
 import { translations } from '../data/translations';
@@ -36,6 +37,7 @@ interface HeaderProps {
   activeSchool?: School;
   onNavigateToBureau?: () => void;
   onOpenDeveloperPortal?: () => void;
+  onOpenDeveloperProfile?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -51,7 +53,8 @@ export const Header: React.FC<HeaderProps> = ({
   isSchoolView = false,
   activeSchool,
   onNavigateToBureau,
-  onOpenDeveloperPortal
+  onOpenDeveloperPortal,
+  onOpenDeveloperProfile
 }) => {
   const t = translations[currentLang];
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -431,6 +434,20 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <KeyRound className="w-3.5 h-3.5 text-amber-700" />
                 <span className="hidden md:inline">ኮድ ማስገቢያ</span>
+              </button>
+            )}
+
+            {/* Developer / Builder Profile Button ("ሲስተሙን ማን ገነባው?") */}
+            {onOpenDeveloperProfile && (
+              <button
+                type="button"
+                onClick={onOpenDeveloperProfile}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-amber-950 bg-gradient-to-r from-amber-100 to-amber-200 hover:from-amber-200 hover:to-amber-300 border border-amber-400/80 rounded-xl transition-all cursor-pointer shadow-2xs shrink-0"
+                title="ሲስተሙን ማን ገነባው? (ታሜና ሥራው ኃ/የተ/የግ/ማ · ውሽዬ ሶፍትዌር ሶሉሽን)"
+              >
+                <Code2 className="w-3.5 h-3.5 text-amber-900" />
+                <span className="hidden sm:inline">ሲስተሙን ማን ገነባው?</span>
+                <span className="sm:hidden text-[10px]">አበልፃጊ</span>
               </button>
             )}
 

@@ -15,7 +15,8 @@ import {
   X,
   Megaphone,
   Sparkles,
-  Search
+  Search,
+  Lock
 } from 'lucide-react';
 import { SchoolAnnouncement, AppUserSession, Language } from '../types';
 import { StorageService } from '../utils/storage';
@@ -48,16 +49,17 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
   const [priority, setPriority] = useState<SchoolAnnouncement['priority']>('normal');
   const [category, setCategory] = useState<SchoolAnnouncement['category']>('administrative');
 
-  // Can the current user post announcements?
-  // Owner/Board, Director, Bureau, Teachers, and Accountants can post
+  // Strict Read-Only Rule for Bureau: "ትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውም መረጃወች ማየት ብቻ ማሻሻል ማስተካከል አይቻልም"
+  const isBureauRole =
+    currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
+
   const canPost =
-    currentUser?.role === 'school_owner' ||
-    currentUser?.role === 'school_director' ||
-    currentUser?.role === 'school_admin' ||
-    currentUser?.role === 'teacher' ||
-    currentUser?.role === 'bureau_admin' ||
-    currentUser?.role === 'bureau_staff' ||
-    currentUser?.role === 'accountant';
+    !isBureauRole &&
+    (currentUser?.role === 'school_owner' ||
+      currentUser?.role === 'school_director' ||
+      currentUser?.role === 'school_admin' ||
+      currentUser?.role === 'teacher' ||
+      currentUser?.role === 'accountant');
 
   const handleCreateAnnouncement = (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,6 +200,13 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
               <span>አዲስ ማስታወቂያ ለጥፍ</span>
             </button>
           )}
+
+          {isBureauRole && (
+            <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold shrink-0">
+              <Lock className="w-4 h-4 text-amber-300" />
+              <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -303,9 +312,9 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                       {ann.createdAt}
                     </span>
 
-                    {(currentUser?.role === 'school_owner' ||
-                      currentUser?.role === 'school_director' ||
-                      currentUser?.role === 'bureau_admin') && (
+                    {!isBureauRole &&
+                      (currentUser?.role === 'school_owner' ||
+                        currentUser?.role === 'school_director') && (
                       <button
                         type="button"
                         onClick={() => handleDeleteAnnouncement(ann.id)}

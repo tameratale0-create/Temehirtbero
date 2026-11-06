@@ -79,7 +79,8 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
   const [editAwash, setEditAwash] = useState<string>(config.awashAccount);
   const [editDashen, setEditDashen] = useState<string>(config.dashenAccount);
   const [editHolder, setEditHolder] = useState<string>(config.accountHolder);
-  const [editPhone, setEditPhone] = useState<string>(config.developerPhone || '+251 91 188 4590');
+  const [editPhone, setEditPhone] = useState<string>(config.developerPhone || '+251 91 102 9070');
+  const [editSecondaryPhone, setEditSecondaryPhone] = useState<string>(config.secondaryPhone || '+251 70 137 0299');
   const [editEmail, setEditEmail] = useState<string>(config.developerEmail || 'tameratale09@gmail.com');
   const [editInstructions, setEditInstructions] = useState<string>(config.instructionsAm || '');
   const [configSavedToast, setConfigSavedToast] = useState<boolean>(false);
@@ -89,7 +90,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
   const [newBankName, setNewBankName] = useState<string>('የኢትዮጵያ ንግድ ባንክ (CBE)');
   const [customBankNameInput, setCustomBankNameInput] = useState<string>('');
   const [newAccountNumber, setNewAccountNumber] = useState<string>('');
-  const [newAccountHolder, setNewAccountHolder] = useState<string>(config.accountHolder || 'ታምራት ዓለ (Tamerat Ale)');
+  const [newAccountHolder, setNewAccountHolder] = useState<string>(config.accountHolder || 'ታምራት አሌ (Tamerat Ale)');
   const [newBranchOrPhone, setNewBranchOrPhone] = useState<string>('ሻሸመኔ ቅርንጫፍ');
   const [newAccountNotes, setNewAccountNotes] = useState<string>('ዋና የክፍያ መቀበያ ሂሳብ');
   const [copiedBankId, setCopiedBankId] = useState<string | null>(null);
@@ -115,11 +116,12 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
     setEditAwash(loadedConfig.awashAccount);
     setEditDashen(loadedConfig.dashenAccount);
     setEditHolder(loadedConfig.accountHolder);
-    setEditPhone(loadedConfig.developerPhone || '+251 91 188 4590');
+    setEditPhone(loadedConfig.developerPhone || '+251 91 102 9070');
+    setEditSecondaryPhone(loadedConfig.secondaryPhone || '+251 70 137 0299');
     setEditEmail(loadedConfig.developerEmail || 'tameratale09@gmail.com');
     setEditInstructions(loadedConfig.instructionsAm || '');
     setBankAccountsList(loadedConfig.bankAccounts || []);
-    setNewAccountHolder(loadedConfig.accountHolder || 'ታምራት ዓለ (Tamerat Ale)');
+    setNewAccountHolder(loadedConfig.accountHolder || 'ታምራት አሌ (Tamerat Ale)');
   };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -252,6 +254,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
       dashenAccount: editDashen.trim(),
       accountHolder: editHolder.trim(),
       developerPhone: editPhone.trim(),
+      secondaryPhone: editSecondaryPhone.trim(),
       developerEmail: editEmail.trim(),
       instructionsAm: editInstructions.trim(),
       bankAccounts: bankAccountsList
@@ -293,10 +296,17 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
               <KeyRound className="w-8 h-8" />
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mb-2">
+            <div className="inline-block px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-xs font-bold text-amber-300 mb-2">
+              ታሜና ሥራው ኃ/የተ/የግ/ማ · ውሽዬ ሶፍትዌር ሶሉሽን
+            </div>
+
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">
               የሲስተም አበልፃጊ ሚስጥራዊ በር
             </h2>
-            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+            <p className="text-xs text-amber-200/90 font-semibold mb-3">
+              ዋና ቀዳሚ ፕሮግራመር፡ ታምራት አሌ | ሻሸመኔ
+            </p>
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
               ይህ ገፅ ለሲስተም አበልፃጊ (Developer) ብቻ የተፈቀደ ሚስጥራዊ መቆጣጠሪያ ነው። የትምህርት ቤቶችን የክፍያ ደረሰኝ ለማረጋገጥ፣ የባንክ ሂሳቦችን ለማስተዳደር እና ወደ ትምህርት ቢሮ የመገናኘት ፈቃድ ለመስጠት የይለፍ ቃል ያስገቡ።
             </p>
 
@@ -365,7 +375,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                     </span>
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-400">
-                    ባለቤት፡ <span className="text-amber-300 font-semibold">{config.accountHolder}</span> | የትምህርት ቢሮ ግንኙነት ፈቃድ መቆጣጠሪያ
+                    <span className="text-amber-300 font-bold">ታሜና ሥራው ኃ/የተ/የግ/ማ</span> ስር <span className="text-amber-200 font-semibold">ውሽዬ ሶፍትዌር ሶሉሽን</span> | ዋና ፕሮግራመር፡ <strong className="text-white">ታምራት አሌ</strong> (ሻሸመኔ)
                   </p>
                 </div>
               </div>
@@ -1254,6 +1264,44 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <span>አጠቃላይ የታሪፍ እና የአበልፃጊ መረጃ ቅንብሮች</span>
                     </h4>
 
+                    {/* Corporate Pedigree & Engineering Team Card */}
+                    <div className="p-3.5 bg-slate-950/80 rounded-xl border border-amber-500/30 text-xs space-y-2">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div>
+                          <span className="text-[10px] text-amber-400 uppercase font-black">
+                            የድርጅት መዋቅር (Company Structure)
+                          </span>
+                          <h5 className="font-bold text-white text-xs sm:text-sm">
+                            ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)
+                          </h5>
+                          <p className="text-[11px] text-amber-200">
+                            እህት ድርጅት፡ ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)
+                          </p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                          ሻሸመኔ፣ ኢትዮጵያ
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-300">
+                        <div className="p-2 bg-slate-900 rounded-lg">
+                          <span className="text-[9px] text-slate-400 block">ዋና ቀዳሚ ፕሮግራመር፡</span>
+                          <strong className="text-white">ታምራት አሌ</strong>
+                        </div>
+                        <div className="p-2 bg-slate-900 rounded-lg">
+                          <span className="text-[9px] text-slate-400 block">ባክኢንድ ኢንጅነር፡</span>
+                          <strong className="text-white">ታምራት አሌ</strong>
+                        </div>
+                        <div className="p-2 bg-slate-900 rounded-lg">
+                          <span className="text-[9px] text-slate-400 block">ፍሮንትኢንድ ኢንጅነር፡</span>
+                          <strong className="text-white">ታምራት አሌ</strong>
+                        </div>
+                        <div className="p-2 bg-slate-900 rounded-lg">
+                          <span className="text-[9px] text-slate-400 block">ዲዛይነር (UI/UX)፡</span>
+                          <strong className="text-white">ታምራት አሌ</strong>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -1283,7 +1331,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
                           <Phone className="w-3 h-3 text-amber-400" />
-                          <span>የአበልፃጊ ስልክ ቁጥር (Developer Phone)</span>
+                          <span>ዋና ስልክ ቁጥር (Primary Phone / ቴሌብር)</span>
                         </label>
                         <input
                           type="text"
@@ -1294,6 +1342,19 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       </div>
 
                       <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-sky-400" />
+                          <span>ሁለተኛ ስልክ ቁጥር (Secondary Phone / ድጋፍ)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={editSecondaryPhone}
+                          onChange={(e) => setEditSecondaryPhone(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
                           <Mail className="w-3 h-3 text-amber-400" />
                           <span>የአበልፃጊ ኢሜይል (Developer Email)</span>

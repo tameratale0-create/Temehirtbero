@@ -13,7 +13,9 @@ import {
   Plus,
   Printer,
   Filter,
-  X
+  X,
+  Eye,
+  Lock
 } from 'lucide-react';
 import { Language, SchoolReportSubmission } from '../types';
 import { translations } from '../data/translations';
@@ -114,6 +116,11 @@ export const StudentReportsReception: React.FC<StudentReportsReceptionProps> = (
           </div>
 
           <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 text-teal-900 border border-teal-300 rounded-xl text-xs font-bold">
+              <Eye className="w-4 h-4 text-teal-700" />
+              <span>ከትምህርት ቤቶች የተላኩ (ማየት ብቻ - Read-Only)</span>
+            </div>
+
             <button
               type="button"
               onClick={() => window.print()}
@@ -123,16 +130,6 @@ export const StudentReportsReception: React.FC<StudentReportsReceptionProps> = (
               <Printer className="w-4 h-4 text-slate-600" />
               <span>ሪፖርት አትም</span>
             </button>
-
-            {onOpenSubmitReport && (
-              <button
-                onClick={onOpenSubmitReport}
-                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t.submit_new_report}</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -348,6 +345,11 @@ export const StudentReportsReception: React.FC<StudentReportsReceptionProps> = (
                   {selectedReport.averageScore} / 100
                 </span>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 font-semibold">
+              <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>የትምህርት ቤቱ የውጤት ዳታ ማየት ብቻ ነው፤ ቢሮው ሪፖርቱን መገምገምና ይሁንታ/ማሻሻያ መላክ ብቻ ይችላል።</span>
             </div>
 
             <div>

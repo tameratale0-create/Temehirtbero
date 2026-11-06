@@ -713,9 +713,17 @@ export interface DeveloperPaymentConfig {
   abyssiniaAccount?: string;
   coopAccount?: string;
   developerPhone: string;
+  secondaryPhone?: string;
   developerEmail: string;
   instructionsAm: string;
   bankAccounts?: DeveloperCustomBankAccount[];
+  parentCompany?: string;
+  sisterCompany?: string;
+  leadProgrammer?: string;
+  backendEngineer?: string;
+  frontendEngineer?: string;
+  designer?: string;
+  address?: string;
 }
 
 

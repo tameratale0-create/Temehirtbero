@@ -21,7 +21,8 @@ import {
   RotateCcw,
   UserCheck,
   Check,
-  GraduationCap
+  GraduationCap,
+  Lock
 } from 'lucide-react';
 import {
   Language,
@@ -52,6 +53,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
   currentUser,
   onRefreshParentState
 }) => {
+  const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [batches, setBatches] = useState<AcademicGradeWorkflowBatch[]>(() => {
     const all = StorageService.getGradeWorkflows();
     const schoolBatches = all.filter((b) => b.schoolId === school.id || b.schoolName === school.name);
@@ -344,14 +346,21 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-lg hover:scale-102 cursor-pointer flex items-center gap-2 shrink-0"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>አዲስ ውጤት አስገባና ላክ (New Grade Submission)</span>
-            </button>
+            {!isBureauRole ? (
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-lg hover:scale-102 cursor-pointer flex items-center gap-2 shrink-0"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>አዲስ ውጤት አስገባና ላክ (New Grade Submission)</span>
+              </button>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold shrink-0">
+                <Lock className="w-4 h-4 text-amber-300" />
+                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+              </div>
+            )}
           </div>
 
           {/* 3-Stage Progress Timeline */}
@@ -909,8 +918,17 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 የማፅደቅና የማስተላለፍ ተግባራት (Workflow Actions)
               </h4>
 
+              {isBureauRole && (
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-amber-800 shrink-0" />
+                  <span>
+                    የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)፡ የውጤት ምዝገባ፣ ማጠናቀርና ማፅደቅ የትምህርት ቤቱ መምህራንና ዳይሬክተር ስልጣን ብቻ ነው። ቢሮው የተላከውን ውጤት ለማየትና ለመገምገም ብቻ ፍቃድ አለው፤ ውጤት መቀየር ወይም ማሻሻል አይቻልም።
+                  </span>
+                </div>
+              )}
+
               {/* Stage 1 action: If Draft / Resubmit to Homeroom */}
-              {selectedBatch.status === 'draft' && (
+              {!isBureauRole && selectedBatch.status === 'draft' && (
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-slate-600">
                     ውጤቱ ለመምህሩ ዝግጁ ሆኗል። ለክፍል ተጠሪው መምህር ይላኩ፡
@@ -927,7 +945,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               )}
 
               {/* Stage 2 action: Homeroom Teacher Reviews and Submits to Director */}
-              {selectedBatch.status === 'submitted_to_homeroom' && (
+              {!isBureauRole && selectedBatch.status === 'submitted_to_homeroom' && (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-600">
                     ይህ ውጤት ለክፍል ተጠሪው ቀርቧል። የክፍሉን ማጠቃለያ አስተያየት በማከል ለት/ቤቱ ዳይሬክተር ያስተላልፉ፡
@@ -960,7 +978,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               )}
 
               {/* Stage 3 action: Director Final Approval & Official Dispatch */}
-              {selectedBatch.status === 'submitted_to_director' && (
+              {!isBureauRole && selectedBatch.status === 'submitted_to_director' && (
                 <div className="space-y-3 p-3 bg-amber-50 rounded-xl border border-amber-200">
                   <div className="flex items-center gap-2 text-amber-950 font-bold text-xs">
                     <ShieldCheck className="w-4 h-4 text-amber-800" />

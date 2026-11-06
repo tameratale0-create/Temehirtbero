@@ -19,7 +19,8 @@ import {
   Send,
   X,
   FileText,
-  Filter
+  Filter,
+  Lock
 } from 'lucide-react';
 import { FeePaymentRecord, SchoolExpenseRecord, StudentRecord, School, Language, AppUserSession } from '../types';
 import { StorageService } from '../utils/storage';
@@ -37,6 +38,7 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
   currentUser,
   currentLang
 }) => {
+  const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [payments, setPayments] = useState<FeePaymentRecord[]>(() =>
     StorageService.getFeePayments(school.id)
   );
@@ -170,23 +172,32 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCollectModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>የወር ክፍያ ተቀበል (Collect Fee)</span>
-            </button>
+            {!isBureauRole ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowCollectModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>የወር ክፍያ ተቀበል (Collect Fee)</span>
+                </button>
 
-            <button
-              type="button"
-              onClick={() => setShowExpenseModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-700/80 hover:bg-rose-700 text-white text-xs font-bold rounded-xl border border-rose-500/40 transition-colors cursor-pointer"
-            >
-              <TrendingDown className="w-4 h-4" />
-              <span>ወጪ መዝግብ (Expense)</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setShowExpenseModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-700/80 hover:bg-rose-700 text-white text-xs font-bold rounded-xl border border-rose-500/40 transition-colors cursor-pointer"
+                >
+                  <TrendingDown className="w-4 h-4" />
+                  <span>ወጪ መዝግብ (Expense)</span>
+                </button>
+              </>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
+                <Lock className="w-4 h-4 text-amber-300" />
+                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

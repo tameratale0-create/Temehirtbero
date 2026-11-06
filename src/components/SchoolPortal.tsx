@@ -147,6 +147,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
   // Strict Role Compartmentalization & Isolation
   // "አንዱ የአንዱን ስራ ሳያይ ሁሉም የየራሳቸውን ስራ እንዲሰሩ"
+  const isBureauRole =
+    currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
+
   const isLibrarian =
     currentUser?.staffDepartment?.toLowerCase().includes('library') ||
     currentUser?.staffDepartment?.toLowerCase().includes('መጻሕፍት') ||
@@ -749,12 +752,12 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
   // "አንዱ የአንዱን ስራ ሳያይ ሁሉም የየራሳቸውን ስራ እንዲሰሩ"
   const isTeacherUser = currentUser?.role === 'teacher';
   const isLibrarianUser = isLibrarian;
+  // Bureau role has strictly read-only inspection authority: "ትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውም መረጃወች ማየት ብቻ ማሻሻል ማስተካከል አይቻልም"
   const canManageStaff =
-    currentUser?.role === 'school_owner' ||
-    currentUser?.role === 'school_director' ||
-    currentUser?.role === 'bureau_admin' ||
-    currentUser?.role === 'bureau_staff' ||
-    currentUser?.role === 'school_admin';
+    !isBureauRole &&
+    (currentUser?.role === 'school_owner' ||
+      currentUser?.role === 'school_director' ||
+      currentUser?.role === 'school_admin');
 
   const currentSchoolStakeholders = stakeholders.filter(
     (s) => s.schoolId === currentSchool.id || s.schoolName === currentSchool.name
@@ -835,6 +838,37 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* =========================================================================
+          🌟 BUREAU READ-ONLY INSPECTION BANNER:
+          "ትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውም መረጃወች ማየት ብቻ ማሻሻል ማስተካከል አይቻልም"
+         ========================================================================= */}
+      {isBureauRole && (
+        <div className="bg-amber-50/95 border-2 border-amber-400 rounded-2xl sm:rounded-3xl p-4 sm:p-5 text-amber-950 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+            <div className="p-2.5 rounded-2xl bg-amber-200 text-amber-950 shrink-0 shadow-xs border border-amber-300">
+              <Eye className="w-6 h-6 text-amber-950" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-black text-amber-950 tracking-tight">
+                  🏛️ የሻሸመኔ ከተማ ትምህርት ቢሮ የቁጥጥር እይታ (Bureau Read-Only Mode)
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-amber-300 text-amber-950 border border-amber-500 font-black uppercase tracking-wider">
+                  ማየት ብቻ · Read-Only
+                </span>
+              </div>
+              <p className="text-xs text-amber-900 mt-1 leading-relaxed">
+                የትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውንም መረጃዎች (የተማሪዎች፣ የሰራተኞች፣ የውጤት፣ የፋይናንስና አስተዳደራዊ መረጃዎች) <strong>ማየት ብቻ</strong> ይችላል። መረጃዎችን ማሻሻል፣ ማስተካከል፣ መመዝገብ ወይም መሰረዝ በጥብቅ የተከለከለ ሲሆን ስልጣኑ የትምህርት ቤቱ አስተዳዳሪዎች ብቻ ነው።
+              </p>
+            </div>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-200/90 rounded-xl text-xs font-black text-amber-950 border border-amber-400/80 shrink-0 self-start md:self-auto shadow-2xs">
+            <Lock className="w-4 h-4 text-amber-900" />
+            <span>መረጃ መቀየር አይቻልም</span>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
           1. School Profile Banner: In Fullscreen or Desk-only mode, display a sleek compact bar
              so the clicked desk gets maximum screen ("የተነካው በተን አክቲቪቲ ብቻ")
          ========================================================================= */}
@@ -870,14 +904,16 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               {isDeskOnly ? <Minimize2 className="w-3.5 h-3.5 text-amber-400" /> : <Maximize2 className="w-3.5 h-3.5 text-emerald-400" />}
               <span className="hidden sm:inline">{isDeskOnly ? 'መደበኛ እይታ' : 'ክፍሉን አጉላ'}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setShowLogoModal(true)}
-              className="p-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs border border-amber-400/30 cursor-pointer"
-              title="አርማ ጫን"
-            >
-              <Camera className="w-3.5 h-3.5" />
-            </button>
+            {!isBureauRole && (
+              <button
+                type="button"
+                onClick={() => setShowLogoModal(true)}
+                className="p-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs border border-amber-400/30 cursor-pointer"
+                title="አርማ ጫን"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -901,15 +937,17 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 shape="rounded"
                 className="ring-3 ring-amber-400/80 shadow-xl cursor-pointer"
               />
-              <button
-                type="button"
-                onClick={() => setShowLogoModal(true)}
-                className="absolute inset-0 bg-black/60 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-bold cursor-pointer"
-                title="አርማ ቀይር / ጫን"
-              >
-                <Camera className="w-4 h-4 mb-0.5" />
-                <span>ቀይር</span>
-              </button>
+              {!isBureauRole && (
+                <button
+                  type="button"
+                  onClick={() => setShowLogoModal(true)}
+                  className="absolute inset-0 bg-black/60 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-bold cursor-pointer"
+                  title="አርማ ቀይር / ጫን"
+                >
+                  <Camera className="w-4 h-4 mb-0.5" />
+                  <span>ቀይር</span>
+                </button>
+              )}
             </div>
 
             {/* School Meta Info */}
@@ -970,15 +1008,17 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
           {/* Quick Actions Bar */}
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-start sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-emerald-800/60">
-            {/* Upload Logo Button */}
-            <button
-              type="button"
-              onClick={() => setShowLogoModal(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold rounded-xl border border-amber-400/40 transition-colors shadow-xs"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>አርማ ጫን</span>
-            </button>
+            {/* Upload Logo Button - School Admin Only */}
+            {!isBureauRole && (
+              <button
+                type="button"
+                onClick={() => setShowLogoModal(true)}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold rounded-xl border border-amber-400/40 transition-colors shadow-xs"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>አርማ ጫን</span>
+              </button>
+            )}
 
             {onNavigateToBureauExams && (
               <button
@@ -1608,14 +1648,21 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowAddStudentModal(true)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>አዲስ ተማሪ መዝግብ</span>
-              </button>
+              {!isBureauRole ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAddStudentModal(true)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>አዲስ ተማሪ መዝግብ</span>
+                </button>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold shrink-0">
+                  <Lock className="w-3.5 h-3.5 text-amber-800" />
+                  <span>ተማሪዎች ማየት ብቻ (Read-Only)</span>
+                </div>
+              )}
             </div>
 
             {/* Filter Controls Grid: Search + Grade Select + Section Select + Sort Select */}
@@ -2219,6 +2266,12 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   <span>+ አዲስ ባለድርሻ አካል መዝግብ</span>
                 </button>
               )}
+              {isBureauRole && (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold shrink-0">
+                  <Lock className="w-3.5 h-3.5 text-amber-800" />
+                  <span>ባለድርሻ አካላት ማየት ብቻ (Read-Only)</span>
+                </div>
+              )}
             </div>
 
             {/* Quick Metrics Bar */}
@@ -2503,16 +2556,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     </button>
 
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingStakeholder(stk);
-                          setShowStakeholderForm(true);
-                        }}
-                        className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold transition-colors"
-                      >
-                        <span>አስተካክል / ሰነድ አክል</span>
-                      </button>
+                      {!isBureauRole && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingStakeholder(stk);
+                            setShowStakeholderForm(true);
+                          }}
+                          className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          <span>አስተካክል / ሰነድ አክል</span>
+                        </button>
+                      )}
 
                       <button
                         type="button"
@@ -2549,17 +2604,19 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 <p className="text-xs text-slate-500">
                   የፍለጋ ቃሉን ይቀይሩ ወይም አዲስ ባለድርሻ አካል ይመዝግቡ
                 </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingStakeholder(null);
-                    setShowStakeholderForm(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-900 transition-colors mt-2"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>አዲስ ባለድርሻ አካል መዝግብ</span>
-                </button>
+                {!isBureauRole && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingStakeholder(null);
+                      setShowStakeholderForm(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-900 transition-colors mt-2"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>አዲስ ባለድርሻ አካል መዝግብ</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -2583,14 +2640,21 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 <p className="text-xs text-slate-500 mt-0.5">{t.code_generation_desc}</p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowAddCodeModal(true)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t.btn_generate_user_code}</span>
-              </button>
+              {!isBureauRole ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAddCodeModal(true)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t.btn_generate_user_code}</span>
+                </button>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold shrink-0">
+                  <Lock className="w-3.5 h-3.5 text-amber-800" />
+                  <span>ኮዶች ማየት ብቻ (Read-Only)</span>
+                </div>
+              )}
             </div>
 
             {/* Filter and Search Bar for Codes */}
@@ -2835,13 +2899,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Send className="w-4 h-4" />
-                <span>ሪፖርቱን ለከተማ ትምህርት ቢሮ ላክ</span>
-              </button>
+              {!isBureauRole ? (
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>ሪፖርቱን ለከተማ ትምህርት ቢሮ ላክ</span>
+                </button>
+              ) : (
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-center text-xs font-bold text-amber-950 flex items-center justify-center gap-2">
+                  <Lock className="w-4 h-4 text-amber-800" />
+                  <span>የትምህርት ቢሮ እይታ፡ ሪፖርት የሚልኩት የትምህርት ቤቱ ዳይሬክተር ብቻ ናቸው (ማየት ብቻ)</span>
+                </div>
+              )}
             </form>
           </div>
         )

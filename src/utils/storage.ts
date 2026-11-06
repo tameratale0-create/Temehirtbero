@@ -1858,6 +1858,17 @@ export const StorageService = {
     }
     if (!cfg.abyssiniaAccount) cfg.abyssiniaAccount = initialDeveloperConfig.abyssiniaAccount;
     if (!cfg.coopAccount) cfg.coopAccount = initialDeveloperConfig.coopAccount;
+    if (!cfg.parentCompany) cfg.parentCompany = initialDeveloperConfig.parentCompany;
+    if (!cfg.sisterCompany) cfg.sisterCompany = initialDeveloperConfig.sisterCompany;
+    if (!cfg.leadProgrammer) cfg.leadProgrammer = initialDeveloperConfig.leadProgrammer;
+    if (!cfg.backendEngineer) cfg.backendEngineer = initialDeveloperConfig.backendEngineer;
+    if (!cfg.frontendEngineer) cfg.frontendEngineer = initialDeveloperConfig.frontendEngineer;
+    if (!cfg.designer) cfg.designer = initialDeveloperConfig.designer;
+    if (!cfg.address) cfg.address = initialDeveloperConfig.address;
+    if (!cfg.secondaryPhone || cfg.developerPhone === '+251 91 188 4590') {
+      cfg.developerPhone = initialDeveloperConfig.developerPhone;
+      cfg.secondaryPhone = initialDeveloperConfig.secondaryPhone;
+    }
     return cfg;
   },
   saveDeveloperConfig: (config: DeveloperPaymentConfig): DeveloperPaymentConfig => {

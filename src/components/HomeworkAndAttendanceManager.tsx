@@ -19,7 +19,8 @@ import {
   Edit,
   Trash2,
   MessageSquare,
-  QrCode
+  QrCode,
+  Lock
 } from 'lucide-react';
 import {
   HomeworkAssignment,
@@ -48,6 +49,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
   currentUser,
   currentLang
 }) => {
+  const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [activeTab, setActiveTab] = useState<'bureau_training' | 'homework' | 'attendance'>('bureau_training');
 
   // Detect Teacher's Assigned Subject
@@ -241,14 +243,21 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowAddHwModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>አዲስ የቤት ስራ ስጥ (New Homework)</span>
-            </button>
+            {!isBureauRole ? (
+              <button
+                type="button"
+                onClick={() => setShowAddHwModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>አዲስ የቤት ስራ ስጥ (New Homework)</span>
+              </button>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
+                <Lock className="w-4 h-4 text-amber-300" />
+                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -383,7 +392,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
               {visibleAssignments.map((hw) => {
                 const hwSubs = submissions.filter((s) => s.assignmentId === hw.id);
                 const gradedCount = hwSubs.filter((s) => s.status === 'graded').length;
-                const canDelete = !isTeacherUser || hw.teacherName === currentUser?.name;
+                const canDelete = !isBureauRole && (!isTeacherUser || hw.teacherName === currentUser?.name);
                 return (
                   <div
                     key={hw.id}
@@ -558,14 +567,21 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowQrModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
-              >
-                <QrCode className="w-4 h-4 text-amber-300" />
-                <span>በ QR መገኘት መዝግብ (QR Scan)</span>
-              </button>
+              {isBureauRole ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold shrink-0">
+                  <Lock className="w-3.5 h-3.5 text-amber-600" />
+                  <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowQrModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+                >
+                  <QrCode className="w-4 h-4 text-amber-300" />
+                  <span>በ QR መገኘት መዝግብ (QR Scan)</span>
+                </button>
+              )}
 
               <div className="flex items-center gap-1.5 text-xs">
                 <span className="text-slate-500 font-semibold">ቀን፡</span>
@@ -612,7 +628,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   <th className="py-3 px-3">የተማሪ ስም</th>
                   <th className="py-3 px-3">ክፍል</th>
                   <th className="py-3 px-3">ወላጅ</th>
-                  <th className="py-3 px-3">የመገኘት ሁኔታ (ጠቅ አድርገው ይምረጡ)</th>
+                  <th className="py-3 px-3">
+                    {isBureauRole
+                      ? 'የመገኘት ሁኔታ (ማየት ብቻ - Read-Only)'
+                      : 'የመገኘት ሁኔታ (ጠቅ አድርገው ይምረጡ)'}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -634,8 +654,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleToggleAttendance(st, 'present')}
-                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                            disabled={isBureauRole}
+                            onClick={() => !isBureauRole && handleToggleAttendance(st, 'present')}
+                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 ${
+                              isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                            } ${
                               currentStatus === 'present'
                                 ? 'bg-emerald-700 text-white shadow-2xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -647,8 +670,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
                           <button
                             type="button"
-                            onClick={() => handleToggleAttendance(st, 'absent')}
-                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                            disabled={isBureauRole}
+                            onClick={() => !isBureauRole && handleToggleAttendance(st, 'absent')}
+                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 ${
+                              isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                            } ${
                               currentStatus === 'absent'
                                 ? 'bg-rose-700 text-white shadow-2xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -660,8 +686,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
                           <button
                             type="button"
-                            onClick={() => handleToggleAttendance(st, 'late')}
-                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                            disabled={isBureauRole}
+                            onClick={() => !isBureauRole && handleToggleAttendance(st, 'late')}
+                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 ${
+                              isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                            } ${
                               currentStatus === 'late'
                                 ? 'bg-amber-600 text-white shadow-2xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -673,8 +702,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
                           <button
                             type="button"
-                            onClick={() => handleToggleAttendance(st, 'excused')}
-                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                            disabled={isBureauRole}
+                            onClick={() => !isBureauRole && handleToggleAttendance(st, 'excused')}
+                            className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 ${
+                              isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                            } ${
                               currentStatus === 'excused'
                                 ? 'bg-blue-700 text-white shadow-2xs'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

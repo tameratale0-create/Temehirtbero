@@ -27,7 +27,8 @@ import {
   Moon,
   Clock,
   Sun,
-  Sunrise
+  Sunrise,
+  Lock
 } from 'lucide-react';
 import {
   StudentRecord,
@@ -57,6 +58,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
   currentUser,
   currentLang
 }) => {
+  const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [activeTab, setActiveTab] = useState<'admissions' | 'structure' | 'id_cards'>('admissions');
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState<number | 'all'>('all');
@@ -262,14 +264,21 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>አዲስ ተማሪ መዝግብ (Admit Student)</span>
-            </button>
+            {!isBureauRole ? (
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>አዲስ ተማሪ መዝግብ (Admit Student)</span>
+              </button>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
+                <Lock className="w-4 h-4 text-amber-300" />
+                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

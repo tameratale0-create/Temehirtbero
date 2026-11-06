@@ -59,6 +59,7 @@ import { SplashScreen } from './components/SplashScreen';
 import { AccessCodeGate } from './components/AccessCodeGate';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { SecretDeveloperPortalModal } from './components/SecretDeveloperPortalModal';
+import { SystemDeveloperProfileModal } from './components/SystemDeveloperProfileModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 export default function App() {
@@ -112,6 +113,7 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loginModalTab, setLoginModalTab] = useState<'bureau' | 'school_reg' | 'school_login'>('bureau');
   const [showDeveloperPortalModal, setShowDeveloperPortalModal] = useState<boolean>(false);
+  const [showDeveloperProfileModal, setShowDeveloperProfileModal] = useState<boolean>(false);
 
   // Active School selection for School Portal
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>(
@@ -446,7 +448,6 @@ export default function App() {
             reports={reports}
             onReportsChange={(updated) => setReports(updated)}
             currentOfficerName={currentUser?.name}
-            onOpenSubmitReport={() => navigateToActivity('school_portal', 'submit_report')}
           />
         );
       case 'credentials':
@@ -565,6 +566,7 @@ export default function App() {
           navigateToActivity('dashboard');
         }}
         onOpenDeveloperPortal={() => setShowDeveloperPortalModal(true)}
+        onOpenDeveloperProfile={() => setShowDeveloperProfileModal(true)}
       />
 
       {/* Main Container - Responsive padding for mobile & desktop */}
@@ -1046,20 +1048,68 @@ export default function App() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12 py-6 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-emerald-800" />
-            <span className="font-bold text-slate-800">{t.bureau_full_name}</span>
-            <span>·</span>
-            <span>{t.city_name}</span>
+      {/* Footer & System Builder Pedigree */}
+      <footer className="bg-slate-900 border-t border-slate-800 mt-12 py-8 text-xs text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          {/* Builder Profile Callout Strip */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950/40 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-[10px] font-black text-amber-300">
+                  ሲስተሙን ማን ገነባው? (SYSTEM BUILDER)
+                </span>
+                <span className="text-[11px] text-slate-400">· ሻሸመኔ፣ ኢትዮጵያ</span>
+              </div>
+              <h4 className="text-sm sm:text-base font-black text-white">
+                ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)
+              </h4>
+              <p className="text-xs text-amber-200/90 font-medium">
+                እህት ድርጅት፡ <strong>ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)</strong>
+              </p>
+              <p className="text-[11px] text-slate-300 pt-0.5">
+                ዋና ቀዳሚ ፕሮግራመር፣ ባክኢንድ፣ ፍሮንትኢንድ እና ዲዛይነር፡ <strong className="text-white">ታምራት አሌ (Tamerat Ale)</strong>
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
+              <div className="text-left sm:text-right text-[11px] space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400">ቀጥታ ስልኮች፡</span>
+                  <a href="tel:+251911029070" className="font-mono font-bold text-emerald-400 hover:underline">
+                    +251 91 102 9070
+                  </a>
+                  <span className="text-slate-600">/</span>
+                  <a href="tel:+251701370299" className="font-mono font-bold text-sky-400 hover:underline">
+                    +251 70 137 0299
+                  </a>
+                </div>
+                <div className="font-mono text-slate-400">tameratale09@gmail.com</div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowDeveloperProfileModal(true)}
+                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <span>ሙሉ የአበልፃጊ መረጃ</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-emerald-800 font-semibold">
-              ኦንላይን እና ኦፍላይን ይፋዊ ስርዓት (Online & Offline Ready)
-            </span>
-            <span>© 2016-2017 ዓ.ም</span>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-800/80 text-[11px]">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-emerald-500" />
+              <span className="font-bold text-slate-300">{t.bureau_full_name}</span>
+              <span>·</span>
+              <span>{t.city_name}</span>
+            </div>
+            <div className="flex items-center gap-4 text-slate-400">
+              <span className="text-emerald-400 font-semibold">
+                ኦንላይን እና ኦፍላይን ይፋዊ ስርዓት (Online & Offline Ready)
+              </span>
+              <span>© 2016-2017 ዓ.ም</span>
+            </div>
           </div>
         </div>
       </footer>
@@ -1257,6 +1307,13 @@ export default function App() {
         }}
       />
 
+      {/* System Developer Profile Modal ("ሲስተሙን ማን ገነባው?") */}
+      <SystemDeveloperProfileModal
+        isOpen={showDeveloperProfileModal}
+        onClose={() => setShowDeveloperProfileModal(false)}
+        onOpenDeveloperPortal={() => setShowDeveloperPortalModal(true)}
+      />
+
       {/* Offline Connectivity Indicator */}
       <OfflineIndicator currentLang={currentLang} />
 
@@ -1271,6 +1328,7 @@ export default function App() {
         isSchoolView={isSchoolView}
         schoolName={activeSchool?.name}
         onOpenCodeGate={() => setShowCodeGate(true)}
+        onOpenDeveloperProfile={() => setShowDeveloperProfileModal(true)}
       />
     </div>
   );

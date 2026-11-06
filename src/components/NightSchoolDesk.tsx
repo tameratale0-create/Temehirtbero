@@ -27,7 +27,8 @@ import {
   RotateCcw,
   Coffee,
   Check,
-  Eye
+  Eye,
+  Lock
 } from 'lucide-react';
 import {
   School,
@@ -60,6 +61,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
   currentLang,
   onOpenReportCard
 }) => {
+  const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [activeTab, setActiveTab] = useState<'roster' | 'timetable' | 'attendance' | 'bureau_report'>('roster');
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState<number | 'all'>('all');
@@ -342,14 +344,21 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowAddStudentModal(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-amber-500/20 transition-all cursor-pointer transform active:scale-95"
-            >
-              <Plus className="w-4 h-4 text-slate-950 stroke-[3]" />
-              <span>አዲስ የማታ ተማሪ መዝግብ</span>
-            </button>
+            {!isBureauRole ? (
+              <button
+                type="button"
+                onClick={() => setShowAddStudentModal(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-amber-500/20 transition-all cursor-pointer transform active:scale-95"
+              >
+                <Plus className="w-4 h-4 text-slate-950 stroke-[3]" />
+                <span>አዲስ የማታ ተማሪ መዝግብ</span>
+              </button>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
+                <Lock className="w-4 h-4 text-amber-300" />
+                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+              </div>
+            )}
 
             <button
               type="button"
@@ -563,14 +572,16 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 በተመረጠው ማጣሪያ ምንም ተማሪ የለም ወይም እስካሁን የማታ ተማሪ አልተመዘገበም።
               </p>
-              <button
-                type="button"
-                onClick={() => setShowAddStudentModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-950 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>አዲስ የማታ ተማሪ አስገባ</span>
-              </button>
+              {!isBureauRole && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddStudentModal(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-950 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>አዲስ የማታ ተማሪ አስገባ</span>
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -699,14 +710,16 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowAddScheduleModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5 text-amber-300" />
-                <span>ክፍለ-ጊዜ ጨምር</span>
-              </button>
+              {!isBureauRole && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddScheduleModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 text-amber-300" />
+                  <span>ክፍለ-ጊዜ ጨምር</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -838,28 +851,37 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 className="px-3 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none"
               />
 
-              <button
-                type="button"
-                onClick={() => {
-                  const bulk: Record<string, { status: 'present' }> = {};
-                  nightStudents.forEach((s) => {
-                    bulk[s.id] = { status: 'present' };
-                  });
-                  setAttendanceLogs(bulk);
-                }}
-                className="px-3 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-              >
-                ሁሉንም በጊዜ ገብተዋል አድርግ
-              </button>
+              {!isBureauRole ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const bulk: Record<string, { status: 'present' }> = {};
+                      nightStudents.forEach((s) => {
+                        bulk[s.id] = { status: 'present' };
+                      });
+                      setAttendanceLogs(bulk);
+                    }}
+                    className="px-3 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    ሁሉንም በጊዜ ገብተዋል አድርግ
+                  </button>
 
-              <button
-                type="button"
-                onClick={handleSaveNightAttendance}
-                className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-              >
-                <Check className="w-3.5 h-3.5 text-amber-300" />
-                <span>የዛሬውን መገኘት መዝግብ</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveNightAttendance}
+                    className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5 text-amber-300" />
+                    <span>የዛሬውን መገኘት መዝግብ</span>
+                  </button>
+                </>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold">
+                  <Lock className="w-3.5 h-3.5 text-amber-800" />
+                  <span>የመገኘት መዝገብ ማየት ብቻ (Read-Only)</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -902,13 +924,17 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                           <div className="flex items-center gap-1.5">
                             <button
                               type="button"
+                              disabled={isBureauRole}
                               onClick={() =>
+                                !isBureauRole &&
                                 setAttendanceLogs((prev) => ({
                                   ...prev,
                                   [st.id]: { ...prev[st.id], status: 'present' }
                                 }))
                               }
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                                isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                              } ${
                                 currentLog.status === 'present'
                                   ? 'bg-emerald-600 text-white shadow-xs'
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -919,13 +945,17 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
 
                             <button
                               type="button"
+                              disabled={isBureauRole}
                               onClick={() =>
+                                !isBureauRole &&
                                 setAttendanceLogs((prev) => ({
                                   ...prev,
                                   [st.id]: { ...prev[st.id], status: 'late', lateReason: prev[st.id]?.lateReason || 'ከስራ መዘግየት' }
                                 }))
                               }
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                                isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                              } ${
                                 currentLog.status === 'late'
                                   ? 'bg-amber-500 text-slate-950 shadow-xs'
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -936,13 +966,17 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
 
                             <button
                               type="button"
+                              disabled={isBureauRole}
                               onClick={() =>
+                                !isBureauRole &&
                                 setAttendanceLogs((prev) => ({
                                   ...prev,
                                   [st.id]: { ...prev[st.id], status: 'absent' }
                                 }))
                               }
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                                isBureauRole ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                              } ${
                                 currentLog.status === 'absent'
                                   ? 'bg-rose-600 text-white shadow-xs'
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -956,15 +990,17 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                           {currentLog.status === 'late' && (
                             <input
                               type="text"
+                              disabled={isBureauRole}
                               value={currentLog.lateReason || ''}
                               onChange={(e) =>
+                                !isBureauRole &&
                                 setAttendanceLogs((prev) => ({
                                   ...prev,
                                   [st.id]: { ...prev[st.id], lateReason: e.target.value }
                                 }))
                               }
                               placeholder="ለምሳሌ፡ ከስራ መዘግየት..."
-                              className="w-full px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none"
+                              className="w-full px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none disabled:bg-slate-100 disabled:cursor-not-allowed"
                             />
                           )}
                         </td>

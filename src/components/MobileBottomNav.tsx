@@ -16,7 +16,8 @@ import {
   DollarSign,
   ClipboardList,
   Moon,
-  ChevronUp
+  ChevronUp,
+  Code2
 } from 'lucide-react';
 import { Language, AppUserSession } from '../types';
 import { ShashemeneEducationBureauEmblem } from './ShashemeneEducationBureauEmblem';
@@ -29,6 +30,7 @@ interface MobileBottomNavProps {
   onOpenRoleModal: () => void;
   onOpenDeveloperPortal: () => void;
   onOpenDeveloperPayment?: () => void;
+  onOpenDeveloperProfile?: () => void;
   isSchoolView?: boolean;
   schoolName?: string;
   onOpenCodeGate?: () => void;
@@ -43,6 +45,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenRoleModal,
   onOpenDeveloperPortal,
   onOpenDeveloperPayment,
+  onOpenDeveloperProfile,
   isSchoolView = false,
   schoolName,
   onOpenCodeGate,
@@ -236,6 +239,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 <span className="font-bold text-indigo-950">የአበልፃጊ ሚስጥር በር</span>
                 <span className="text-[10px] text-indigo-800">ኮድ: tameratale6576</span>
               </button>
+
+              {onOpenDeveloperProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    onOpenDeveloperProfile();
+                  }}
+                  className="p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 border border-amber-300 text-left flex flex-col gap-1 transition"
+                >
+                  <Code2 className="w-5 h-5 text-amber-700" />
+                  <span className="font-bold text-amber-950">ሲስተሙን ማን ገነባው?</span>
+                  <span className="text-[10px] text-amber-800">ታሜና ሥራው · ውሽዬ ሶፍትዌር</span>
+                </button>
+              )}
 
               {onOpenDeveloperPayment && (
                 <button

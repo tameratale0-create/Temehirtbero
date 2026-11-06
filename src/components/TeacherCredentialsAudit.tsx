@@ -184,13 +184,10 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
               <span>ኦዲት አትም</span>
             </button>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>አዲስ ማስረጃ መዝግብ</span>
-            </button>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-sky-900 border border-sky-300 rounded-xl text-xs font-bold">
+              <ShieldCheck className="w-4 h-4 text-sky-700" />
+              <span>ከትምህርት ቤቶች የተላኩ (ማየትና ማረጋገጥ ብቻ)</span>
+            </div>
           </div>
         </div>
 
