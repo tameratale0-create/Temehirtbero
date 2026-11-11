@@ -5,6 +5,7 @@ import {
   TeacherExam,
   ExamSubmission,
   TrainingMaterial,
+  TrainingAttachment,
   StudentRecord,
   SchoolReportSubmission,
   BureauStandardCriteria,
@@ -28,7 +29,10 @@ import {
   NightAttendanceEntry,
   DeveloperPaymentReceipt,
   DeveloperPaymentConfig,
-  DeveloperPaymentStatus
+  DeveloperPaymentStatus,
+  StudentDisciplineReport,
+  TeacherTrainingNotification,
+  SchoolBankAccount
 } from '../types';
 import {
   initialSchools,
@@ -50,7 +54,9 @@ import {
   initialSubmissions,
   initialNightClassSchedule,
   initialDeveloperConfig,
-  initialDeveloperPayments
+  initialDeveloperPayments,
+  initialDisciplineReports,
+  initialSchoolBankAccounts
 } from '../data/initialData';
 import { OfflineSyncManager } from './offlineSync';
 
@@ -82,6 +88,9 @@ const STORAGE_KEYS = {
   NIGHT_ATTENDANCE: 'shash_edu_night_attendance_v1',
   DEVELOPER_PAYMENTS: 'shash_edu_dev_payments_v1',
   DEVELOPER_CONFIG: 'shash_edu_dev_config_v1',
+  DISCIPLINE_REPORTS: 'shash_edu_discipline_reports_v1',
+  TEACHER_TRAINING_NOTIFICATIONS: 'shash_edu_teacher_training_notifications_v1',
+  SCHOOL_BANK_ACCOUNTS: 'shash_edu_school_bank_accounts_v1',
   LAST_SYNC: 'shash_edu_last_sync_v1'
 };
 
@@ -794,12 +803,24 @@ export const StorageService = {
     const stored = loadItem<TrainingMaterial[]>(STORAGE_KEYS.TRAINING, initialTrainingMaterials);
     const storedIds = new Set(stored.map((m) => m.id));
     const missing = initialTrainingMaterials.filter((m) => !storedIds.has(m.id));
-    if (missing.length > 0) {
-      const combined = [...stored, ...missing];
-      saveItem(STORAGE_KEYS.TRAINING, combined);
-      return combined;
+    let result = missing.length > 0 ? [...stored, ...missing] : stored;
+
+    let needsResave = missing.length > 0;
+    result = result.map((m) => {
+      if (!m.attachments || m.attachments.length === 0) {
+        const init = initialTrainingMaterials.find((im) => im.id === m.id);
+        if (init && init.attachments && init.attachments.length > 0) {
+          needsResave = true;
+          return { ...m, attachments: init.attachments };
+        }
+      }
+      return m;
+    });
+
+    if (needsResave) {
+      saveItem(STORAGE_KEYS.TRAINING, result);
     }
-    return stored;
+    return result;
   },
   saveTrainingMaterials: (materials: TrainingMaterial[]) => saveItem(STORAGE_KEYS.TRAINING, materials),
   addTrainingMaterial: (material: TrainingMaterial) => {
@@ -811,6 +832,35 @@ export const StorageService = {
   incrementDownload: (id: string) => {
     const list = StorageService.getTrainingMaterials();
     const updated = list.map((m) => (m.id === id ? { ...m, downloadCount: m.downloadCount + 1 } : m));
+    StorageService.saveTrainingMaterials(updated);
+    return updated;
+  },
+  addTrainingAttachment: (materialId: string, attachment: TrainingAttachment): TrainingMaterial[] => {
+    const list = StorageService.getTrainingMaterials();
+    const updated = list.map((m) => {
+      if (m.id === materialId) {
+        const existing = m.attachments || [];
+        return {
+          ...m,
+          attachments: [attachment, ...existing.filter((a) => a.id !== attachment.id)]
+        };
+      }
+      return m;
+    });
+    StorageService.saveTrainingMaterials(updated);
+    return updated;
+  },
+  deleteTrainingAttachment: (materialId: string, attachmentId: string): TrainingMaterial[] => {
+    const list = StorageService.getTrainingMaterials();
+    const updated = list.map((m) => {
+      if (m.id === materialId) {
+        return {
+          ...m,
+          attachments: (m.attachments || []).filter((a) => a.id !== attachmentId)
+        };
+      }
+      return m;
+    });
     StorageService.saveTrainingMaterials(updated);
     return updated;
   },
@@ -833,6 +883,32 @@ export const StorageService = {
     map[teacherId] = updated;
     saveItem(STORAGE_KEYS.TEACHER_TRAINING_PROGRESS, map);
     return { completed, allCompleted: updated };
+  },
+
+  // Teacher Training Dispatch Notifications
+  getTeacherTrainingNotifications: (teacherId?: string): TeacherTrainingNotification[] => {
+    const list = loadItem<TeacherTrainingNotification[]>(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, []);
+    if (!teacherId) return list;
+    return list.filter((n) => !n.teacherId || n.teacherId === teacherId);
+  },
+  addTeacherTrainingNotification: (notif: TeacherTrainingNotification): TeacherTrainingNotification[] => {
+    const list = loadItem<TeacherTrainingNotification[]>(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, []);
+    const updated = [notif, ...list.filter((n) => n.id !== notif.id)];
+    saveItem(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, updated);
+    window.dispatchEvent(new CustomEvent('teacher_training_dispatched', { detail: notif }));
+    return updated;
+  },
+  markTeacherTrainingNotificationAsRead: (notifId: string): TeacherTrainingNotification[] => {
+    const list = loadItem<TeacherTrainingNotification[]>(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, []);
+    const updated = list.map((n) => (n.id === notifId ? { ...n, isRead: true } : n));
+    saveItem(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, updated);
+    return updated;
+  },
+  markAllTeacherTrainingNotificationsAsRead: (teacherId?: string): TeacherTrainingNotification[] => {
+    const list = loadItem<TeacherTrainingNotification[]>(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, []);
+    const updated = list.map((n) => (!teacherId || !n.teacherId || n.teacherId === teacherId ? { ...n, isRead: true } : n));
+    saveItem(STORAGE_KEYS.TEACHER_TRAINING_NOTIFICATIONS, updated);
+    return updated;
   },
 
   // Student Reports
@@ -1072,11 +1148,137 @@ export const StorageService = {
     if (studentId) all = all.filter((f) => f.studentId === studentId);
     return all;
   },
-  saveFeePayments: (list: FeePaymentRecord[]) => saveItem(STORAGE_KEYS.FEE_PAYMENTS, list),
+  saveFeePayments: (list: FeePaymentRecord[]) => {
+    saveItem(STORAGE_KEYS.FEE_PAYMENTS, list);
+    try {
+      window.dispatchEvent(new CustomEvent('fee_payments_updated', { detail: list }));
+    } catch {
+      // ignore
+    }
+  },
   addFeePayment: (payment: FeePaymentRecord) => {
     const list = StorageService.getFeePayments();
     const updated = [payment, ...list];
     StorageService.saveFeePayments(updated);
+    return updated;
+  },
+  updateFeePayment: (payment: FeePaymentRecord) => {
+    const list = StorageService.getFeePayments();
+    const index = list.findIndex((f) => f.id === payment.id);
+    let updated: FeePaymentRecord[];
+    if (index >= 0) {
+      updated = [...list];
+      updated[index] = payment;
+    } else {
+      updated = [payment, ...list];
+    }
+    StorageService.saveFeePayments(updated);
+    return updated;
+  },
+  submitFeePaymentReceipt: (payment: FeePaymentRecord) => {
+    const list = StorageService.getFeePayments();
+    // Check if an existing record for the same student & month exists
+    const existingIndex = list.findIndex(
+      (f) =>
+        f.studentId === payment.studentId &&
+        f.month.trim().toLowerCase() === payment.month.trim().toLowerCase()
+    );
+    let updated: FeePaymentRecord[];
+    if (existingIndex >= 0) {
+      updated = [...list];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        ...payment,
+        status: 'pending' as const,
+        submittedAt: payment.submittedAt || new Date().toISOString()
+      };
+    } else {
+      updated = [payment, ...list];
+    }
+    StorageService.saveFeePayments(updated);
+    return updated;
+  },
+  verifyFeePayment: (id: string, accountantName: string, notes?: string) => {
+    const list = StorageService.getFeePayments();
+    const nowIso = new Date().toISOString();
+    const updated = list.map((f) => {
+      if (f.id === id) {
+        const receiptNumber = f.receiptNumber && f.receiptNumber !== 'PENDING'
+          ? f.receiptNumber
+          : `SHAS-REC-${Date.now().toString().slice(-6)}`;
+        return {
+          ...f,
+          status: 'paid' as const,
+          receiptNumber,
+          paymentDate: f.paymentDate || nowIso.split('T')[0],
+          collectedBy: accountantName,
+          verifiedBy: accountantName,
+          verifiedAt: nowIso,
+          notes: notes !== undefined ? notes : f.notes,
+          rejectionReason: undefined
+        };
+      }
+      return f;
+    });
+    StorageService.saveFeePayments(updated);
+    return updated;
+  },
+  rejectFeePayment: (id: string, reason: string, accountantName: string) => {
+    const list = StorageService.getFeePayments();
+    const nowIso = new Date().toISOString();
+    const updated = list.map((f) => {
+      if (f.id === id) {
+        return {
+          ...f,
+          status: 'rejected' as const,
+          rejectionReason: reason,
+          verifiedBy: accountantName,
+          verifiedAt: nowIso
+        };
+      }
+      return f;
+    });
+    StorageService.saveFeePayments(updated);
+    return updated;
+  },
+
+  // School Official Bank Accounts posted by Cashier (የትምህርት ቤቱ ገንዘብ ያዥ የሚለጥፋቸው ይፋዊ የባንክ አካውንቶች)
+  getSchoolBankAccounts: (schoolId?: string): SchoolBankAccount[] => {
+    let all = loadItem<SchoolBankAccount[]>(STORAGE_KEYS.SCHOOL_BANK_ACCOUNTS, initialSchoolBankAccounts);
+    if (schoolId) all = all.filter((a) => a.schoolId === schoolId);
+    return all;
+  },
+  saveSchoolBankAccounts: (list: SchoolBankAccount[]) => {
+    saveItem(STORAGE_KEYS.SCHOOL_BANK_ACCOUNTS, list);
+    try {
+      window.dispatchEvent(new CustomEvent('school_bank_accounts_updated', { detail: list }));
+    } catch {
+      // ignore
+    }
+  },
+  addSchoolBankAccount: (acc: SchoolBankAccount) => {
+    const list = StorageService.getSchoolBankAccounts();
+    const updated = [acc, ...list];
+    StorageService.saveSchoolBankAccounts(updated);
+    return updated;
+  },
+  updateSchoolBankAccount: (acc: SchoolBankAccount) => {
+    const list = StorageService.getSchoolBankAccounts();
+    const index = list.findIndex((a) => a.id === acc.id);
+    let updated: SchoolBankAccount[];
+    if (index >= 0) {
+      updated = [...list];
+      updated[index] = acc;
+    } else {
+      updated = [acc, ...list];
+    }
+    StorageService.saveSchoolBankAccounts(updated);
+    return updated;
+  },
+  deleteSchoolBankAccount: (id: string) => {
+    const list = StorageService.getSchoolBankAccounts();
+    const updated = list.filter((a) => a.id !== id);
+    StorageService.saveSchoolBankAccounts(updated);
     return updated;
   },
 
@@ -1865,6 +2067,7 @@ export const StorageService = {
     if (!cfg.frontendEngineer) cfg.frontendEngineer = initialDeveloperConfig.frontendEngineer;
     if (!cfg.designer) cfg.designer = initialDeveloperConfig.designer;
     if (!cfg.address) cfg.address = initialDeveloperConfig.address;
+    if (!cfg.websiteUrl) cfg.websiteUrl = initialDeveloperConfig.websiteUrl;
     if (!cfg.secondaryPhone || cfg.developerPhone === '+251 91 188 4590') {
       cfg.developerPhone = initialDeveloperConfig.developerPhone;
       cfg.secondaryPhone = initialDeveloperConfig.secondaryPhone;
@@ -1879,6 +2082,61 @@ export const StorageService = {
     const schools = StorageService.getSchools();
     const target = schools.find((s) => s.id === schoolId);
     return target?.developerPaymentStatus === 'approved';
+  },
+
+  // ==========================================================================
+  // Student Discipline & Misconduct Tip-off Reports (የተማሪዎች ስነ-ምግባር ክትትልና ጥቆማ)
+  // ==========================================================================
+  getDisciplineReports: (schoolId?: string): StudentDisciplineReport[] => {
+    const list = loadItem<StudentDisciplineReport[]>(STORAGE_KEYS.DISCIPLINE_REPORTS, initialDisciplineReports);
+    if (!schoolId) return list;
+    return list.filter((r) => r.schoolId === schoolId);
+  },
+
+  addDisciplineReport: (report: StudentDisciplineReport): StudentDisciplineReport[] => {
+    const list = loadItem<StudentDisciplineReport[]>(STORAGE_KEYS.DISCIPLINE_REPORTS, initialDisciplineReports);
+    const updated = [report, ...list.filter((r) => r.id !== report.id)];
+    saveItem(STORAGE_KEYS.DISCIPLINE_REPORTS, updated);
+    return updated;
+  },
+
+  updateDisciplineReport: (report: StudentDisciplineReport): StudentDisciplineReport[] => {
+    const list = loadItem<StudentDisciplineReport[]>(STORAGE_KEYS.DISCIPLINE_REPORTS, initialDisciplineReports);
+    const updated = list.map((r) => (r.id === report.id ? report : r));
+    saveItem(STORAGE_KEYS.DISCIPLINE_REPORTS, updated);
+    return updated;
+  },
+
+  acknowledgeDisciplineReport: (
+    id: string,
+    directorName: string,
+    remarks?: string
+  ): StudentDisciplineReport[] => {
+    const list = loadItem<StudentDisciplineReport[]>(STORAGE_KEYS.DISCIPLINE_REPORTS, initialDisciplineReports);
+    const nowIso = new Date().toISOString();
+    const updated = list.map((r) => {
+      if (r.id === id) {
+        return {
+          ...r,
+          isAcknowledged: true,
+          acknowledgedByDirectorName: directorName,
+          directorAcknowledgedAt: nowIso,
+          directorRemarks: remarks || r.directorRemarks,
+          status: r.status === 'pending_review' ? 'under_investigation' : r.status,
+          updatedAt: nowIso
+        };
+      }
+      return r;
+    });
+    saveItem(STORAGE_KEYS.DISCIPLINE_REPORTS, updated);
+    return updated;
+  },
+
+  deleteDisciplineReport: (id: string): StudentDisciplineReport[] => {
+    const list = loadItem<StudentDisciplineReport[]>(STORAGE_KEYS.DISCIPLINE_REPORTS, initialDisciplineReports);
+    const updated = list.filter((r) => r.id !== id);
+    saveItem(STORAGE_KEYS.DISCIPLINE_REPORTS, updated);
+    return updated;
   },
 
   // Reset to default
@@ -1897,5 +2155,6 @@ export const StorageService = {
     saveItem(STORAGE_KEYS.GRADE_WORKFLOW_BATCHES, initialGradeWorkflows);
     saveItem(STORAGE_KEYS.DEVELOPER_PAYMENTS, initialDeveloperPayments);
     saveItem(STORAGE_KEYS.DEVELOPER_CONFIG, initialDeveloperConfig);
+    saveItem(STORAGE_KEYS.DISCIPLINE_REPORTS, initialDisciplineReports);
   }
 };

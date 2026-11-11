@@ -12,9 +12,11 @@ export type SyncEntityType =
   | 'student_performance'
   | 'teacher_credential'
   | 'training_material'
+  | 'training_attachment'
   | 'exam_submission'
   | 'teacher_evaluation'
-  | 'grade_workflow';
+  | 'grade_workflow'
+  | 'student_discipline';
 
 export interface SyncQueueItem {
   id: string;

@@ -59,14 +59,46 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
   const getInspectionBadge = (lvl: InspectionLevel) => {
     switch (lvl) {
       case 'level_4':
-        return { label: 'ደረጃ 4 (ሞዴል)', bg: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+        return {
+          label:
+            currentLang === 'om'
+              ? 'Sadarkaa 4 (Moodeela)'
+              : currentLang === 'en'
+              ? 'Level 4 (Model)'
+              : 'ደረጃ 4 (ሞዴል)',
+          bg: 'bg-emerald-100 text-emerald-800 border-emerald-300'
+        };
       case 'level_3':
-        return { label: 'ደረጃ 3 (ጥሩ ደረጃ)', bg: 'bg-teal-100 text-teal-800 border-teal-300' };
+        return {
+          label:
+            currentLang === 'om'
+              ? 'Sadarkaa 3 (Sadarkaa Gaarii)'
+              : currentLang === 'en'
+              ? 'Level 3 (Good)'
+              : 'ደረጃ 3 (ጥሩ ደረጃ)',
+          bg: 'bg-teal-100 text-teal-800 border-teal-300'
+        };
       case 'level_2':
-        return { label: 'ደረጃ 2 (መካከለኛ)', bg: 'bg-amber-100 text-amber-800 border-amber-300' };
+        return {
+          label:
+            currentLang === 'om'
+              ? 'Sadarkaa 2 (Giddu-galeessa)'
+              : currentLang === 'en'
+              ? 'Level 2 (Average)'
+              : 'ደረጃ 2 (መካከለኛ)',
+          bg: 'bg-amber-100 text-amber-800 border-amber-300'
+        };
       case 'level_1':
       default:
-        return { label: 'ደረጃ 1 (ማሻሻያ የሚሻ)', bg: 'bg-rose-100 text-rose-800 border-rose-300' };
+        return {
+          label:
+            currentLang === 'om'
+              ? "Sadarkaa 1 (Fooyya'iinsa Barbaada)"
+              : currentLang === 'en'
+              ? 'Level 1 (Needs Improvement)'
+              : 'ደረጃ 1 (ማሻሻያ የሚሻ)',
+          bg: 'bg-rose-100 text-rose-800 border-rose-300'
+        };
     }
   };
 
@@ -249,10 +281,14 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
                     />
                     <div>
                       <h3 className="text-xs font-bold text-slate-900 leading-snug">
-                        {school.name}
+                        {currentLang === 'om' ? (school.nameOm || school.name) : school.name}
                       </h3>
-                      {school.nameOm && (
-                        <p className="text-[11px] text-slate-500 line-clamp-1">{school.nameOm}</p>
+                      {currentLang === 'om' ? (
+                        <p className="text-[11px] text-slate-500 line-clamp-1">{school.name}</p>
+                      ) : (
+                        school.nameOm && (
+                          <p className="text-[11px] text-slate-500 line-clamp-1">{school.nameOm}</p>
+                        )
                       )}
                     </div>
                   </div>
@@ -265,32 +301,61 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <div>
-                    <span className="text-[10px] text-slate-400 block">አጠቃላይ ተማሪ</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {currentLang === 'om'
+                        ? "Ida'ama Barattootaa"
+                        : currentLang === 'en'
+                        ? 'Total Students'
+                        : 'አጠቃላይ ተማሪ'}
+                    </span>
                     <strong className="text-slate-800 text-sm">
                       {school.totalStudents.toLocaleString()}
                     </strong>
                     <span className="text-[10px] text-slate-500 block">
-                      (ወ: {school.maleStudents} · ሴ: {school.femaleStudents})
+                      ({currentLang === 'om' ? 'Dhi: ' : 'ወ: '}
+                      {school.maleStudents} · {currentLang === 'om' ? 'Dub: ' : 'ሴ: '}
+                      {school.femaleStudents})
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-[10px] text-slate-400 block">መምህራን</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {currentLang === 'om'
+                        ? 'Barsiisota'
+                        : currentLang === 'en'
+                        ? 'Teachers'
+                        : 'መምህራን'}
+                    </span>
                     <strong className="text-slate-800 text-sm">{school.totalTeachers}</strong>
                     <span className="text-[10px] text-slate-500 block">
-                      (ወ: {school.maleTeachers} · ሴ: {school.femaleTeachers})
+                      ({currentLang === 'om' ? 'Dhi: ' : 'ወ: '}
+                      {school.maleTeachers} · {currentLang === 'om' ? 'Dub: ' : 'ሴ: '}
+                      {school.femaleTeachers})
                     </span>
                   </div>
 
                   <div className="pt-2 border-t border-slate-200/60">
-                    <span className="text-[10px] text-slate-400 block">ክፍሎች / ላብራቶሪ</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {currentLang === 'om'
+                        ? 'Kutaalee / Laab'
+                        : currentLang === 'en'
+                        ? 'Classrooms / Labs'
+                        : 'ክፍሎች / ላብራቶሪ'}
+                    </span>
                     <span className="font-semibold text-slate-700">
-                      {school.classroomsCount} ክፍል / {school.labsCount} ላብ
+                      {school.classroomsCount} {currentLang === 'om' ? 'Kutaa' : 'ክፍል'} /{' '}
+                      {school.labsCount} {currentLang === 'om' ? 'Laab' : 'ላብ'}
                     </span>
                   </div>
 
                   <div className="pt-2 border-t border-slate-200/60">
-                    <span className="text-[10px] text-slate-400 block">ክፍለ ከተማ</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {currentLang === 'om'
+                        ? 'Kifle Ketemaa'
+                        : currentLang === 'en'
+                        ? 'Subcity'
+                        : 'ክፍለ ከተማ'}
+                    </span>
                     <span className="font-semibold text-slate-700">{school.subcity}</span>
                   </div>
                 </div>

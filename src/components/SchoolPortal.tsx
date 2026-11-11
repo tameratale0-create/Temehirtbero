@@ -46,7 +46,9 @@ import {
   X,
   Hash,
   Moon,
-  Lock
+  Lock,
+  ShieldAlert,
+  ArrowLeft
 } from 'lucide-react';
 import {
   Language,
@@ -56,10 +58,19 @@ import {
   SchoolReportSubmission,
   AppUserSession,
   SchoolStakeholder,
-  DeveloperPaymentReceipt
+  DeveloperPaymentReceipt,
+  StudentDisciplineReport
 } from '../types';
 import { translations } from '../data/translations';
 import { StorageService, SchoolUserCode } from '../utils/storage';
+import {
+  getLocalizedStakeholders,
+  getLocalizedSchoolCodes,
+  getLocalizedDisciplineList,
+  getLocalizedNightScheduleList,
+  getLocalizedAnnouncements,
+  getLocalizedHomeworkList
+} from '../utils/localizedData';
 import { OfflineSyncManager } from '../utils/offlineSync';
 import { StudentIDCardModal } from './StudentIDCardModal';
 import { SchoolLogo } from './SchoolLogo';
@@ -78,8 +89,10 @@ import { BureauTeacherAppraisalView } from './BureauTeacherAppraisalView';
 import { GradeApprovalWorkflowDesk } from './GradeApprovalWorkflowDesk';
 import { NightSchoolDesk } from './NightSchoolDesk';
 import { DeveloperPaymentModal } from './DeveloperPaymentModal';
+import { StudentDisciplineDesk } from './StudentDisciplineDesk';
 
 export type SchoolSubTab =
+  | 'overview'
   | 'stakeholders'
   | 'owner_board'
   | 'notices'
@@ -88,6 +101,7 @@ export type SchoolSubTab =
   | 'qr_attendance'
   | 'teacher_evaluations'
   | 'grade_workflow'
+  | 'student_discipline'
   | 'night_school'
   | 'finance'
   | 'registrar'
@@ -95,6 +109,191 @@ export type SchoolSubTab =
   | 'codes'
   | 'submit_report'
   | 'library_desk';
+
+export const getDeskInfo = (tab: SchoolSubTab, lang: Language = 'am') => {
+  switch (tab) {
+    case 'overview':
+      return {
+        titleAm: 'ዋናው የትምህርት ቤት ማውጫ',
+        titleEn: 'School Launchpad & All Desks',
+        titleOm: 'Baafata Hojii Manneen Barnootaa Hunda',
+        title: lang === 'om' ? 'Baafata Hojii Manneen Barnootaa Hunda' : lang === 'en' ? 'School Launchpad & All Desks' : 'ዋናው የትምህርት ቤት ማውጫ',
+        icon: '🏠',
+        gradient: 'from-slate-700 to-slate-900',
+        desc: lang === 'om' ? 'Baafata hojiilee fi kutaa mana barnootaa hundaa filachuu' : lang === 'en' ? 'Main school launchpad and desk navigator' : 'የትምህርት ቤቱን አጠቃላይ የስራ ክፍሎች ማውጫ እና መምረጫ'
+      };
+    case 'finance':
+      return {
+        titleAm: 'የሒሳብ ክፍል እና የወር ክፍያ',
+        titleEn: 'Finance & Tuition Fees',
+        titleOm: 'Kutaa Faayinaansii fi Kaffaltii Ji\'aa',
+        title: lang === 'om' ? 'Kutaa Faayinaansii fi Kaffaltii Ji\'aa' : lang === 'en' ? 'Finance & Tuition Fees' : 'የሒሳብ ክፍል እና የወር ክፍያ',
+        icon: '💵',
+        gradient: 'from-emerald-600 to-teal-800',
+        desc: lang === 'om' ? 'Kaffaltii ji\'aa barattootaa, lakkoofsa herrega baankii, mirkaneessa nagahee fi baasiiwwan' : lang === 'en' ? 'Tuition fee payments, bank accounts, receipts and school expenses' : 'የተማሪዎች ወርሃዊ ክፍያ፣ የባንክ አካውንቶች፣ ደረሰኝ ማረጋገጫ እና ወጪዎች'
+      };
+    case 'student_discipline':
+      return {
+        titleAm: 'የተማሪዎች ስነ-ምግባር ክትትልና መጠቆሚያ',
+        titleEn: 'Student Conduct & Misconduct Tips',
+        titleOm: 'Hordoffii Amalaa fi Qajeelfama Barattootaa',
+        title: lang === 'om' ? 'Hordoffii Amalaa fi Qajeelfama Barattootaa' : lang === 'en' ? 'Student Conduct & Misconduct Tips' : 'የተማሪዎች ስነ-ምግባር ክትትልና መጠቆሚያ',
+        icon: '🚨',
+        gradient: 'from-rose-600 to-red-800',
+        desc: lang === 'om' ? 'Gabaasa balleessaa amalaa, qajeelfama daarektaraa fi tarkaanfii fudhatame' : lang === 'en' ? 'Student misconduct tips, director decisions and disciplinary actions' : 'የስነ-ምግባር ጉድለት ጥቆማዎች፣ የዳይሬክተር ውሳኔና እርምጃ'
+      };
+    case 'grade_workflow':
+      return {
+        titleAm: 'የውጤት ማፅደቂያ ስርዓት (Grade Workflow)',
+        titleEn: 'Grade Approval Workflow (Teacher -> Homeroom -> Director)',
+        titleOm: 'Sirna Mirkaneessa Qabxii (Grade Approval Workflow)',
+        title: lang === 'om' ? 'Sirna Mirkaneessa Qabxii (Grade Approval Workflow)' : lang === 'en' ? 'Grade Approval Workflow (Teacher -> Homeroom -> Director)' : 'የውጤት ማፅደቂያ ስርዓት (Grade Workflow)',
+        icon: '📝',
+        gradient: 'from-teal-600 to-cyan-800',
+        desc: lang === 'om' ? 'Walitti-qabaa qabxii qormaataa, mirkaneessa barsiisaa, kutaadhaa fi chaappaa daarektaraa' : lang === 'en' ? 'Exam scores collection, teacher and homeroom verification, official director stamp' : 'የፈተና ውጤት መሰብሰቢያ፣ ማረጋገጫና ይፋዊ ማፅደቂያ ማህተም'
+      };
+    case 'roster':
+      return {
+        titleAm: 'የተማሪዎች ውጤት ዝርዝርና ካርድ',
+        titleEn: 'Student Roster & Report Cards',
+        titleOm: 'Tarree Barattootaa fi Kaardii Qabxii',
+        title: lang === 'om' ? 'Tarree Barattootaa fi Kaardii Qabxii' : lang === 'en' ? 'Student Roster & Report Cards' : 'የተማሪዎች ውጤት ዝርዝርና ካርድ',
+        icon: '👥',
+        gradient: 'from-blue-600 to-indigo-800',
+        desc: lang === 'om' ? 'Galmee qabxii barattoota guyyaa, sadarkaa fi maxxansa kaardii gabaasaa' : lang === 'en' ? 'Regular student score records, ranks and printable report cards' : 'የቀን ተማሪዎች ውጤት መዝገብ፣ ደረጃ፣ የውጤት ካርድ ማተሚያ'
+      };
+    case 'night_school':
+      return {
+        titleAm: 'የማታና ተከታታይ ትምህርት ፕሮግራም',
+        titleEn: 'Night & Extension School Program',
+        titleOm: 'Sagantaa Barnoota Galgalaa fi Dabalataa',
+        title: lang === 'om' ? 'Sagantaa Barnoota Galgalaa fi Dabalataa' : lang === 'en' ? 'Night & Extension School Program' : 'የማታና ተከታታይ ትምህርት ፕሮግራም',
+        icon: '🌙',
+        gradient: 'from-indigo-600 to-purple-800',
+        desc: lang === 'om' ? 'Galmee barattoota galgalaa, sagantaa daree fi hordoffii argamaa' : lang === 'en' ? 'Night school student admissions, timetable and attendance tracking' : 'የማታ ተማሪዎች ምዝገባ፣ የክፍለ-ጊዜ ሰሌዳና ማታ መገኘት'
+      };
+    case 'homework_attendance':
+      return {
+        titleAm: 'የቤት ስራ እና ዕለታዊ መገኘት',
+        titleEn: 'Homework & Daily Attendance',
+        titleOm: 'Hojii Manaa fi Argama Guyyaa',
+        title: lang === 'om' ? 'Hojii Manaa fi Argama Guyyaa' : lang === 'en' ? 'Homework & Daily Attendance' : 'የቤት ስራ እና ዕለታዊ መገኘት',
+        icon: '📚',
+        gradient: 'from-amber-600 to-orange-800',
+        desc: lang === 'om' ? 'Kenniinsa hojii manaa, deebii barattoonni erganii fi hordoffii argama daree' : lang === 'en' ? 'Class homework dispatch, student submissions and daily attendance' : 'የክፍል የቤት ስራ መስጫ፣ ተማሪዎች የላኩት መልስና ዕለታዊ መገኘት'
+      };
+    case 'teacher_training':
+      return {
+        titleAm: 'ከትምህርት ቢሮ የተላኩ ስልጠናዎች',
+        titleEn: 'Bureau Subject Training Dispatches',
+        titleOm: 'Leenjii Barsiisotaa Biiroo Barnootaatiin Ergame',
+        title: lang === 'om' ? 'Leenjii Barsiisotaa Biiroo Barnootaatiin Ergame' : lang === 'en' ? 'Bureau Subject Training Dispatches' : 'ከትምህርት ቢሮ የተላኩ ስልጠናዎች',
+        icon: '🎓',
+        gradient: 'from-emerald-700 to-teal-900',
+        desc: lang === 'om' ? 'Barruulee leenjii gosa barnootaa fi sadarkaa kutaatiin Biiroo Barnootaatiin ergaman' : lang === 'en' ? 'Subject and grade level training documents sent by Education Bureau' : 'በትምህርት ቢሮ የተላኩ የስልጠና ሰነዶች፣ አታችመንትና ፈተናዎች'
+      };
+    case 'qr_attendance':
+      return {
+        titleAm: 'የተማሪዎች መገኘት በ QR መዝገብ',
+        titleEn: 'Student QR Attendance Check-in',
+        titleOm: 'Hordoffii Argama Barattootaa QR Koodiin',
+        title: lang === 'om' ? 'Hordoffii Argama Barattootaa QR Koodiin' : lang === 'en' ? 'Student QR Attendance Check-in' : 'የተማሪዎች መገኘት በ QR መዝገብ',
+        icon: '📱',
+        gradient: 'from-teal-600 to-emerald-800',
+        desc: lang === 'om' ? 'QR koodii waraqaa eenyummaa iskaan gochuun galmee argama saffisaa' : lang === 'en' ? 'Fast daily check-in by scanning student ID badge QR codes' : 'የተማሪ መታወቂያ QR ስካን በማድረግ ፈጣን ዕለታዊ መገኘት'
+      };
+    case 'teacher_evaluations':
+      return {
+        titleAm: 'የመምህራን የማስተማር ብቃት ምዘና',
+        titleEn: 'Teacher Appraisal & Student Feedback',
+        titleOm: 'Madaallii Gahumsa Barsiisuu Barsiisotaa',
+        title: lang === 'om' ? 'Madaallii Gahumsa Barsiisuu Barsiisotaa' : lang === 'en' ? 'Teacher Appraisal & Student Feedback' : 'የመምህራን የማስተማር ብቃት ምዘና',
+        icon: '⭐',
+        gradient: 'from-amber-500 to-amber-700',
+        desc: lang === 'om' ? 'Madaallii barattootaa fi maatii, fi murtii hoggansa mana barnootaa' : lang === 'en' ? 'Student and parent teacher evaluations and appraisal reports' : 'የተማሪዎችና ወላጆች የመምህራን ግምገማ እና የቢሮ ውሳኔ'
+      };
+    case 'notices':
+      return {
+        titleAm: 'የትምህርት ቤት ማስታወቂያ ሰሌዳ',
+        titleEn: 'School Notice Board',
+        titleOm: 'Gabatee Beeksisa Mana Barnootaa',
+        title: lang === 'om' ? 'Gabatee Beeksisa Mana Barnootaa' : lang === 'en' ? 'School Notice Board' : 'የትምህርት ቤት ማስታወቂያ ሰሌዳ',
+        icon: '📢',
+        gradient: 'from-blue-600 to-sky-800',
+        desc: lang === 'om' ? 'Beeksisoota seera-qabeessa mana barnootaa, xalayaa fi waamicha maatii' : lang === 'en' ? 'Official school notices, circulars and parent assemblies' : 'የት/ቤት ይፋዊ ማስታወቂያዎች፣ ሰርኩላርና የወላጅ ጥሪ'
+      };
+    case 'stakeholders':
+      return {
+        titleAm: 'ባለድርሻ አካላት & የፋይዳ ማስረጃዎች',
+        titleEn: 'Staff Credentials & Fayda National ID',
+        titleOm: 'Qaamolee Qooda Fudhattootaa fi Ragaa Faayidaa',
+        title: lang === 'om' ? 'Qaamolee Qooda Fudhattootaa fi Ragaa Faayidaa' : lang === 'en' ? 'Staff Credentials & Fayda National ID' : 'ባለድርሻ አካላት & የፋይዳ ማስረጃዎች',
+        icon: '🎖️',
+        gradient: 'from-emerald-600 to-teal-900',
+        desc: lang === 'om' ? 'Waraqaa eenyummaa dijitaalaa, digirii fi eeyyama ogummaa hojjettootaa' : lang === 'en' ? 'Staff digital ID, degree credentials and professional licenses' : 'የመምህራንና ሰራተኞች ዲጂታል መታወቂያ፣ ዲግሪዎችና የሙያ ፈቃድ'
+      };
+    case 'registrar':
+      return {
+        titleAm: 'ሬጅስትራር፣ አዳዲስ ቅበላና መዋቅር',
+        titleEn: 'Registrar Admissions & Org Structure',
+        titleOm: 'Reejistiraara, Simannaa Haaraa fi Caasaa',
+        title: lang === 'om' ? 'Reejistiraara, Simannaa Haaraa fi Caasaa' : lang === 'en' ? 'Registrar Admissions & Org Structure' : 'ሬጅስትራር፣ አዳዲስ ቅበላና መዋቅር',
+        icon: '📋',
+        gradient: 'from-purple-600 to-violet-800',
+        desc: lang === 'om' ? 'Barattoota haaraa galmeessuu, daree ramaduu fi waraqaa eenyummaa qopheessuu' : lang === 'en' ? 'New student registration, section allocation and ID cards' : 'አዳዲስ ተማሪዎችን መመዝገብ፣ ክፍል መመደብና መታወቂያ ካርድ'
+      };
+    case 'codes':
+      return {
+        titleAm: 'የትምህርት ቤት መግቢያ ኮዶች',
+        titleEn: 'School User Access Codes',
+        titleOm: 'Koodii Seensaa Mana Barnootaa',
+        title: lang === 'om' ? 'Koodii Seensaa Mana Barnootaa' : lang === 'en' ? 'School User Access Codes' : 'የትምህርት ቤት መግቢያ ኮዶች',
+        icon: '🔑',
+        gradient: 'from-amber-600 to-yellow-800',
+        desc: lang === 'om' ? 'Koodii seensaa daarektaraa, barsiisaa, barataa fi maatiif maddisiisuu' : lang === 'en' ? 'Generate access codes for directors, teachers, students and parents' : 'ለዳይሬክተር፣ መምህር፣ ተማሪና ወላጅ የመግቢያ ኮዶች ማመንጫ'
+      };
+    case 'library_desk':
+      return {
+        titleAm: 'የትምህርት ቤት ቤተ-መጻሕፍት ክፍል',
+        titleEn: 'School Library & Book Lending',
+        titleOm: 'Kutaa Mana Dubbisaa (Library)',
+        title: lang === 'om' ? 'Kutaa Mana Dubbisaa (Library)' : lang === 'en' ? 'School Library & Book Lending' : 'የትምህርት ቤት ቤተ-መጻሕፍት ክፍል',
+        icon: '📖',
+        gradient: 'from-blue-700 to-indigo-900',
+        desc: lang === 'om' ? 'Kaataaloogii kitaabotaa, galmee ergifannaati fi hordoffii dubbisaa' : lang === 'en' ? 'Book catalog, lending records and reading engagement tracking' : 'የመጻሕፍት ካታሎግ፣ የተውሶ መዝገብና የንባብ ክትትል'
+      };
+    case 'submit_report':
+      return {
+        titleAm: 'ይፋዊ ሪፖርት ለትምህርት ቢሮ መላኪያ',
+        titleEn: 'Official Report Submission to Bureau',
+        titleOm: 'Gabaasa Seera-qabeessa Biiroof Erguu',
+        title: lang === 'om' ? 'Gabaasa Seera-qabeessa Biiroof Erguu' : lang === 'en' ? 'Official Report Submission to Bureau' : 'ይፋዊ ሪፖርት ለትምህርት ቢሮ መላኪያ',
+        icon: '📤',
+        gradient: 'from-emerald-700 to-green-900',
+        desc: lang === 'om' ? 'Qabxii barattootaa fi istaatiksii waggaa Biiroo Barnootaatiif erguu' : lang === 'en' ? 'Dispatch academic grades and annual school statistics to Bureau' : 'የትምህርት ዘመኑን የተማሪዎች ውጤትና ስታቲስቲክስ ለቢሮ መላኪያ'
+      };
+    case 'owner_board':
+      return {
+        titleAm: 'የትምህርት ቤት ቦርድ አመራር / ባለቤት',
+        titleEn: 'School Owner & Board Governance',
+        titleOm: 'Hoggansa Boordii Mana Barnootaa / Abbaa Qabeenyaa',
+        title: lang === 'om' ? 'Hoggansa Boordii Mana Barnootaa / Abbaa Qabeenyaa' : lang === 'en' ? 'School Owner & Board Governance' : 'የትምህርት ቤት ቦርድ አመራር / ባለቤት',
+        icon: '👑',
+        gradient: 'from-amber-600 to-orange-900',
+        desc: lang === 'om' ? 'Qaxara daarektaraa, murtiilee boordii fi hoggansa olaanaa' : lang === 'en' ? 'Director appointments, board decisions and executive governance' : 'የዳይሬክተር ቅጥር፣ የቦርድ ውሳኔዎችና የበላይ አመራር'
+      };
+    default:
+      return {
+        titleAm: 'የትምህርት ቤት ክፍል',
+        titleEn: 'School Desk',
+        titleOm: 'Kutaa Mana Barnootaa',
+        title: lang === 'om' ? 'Kutaa Mana Barnootaa' : lang === 'en' ? 'School Desk' : 'የትምህርት ቤት ክፍል',
+        icon: '🏫',
+        gradient: 'from-slate-600 to-slate-800',
+        desc: ''
+      };
+  }
+};
 
 interface SchoolPortalProps {
   currentLang: Language;
@@ -168,12 +367,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
     switch (currentUser?.role) {
       case 'school_owner':
         // 2. School Owner / Board Member: Executive Governance, Director Appointments, Notices, Stakeholders, Codes, Bureau Report
-        return ['owner_board', 'grade_workflow', 'night_school', 'notices', 'stakeholders', 'teacher_evaluations', 'qr_attendance', 'finance', 'codes', 'submit_report'];
+        return ['owner_board', 'grade_workflow', 'night_school', 'student_discipline', 'notices', 'stakeholders', 'teacher_evaluations', 'qr_attendance', 'finance', 'codes', 'submit_report'];
 
       case 'school_director':
         // 3. School Principal / Director: Full Supervisory Authority over all school branches
         return [
           'stakeholders',
+          'student_discipline',
           'grade_workflow',
           'night_school',
           'notices',
@@ -189,8 +389,8 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
         ];
 
       case 'teacher':
-        // 4. Teacher: Grade Workflow Submission to Homeroom, Homework, Bureau Subject Training, Student Roster (Marking), Notices, Credentials, QR Attendance, Teacher Evaluations
-        return ['grade_workflow', 'night_school', 'homework_attendance', 'teacher_training', 'teacher_evaluations', 'qr_attendance', 'roster', 'notices', 'stakeholders'];
+        // 4. Teacher: Grade Workflow Submission to Homeroom, Homework, Bureau Subject Training, Student Roster (Marking), Notices, Credentials, QR Attendance, Teacher Evaluations, Discipline Tips
+        return ['grade_workflow', 'student_discipline', 'night_school', 'homework_attendance', 'teacher_training', 'teacher_evaluations', 'qr_attendance', 'roster', 'notices', 'stakeholders'];
 
       case 'accountant':
         // 5. Accountant: ONLY Tuition Fee Collection, School Expenses, Financial Balance, Notices
@@ -198,19 +398,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
       case 'registrar':
         // 6. Registrar: Student Admissions, Student ID Cards, Student Roster, QR Attendance, Notices, Night School Desk
-        return ['registrar', 'night_school', 'roster', 'qr_attendance', 'notices'];
+        return ['registrar', 'night_school', 'student_discipline', 'roster', 'qr_attendance', 'notices'];
 
       case 'student':
-        return ['roster', 'night_school', 'homework_attendance', 'qr_attendance', 'notices'];
+        return ['roster', 'student_discipline', 'night_school', 'homework_attendance', 'qr_attendance', 'notices'];
 
       case 'parent':
-        return ['roster', 'night_school', 'homework_attendance', 'qr_attendance', 'notices', 'finance'];
+        return ['roster', 'student_discipline', 'night_school', 'homework_attendance', 'qr_attendance', 'notices', 'finance'];
 
       case 'bureau_admin':
       case 'bureau_staff':
         return [
           'stakeholders',
           'owner_board',
+          'student_discipline',
           'grade_workflow',
           'night_school',
           'notices',
@@ -228,6 +429,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       default:
         return [
           'stakeholders',
+          'student_discipline',
           'grade_workflow',
           'night_school',
           'notices',
@@ -246,30 +448,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
   const allowedTabs = getAllowedTabs();
 
   const getInitialTab = (): SchoolSubTab => {
-    if (isLibrarian) return 'library_desk';
-    if (currentUser?.role === 'school_owner') return 'owner_board';
-    if (currentUser?.role === 'accountant') return 'finance';
-    if (currentUser?.role === 'registrar') return 'registrar';
-    if (currentUser?.role === 'teacher') return 'homework_attendance';
-    return allowedTabs[0] || 'stakeholders';
+    if (targetSubTab && (targetSubTab === 'overview' || allowedTabs.includes(targetSubTab))) {
+      return targetSubTab;
+    }
+    return 'overview';
   };
 
   const [activeSubTab, setActiveSubTab] = useState<SchoolSubTab>(getInitialTab);
 
-  // When role changes, switch directly to initial authorized tab
+  // When role changes, ensure active tab is valid or return to overview
   useEffect(() => {
-    if (isLibrarian) {
-      setActiveSubTab('library_desk');
-    } else if (currentUser?.role === 'school_owner') {
-      setActiveSubTab('owner_board');
-    } else if (currentUser?.role === 'accountant') {
-      setActiveSubTab('finance');
-    } else if (currentUser?.role === 'registrar') {
-      setActiveSubTab('registrar');
-    } else if (currentUser?.role === 'teacher') {
-      setActiveSubTab('homework_attendance');
-    } else if (!allowedTabs.includes(activeSubTab)) {
-      setActiveSubTab(allowedTabs[0] || 'notices');
+    if (activeSubTab !== 'overview' && !allowedTabs.includes(activeSubTab)) {
+      setActiveSubTab('overview');
     }
   }, [currentUser?.role, currentUser?.accessCode, isLibrarian]);
 
@@ -583,8 +773,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
     setTimeout(() => setReportSubmittedSuccess(false), 4000);
   };
 
+  const localizedSchoolCodes = useMemo(
+    () => getLocalizedSchoolCodes(schoolCodes, currentLang),
+    [schoolCodes, currentLang]
+  );
+
   // Filter school codes for this school
-  const currentSchoolCodes = schoolCodes.filter(
+  const currentSchoolCodes = localizedSchoolCodes.filter(
     (c) => c.schoolId === currentSchool.id || c.schoolName === currentSchool.name
   );
 
@@ -759,7 +954,12 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       currentUser?.role === 'school_director' ||
       currentUser?.role === 'school_admin');
 
-  const currentSchoolStakeholders = stakeholders.filter(
+  const localizedStakeholders = useMemo(
+    () => getLocalizedStakeholders(stakeholders, currentLang),
+    [stakeholders, currentLang]
+  );
+
+  const currentSchoolStakeholders = localizedStakeholders.filter(
     (s) => s.schoolId === currentSchool.id || s.schoolName === currentSchool.name
   );
 
@@ -869,51 +1069,119 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       )}
 
       {/* =========================================================================
-          1. School Profile Banner: In Fullscreen or Desk-only mode, display a sleek compact bar
-             so the clicked desk gets maximum screen ("የተነካው በተን አክቲቪቲ ብቻ")
+          FOCUSED DESK MODE:
+          "የትምህርት ቤት ገፅ ላይ ማንኛውም በተን ሲነካ የተነካው በተን የሚሰራውን ሥራ ብቻ እስክሪን ላይ እንዲታይ አርገው"
+          When activeSubTab !== 'overview', display ONLY the Focused Desk Header Bar.
+          The clicked desk takes 100% of the screen ("የተነካው በተን የሚሰራውን ስራ ብቻ").
+          When activeSubTab === 'overview', display the School Profile Hero, License,
+          Role matrix, and the Department Launchpad Grid of all available buttons.
          ========================================================================= */}
-      {isFullscreen || isDeskOnly ? (
-        <div className="bg-gradient-to-r from-teal-950 via-emerald-950 to-slate-900 rounded-2xl px-4 py-2.5 text-white flex items-center justify-between border border-emerald-500/30 shadow-md">
-          <div className="flex items-center gap-3 min-w-0">
-            <SchoolLogo
-              logoUrl={currentSchool.logoUrl}
-              schoolName={currentSchool.name}
-              size={38}
-              shape="rounded"
-              className="ring-2 ring-amber-400/80 shadow-md shrink-0"
-            />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">{currentSchool.name}</h2>
-                <span className="hidden xs:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 shrink-0">
-                  {currentUser?.name || 'አስተዳዳሪ'}
-                </span>
+      {activeSubTab !== 'overview' ? (
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white rounded-2xl p-3 sm:p-4 shadow-lg border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 sticky top-1 z-30 backdrop-blur-md">
+          {/* Left: Back Button & Desk Indicator */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('overview')}
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95 shrink-0"
+              title={
+                currentLang === 'om'
+                  ? 'Gara Baafataatti Deebi’i'
+                  : currentLang === 'en'
+                  ? 'Back to Launchpad'
+                  : 'ወደ ዋናው ማውጫ ተመለስ'
+              }
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>
+                {currentLang === 'om'
+                  ? '« Gara Baafataatti Deebi’i'
+                  : currentLang === 'en'
+                  ? '« Back to Launchpad'
+                  : '« ወደ ዋናው ማውጫ ተመለስ'}
+              </span>
+            </button>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-emerald-500/30">
+              <span className="text-lg sm:text-xl shrink-0">
+                {getDeskInfo(activeSubTab, currentLang).icon}
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
+                    {currentLang === 'om'
+                      ? 'Hojii Filatame፦'
+                      : currentLang === 'en'
+                      ? 'Active Desk:'
+                      : 'የተከፈተው ስራ፦'}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-white truncate">
+                    {getDeskInfo(activeSubTab, currentLang).title}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-300 hidden md:block truncate max-w-md">
+                  {getDeskInfo(activeSubTab, currentLang).desc}
+                </p>
               </div>
-              <p className="text-[10px] text-emerald-300 font-medium truncate">
-                {currentSchool.subcity} · ኮድ፡ <span className="font-mono text-amber-300 font-bold">{currentSchool.accessCode}</span>
-              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+
+          {/* Right: Quick Switcher Dropdown, School Mini Badge & Controls */}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {/* Quick Switcher Dropdown */}
+            <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1">
+              <span className="text-[11px] font-semibold text-slate-400 hidden lg:inline">
+                {currentLang === 'om'
+                  ? 'Kutaa Jijjiiri:'
+                  : currentLang === 'en'
+                  ? 'Switch Desk:'
+                  : 'ክፍል ቀይር:'}
+              </span>
+              <select
+                value={activeSubTab}
+                onChange={(e) => setActiveSubTab(e.target.value as SchoolSubTab)}
+                className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer py-1 max-w-[150px] sm:max-w-[200px] truncate"
+              >
+                <option value="overview" className="bg-slate-900 text-emerald-300 font-bold">
+                  🏠{' '}
+                  {currentLang === 'om'
+                    ? 'Baafata Olaanaa (Launchpad)'
+                    : currentLang === 'en'
+                    ? 'Main Launchpad'
+                    : 'ዋናው ማውጫ (Launchpad)'}
+                </option>
+                {allowedTabs.map((tab) => {
+                  const desk = getDeskInfo(tab, currentLang);
+                  return (
+                    <option key={tab} value={tab} className="bg-slate-900 text-white">
+                      {desk.icon} {desk.title}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* School Mini Logo & Name */}
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-800/60 border border-slate-700/80">
+              <SchoolLogo
+                logoUrl={currentSchool.logoUrl}
+                schoolName={currentSchool.name}
+                size={26}
+                shape="rounded"
+                className="shrink-0"
+              />
+              <span className="text-xs font-semibold text-slate-200 truncate max-w-[120px]">{currentSchool.name}</span>
+            </div>
+
+            {/* Desk Fullscreen Toggle */}
             <button
               type="button"
               onClick={() => setIsDeskOnly(!isDeskOnly)}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-200 border border-slate-700 inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-xs"
-              title={isDeskOnly ? 'መደበኛ እይታ አሳይ' : 'ይህንን ክፍል ብቻ ሙሉ እስክሪን አድርግ'}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 cursor-pointer"
+              title={isDeskOnly ? 'መደበኛ እይታ' : 'ክፍሉን አጉላ'}
             >
-              {isDeskOnly ? <Minimize2 className="w-3.5 h-3.5 text-amber-400" /> : <Maximize2 className="w-3.5 h-3.5 text-emerald-400" />}
-              <span className="hidden sm:inline">{isDeskOnly ? 'መደበኛ እይታ' : 'ክፍሉን አጉላ'}</span>
+              {isDeskOnly ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4 text-emerald-400" />}
             </button>
-            {!isBureauRole && (
-              <button
-                type="button"
-                onClick={() => setShowLogoModal(true)}
-                className="p-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs border border-amber-400/30 cursor-pointer"
-                title="አርማ ጫን"
-              >
-                <Camera className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
         </div>
       ) : (
@@ -1202,13 +1470,229 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           <span>የስራ ድርሻና መዋቅር መመሪያ (Role Matrix)</span>
         </button>
       </div>
+
+      {/* =========================================================================
+          Department Launchpad Grid (Shown on Overview):
+          "የትምህርት ቤት ገፅ ላይ ማንኛውም በተን ሲነካ የተነካው በተን የሚሰራውን ሥራ ብቻ እስክሪን ላይ እንዲታይ አርገው"
+         ========================================================================= */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 bg-emerald-100 text-emerald-800 rounded-xl text-lg">🎯</span>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                {currentLang === 'om'
+                  ? 'Kutaalee Hojii Mana Barumsaa (Department Work Desks)'
+                  : currentLang === 'en'
+                  ? 'School Department Work Desks'
+                  : 'የትምህርት ቤቱ የስራ ክፍሎች ማውጫ (Department Work Desks)'}
+              </h3>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              {currentLang === 'om'
+                ? 'Kutaalee hojii armaan gadii keessaa kamiyyuu cuqaasuun hojii san qofa ifatti hojjedhaa.'
+                : currentLang === 'en'
+                ? 'Click any department button to work exclusively on that desk.'
+                : 'ከታች ካሉት የስራ ክፍሎች ማንኛውንም በተን ሲነኩ፣ የተነካው የስራ ክፍል ብቻ እስክሪን ላይ ይቀርብልዎታል።'}
+            </p>
+          </div>
+          <div className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl self-start sm:self-auto border border-slate-200">
+            {currentLang === 'om'
+              ? 'Kutaalee Eeyyamaman፦ '
+              : currentLang === 'en'
+              ? 'Allowed Desks: '
+              : 'የተፈቀዱ ክፍሎች፦ '}
+            <span className="text-emerald-700 font-black">{allowedTabs.length}</span>
+          </div>
+        </div>
+
+        {/* Department Buttons Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {allowedTabs.map((tab) => {
+            const info = getDeskInfo(tab, currentLang);
+            let badgeText = '';
+            if (tab === 'roster') {
+              badgeText =
+                currentLang === 'om'
+                  ? `${students.length} barattoota`
+                  : currentLang === 'en'
+                  ? `${students.length} students`
+                  : `${students.length} ተማሪዎች`;
+            } else if (tab === 'finance') {
+              const count = StorageService.getSchoolBankAccounts(currentSchool.id).length;
+              badgeText =
+                currentLang === 'om'
+                  ? `${count} herreega baankii`
+                  : currentLang === 'en'
+                  ? `${count} bank accounts`
+                  : `${count} የባንክ አካውንቶች`;
+            } else if (tab === 'student_discipline') {
+              const pendingCount = StorageService.getDisciplineReports(currentSchool.id).filter(
+                (r) => r.status === 'pending_review'
+              ).length;
+              const totalCount = StorageService.getDisciplineReports(currentSchool.id).length;
+              badgeText =
+                pendingCount > 0
+                  ? currentLang === 'om'
+                    ? `${pendingCount} himannaa haaraa`
+                    : currentLang === 'en'
+                    ? `${pendingCount} new incidents`
+                    : `${pendingCount} አዲስ ጥቆማ`
+                  : currentLang === 'om'
+                  ? `${totalCount} galmeewwan`
+                  : currentLang === 'en'
+                  ? `${totalCount} records`
+                  : `${totalCount} መዛግብት`;
+            } else if (tab === 'night_school') {
+              badgeText =
+                currentLang === 'om'
+                  ? `${nightStudentsCount} barattoota galgalaa`
+                  : currentLang === 'en'
+                  ? `${nightStudentsCount} night students`
+                  : `${nightStudentsCount} የማታ ተማሪዎች`;
+            } else if (tab === 'notices') {
+              const count = StorageService.getAnnouncements(currentSchool.id).length;
+              badgeText =
+                currentLang === 'om'
+                  ? `${count} beeksisoota`
+                  : currentLang === 'en'
+                  ? `${count} notices`
+                  : `${count} ማስታወቂያዎች`;
+            } else if (tab === 'stakeholders') {
+              badgeText =
+                currentLang === 'om'
+                  ? `${stakeholders.length} hojjettoota`
+                  : currentLang === 'en'
+                  ? `${stakeholders.length} staff members`
+                  : `${stakeholders.length} ሰራተኞች`;
+            } else if (tab === 'codes') {
+              badgeText =
+                currentLang === 'om'
+                  ? `${currentSchoolCodes.length} koodii seensaa`
+                  : currentLang === 'en'
+                  ? `${currentSchoolCodes.length} access codes`
+                  : `${currentSchoolCodes.length} የመግቢያ ኮዶች`;
+            } else if (tab === 'grade_workflow') {
+              const count = StorageService.getGradeWorkflows(currentSchool.id).length;
+              badgeText =
+                currentLang === 'om'
+                  ? `${count} galmee qabxii`
+                  : currentLang === 'en'
+                  ? `${count} grade workflows`
+                  : `${count} የውጤት ፋይሎች`;
+            } else if (tab === 'teacher_training') {
+              const count = StorageService.getTrainingMaterials().length;
+              badgeText =
+                currentLang === 'om'
+                  ? `${count} moojuloota leenjii`
+                  : currentLang === 'en'
+                  ? `${count} training modules`
+                  : `${count} የስልጠና ሞጁሎች`;
+            } else if (tab === 'homework_attendance') {
+              const count = StorageService.getHomework(currentSchool.id).length;
+              badgeText =
+                currentLang === 'om'
+                  ? `${count} hojii manaa`
+                  : currentLang === 'en'
+                  ? `${count} homework tasks`
+                  : `${count} የቤት ስራዎች`;
+            } else if (tab === 'qr_attendance') {
+              badgeText =
+                currentLang === 'om'
+                  ? 'Galmee QR'
+                  : currentLang === 'en'
+                  ? 'QR Records'
+                  : 'የ QR መዝገብ';
+            } else if (tab === 'teacher_evaluations') {
+              badgeText =
+                currentLang === 'om'
+                  ? 'Madaallii Barsiisotaa'
+                  : currentLang === 'en'
+                  ? 'Teacher Evals'
+                  : 'የመምህራን ምዘና';
+            } else if (tab === 'registrar') {
+              badgeText =
+                currentLang === 'om'
+                  ? 'Simannaa & Caasaa'
+                  : currentLang === 'en'
+                  ? 'Admissions'
+                  : 'ቅበላ & መዋቅር';
+            } else if (tab === 'library_desk') {
+              const count = StorageService.getLibraryBooks(currentSchool.id).length;
+              badgeText =
+                currentLang === 'om'
+                  ? `${count} kitaabota`
+                  : currentLang === 'en'
+                  ? `${count} books`
+                  : `${count} መጻሕፍት`;
+            } else if (tab === 'submit_report') {
+              badgeText =
+                currentLang === 'om'
+                  ? 'Gabaasa Seera-qabeessa'
+                  : currentLang === 'en'
+                  ? 'Official Report'
+                  : 'ይፋዊ ሪፖርት';
+            } else if (tab === 'owner_board') {
+              badgeText =
+                currentLang === 'om'
+                  ? 'Hoggansa Boordii'
+                  : currentLang === 'en'
+                  ? 'Board Leadership'
+                  : 'የቦርድ አመራር';
+            }
+
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveSubTab(tab)}
+                className="group text-left p-4 sm:p-5 rounded-2xl border-2 border-slate-200/90 hover:border-emerald-600 bg-white hover:bg-emerald-50/30 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-2xl sm:text-3xl p-2.5 rounded-2xl bg-slate-100 group-hover:bg-white group-hover:scale-110 transition-transform shadow-2xs border border-slate-200/60">
+                      {info.icon}
+                    </span>
+                    {badgeText && (
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 group-hover:bg-emerald-100 text-slate-700 group-hover:text-emerald-900 border border-slate-200 group-hover:border-emerald-300">
+                        {badgeText}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-black text-slate-900 group-hover:text-emerald-950 transition-colors">
+                      {info.title}
+                    </h4>
+                    <p className="text-[11px] font-medium text-slate-400 group-hover:text-slate-600 mt-0.5 truncate">
+                      {currentLang === 'om' ? info.titleAm : info.titleEn}
+                    </p>
+                    <p className="text-xs text-slate-600 group-hover:text-slate-700 mt-2 line-clamp-2 leading-relaxed">
+                      {info.desc}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 group-hover:border-emerald-200 flex items-center justify-between text-xs font-black text-emerald-700 group-hover:text-emerald-800">
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Hojicha Bani'
+                      : currentLang === 'en'
+                      ? 'Open Desk'
+                      : 'የክፍሉን ስራ ክፈት'}
+                  </span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
         </>
       )}
 
-      {/* =========================================================================
-          3. Internal Navigation Sub-Tabs (Strictly Filtered by Logged-in Worker Role)
-             "አንዱ የአንዱን ስራ ሳያይ ሁሉም የየራሳቸውን ስራ እንዲሰሩ"
-         ========================================================================= */}
+      {/* Legacy sub-tabs bar hidden in favor of Focused Desk Bar and Launchpad Grid */}
+      {false && (
+      <>
       {/* Mobile-Only Desk Quick Selector Dropdown (sm:hidden) */}
       <div className="sm:hidden bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 shrink-0">
@@ -1525,6 +2009,37 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           </button>
         )}
 
+        {/* Tab: Student Misconduct Tip-off & Discipline Desk (የስነ-ምግባር ጥቆማ & ዲሲፕሊን) */}
+        {allowedTabs.includes('student_discipline') && (
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('student_discipline')}
+            className={`shrink-0 py-2 sm:py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
+              activeSubTab === 'student_discipline'
+                ? 'bg-rose-800 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4 shrink-0 text-amber-400" />
+            <span className="truncate">
+              {currentUser?.role === 'school_director' || currentUser?.role === 'school_owner'
+                ? 'ስነ-ምግባር & ባህሪ መዝገብ (Conduct Log)'
+                : currentUser?.role === 'teacher'
+                ? 'የስነ-ምግባር ክስተት መዝገብ (Conduct Log)'
+                : 'የስነ-ምግባር ጥቆማ (ለዳይሬክተር)'}
+            </span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeSubTab === 'student_discipline' ? 'bg-rose-950 text-white' : 'bg-rose-100 text-rose-800'
+              }`}
+            >
+              {StorageService.getDisciplineReports(currentSchool.id).filter((r) => r.status === 'pending_review').length > 0
+                ? `${StorageService.getDisciplineReports(currentSchool.id).filter((r) => r.status === 'pending_review').length} አዲስ`
+                : StorageService.getDisciplineReports(currentSchool.id).length}
+            </span>
+          </button>
+        )}
+
         {/* Tab: Night Extension School Desk (የማታ ትምህርት ፕሮግራም ዴስክ) */}
         {allowedTabs.includes('night_school') && (
           <button
@@ -1625,6 +2140,8 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           <span className="hidden sm:inline">{isDeskOnly ? 'መደበኛ እይታ' : 'የክፍሉ ሙሉ እስክሪን'}</span>
         </button>
       </div>
+      </>
+      )}
 
       {/* =========================================================================
           3. Sub-Tab 1: Student Roster (Mobile Cards + Desktop Table)
@@ -3072,6 +3589,19 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           currentUser={currentUser}
           currentLang={currentLang}
           onOpenReportCard={(st) => setSelectedStudentForCard(st)}
+        />
+      )}
+
+      {/* =========================================================================
+          5j. Sub-Tab: Student Misconduct Tip-off & Director Discipline Desk
+          ተማሪዎች እና ወላጆች ስነ ምግባር ችግር ያለባቸውን ተማሪዎች ለዳይሬክተር መጠቆሚያ + የክፍል ተማሪዎች ዝርዝር
+         ========================================================================= */}
+      {activeSubTab === 'student_discipline' && (
+        <StudentDisciplineDesk
+          school={currentSchool}
+          students={students}
+          currentUser={currentUser}
+          currentLang={currentLang}
         />
       )}
 

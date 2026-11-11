@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Bell,
   Plus,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { SchoolAnnouncement, AppUserSession, Language } from '../types';
 import { StorageService } from '../utils/storage';
+import { getLocalizedAnnouncements } from '../utils/localizedData';
 
 interface SchoolNoticeBoardProps {
   schoolId: string;
@@ -100,20 +101,27 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
     }
   };
 
+  const localizedAnnouncements = useMemo(
+    () => getLocalizedAnnouncements(announcements, currentLang),
+    [announcements, currentLang]
+  );
+
   // Filter announcements
-  const filteredAnnouncements = announcements.filter((a) => {
-    const matchAudience =
-      selectedAudience === 'all' ||
-      a.targetAudience === 'all' ||
-      a.targetAudience === selectedAudience;
-    const matchCategory = selectedCategory === 'all' || a.category === selectedCategory;
-    const matchSearch =
-      searchQuery.trim() === '' ||
-      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.authorName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchAudience && matchCategory && matchSearch;
-  });
+  const filteredAnnouncements = useMemo(() => {
+    return localizedAnnouncements.filter((a) => {
+      const matchAudience =
+        selectedAudience === 'all' ||
+        a.targetAudience === 'all' ||
+        a.targetAudience === selectedAudience;
+      const matchCategory = selectedCategory === 'all' || a.category === selectedCategory;
+      const matchSearch =
+        searchQuery.trim() === '' ||
+        a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.authorName.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchAudience && matchCategory && matchSearch;
+    });
+  }, [localizedAnnouncements, selectedAudience, selectedCategory, searchQuery]);
 
   const getAuthorBadge = (role: SchoolAnnouncement['authorRole']) => {
     switch (role) {

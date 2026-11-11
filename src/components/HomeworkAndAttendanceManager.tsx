@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   BookOpen,
   Plus,
@@ -32,6 +32,7 @@ import {
   AppUserSession
 } from '../types';
 import { StorageService } from '../utils/storage';
+import { getLocalizedHomeworkList } from '../utils/localizedData';
 import { OfflineSyncManager } from '../utils/offlineSync';
 import { TeacherSubjectTrainingDesk } from './TeacherSubjectTrainingDesk';
 import { StudentQRAttendanceModal } from './StudentQRAttendanceModal';
@@ -209,7 +210,12 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
   // "አንዱ የአንዱን ስራ ሳያይ ሁሉም የየራሳቸውን ስራ እንዲሰሩ"
   const isTeacherUser = currentUser?.role === 'teacher';
 
-  const visibleAssignments = assignments.filter((hw) => {
+  const localizedAssignments = useMemo(
+    () => getLocalizedHomeworkList(assignments, currentLang),
+    [assignments, currentLang]
+  );
+
+  const visibleAssignments = localizedAssignments.filter((hw: HomeworkAssignment) => {
     if (!isTeacherUser) return true; // Director and Bureau admin can oversee all
     return (
       hw.teacherName === currentUser?.name ||
@@ -389,7 +395,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {visibleAssignments.map((hw) => {
+              {visibleAssignments.map((hw: HomeworkAssignment) => {
                 const hwSubs = submissions.filter((s) => s.assignmentId === hw.id);
                 const gradedCount = hwSubs.filter((s) => s.status === 'graded').length;
                 const canDelete = !isBureauRole && (!isTeacherUser || hw.teacherName === currentUser?.name);

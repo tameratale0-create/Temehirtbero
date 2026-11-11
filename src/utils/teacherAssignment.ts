@@ -130,13 +130,34 @@ export function getTeacherAssignment(currentUser: AppUserSession | null): Teache
     }
   }
 
-  // Parse subject from rawAssigned
+  // Parse subject from rawAssigned (support multiple subjects and multiple grades)
+  const detectedSubjectsList: string[] = [];
   if (rawAssigned) {
+    // Check all known canonical subjects
+    CANONICAL_SUBJECTS.forEach((canon) => {
+      const keyword = canon.split(' ')[0].toLowerCase();
+      const amKeyword = canon.includes('(') ? canon.split('(')[1].replace(')', '').trim().toLowerCase() : '';
+      const rawLower = rawAssigned.toLowerCase();
+      if (rawLower.includes(keyword) || (amKeyword && rawLower.includes(amKeyword))) {
+        if (!detectedSubjectsList.includes(canon)) {
+          detectedSubjectsList.push(canon);
+        }
+      }
+    });
+
     detectedSubject = normalizeSubject(rawAssigned);
+    if (!detectedSubjectsList.includes(detectedSubject)) {
+      detectedSubjectsList.unshift(detectedSubject);
+    }
+
     const parsedGrades = parseGradeRange(rawAssigned);
     if (parsedGrades.length > 0) {
       detectedGrades = parsedGrades;
     }
+  }
+
+  if (detectedSubjectsList.length === 0) {
+    detectedSubjectsList.push(detectedSubject);
   }
 
   const primaryGrade = detectedGrades[0] || 10;
@@ -147,7 +168,7 @@ export function getTeacherAssignment(currentUser: AppUserSession | null): Teache
 
   return {
     primarySubject: detectedSubject,
-    subjects: [detectedSubject],
+    subjects: detectedSubjectsList,
     primaryGrade,
     grades: detectedGrades,
     primarySubjectLabel: detectedSubject,
@@ -158,36 +179,76 @@ export function getTeacherAssignment(currentUser: AppUserSession | null): Teache
 
 /**
  * Evaluates whether a training material is relevant for the teacher's subject and grade level.
+ * Support multiple subjects and multiple grades:
+ * "ትምህርት ቢሮ ለየትኛው የክፍል ደረጃ እና የትምህርት አይነት መርጦ ይጪናል መምህሩ እንደሚያስተምረው የትምህርት አይነት እና የትምህርት ደረጃ ይደረሰዋል የትምህርት አይነትና ደረጃ ከአንድ በላይ ሊሆን ይችላል"
  */
 export function isTrainingMaterialForTeacher(
   material: TrainingMaterial,
   assignment: TeacherAssignment
 ): boolean {
   // 1. Subject match:
-  // Material matches if it belongs to the teacher's subject OR is general pedagogy/CPD
-  const matSubjectLower = material.subject.toLowerCase();
-  const teacherSubjectLower = assignment.primarySubject.toLowerCase();
+  // Collect all material subjects
+  const matSubjects: string[] = [];
+  if (material.targetSubjects && material.targetSubjects.length > 0) {
+    matSubjects.push(...material.targetSubjects);
+  }
+  if (material.subject) {
+    matSubjects.push(material.subject);
+  }
 
+  // Collect all teacher subjects
+  const teacherSubjects: string[] = [];
+  if (assignment.subjects && assignment.subjects.length > 0) {
+    teacherSubjects.push(...assignment.subjects);
+  }
+  if (assignment.primarySubject && !teacherSubjects.includes(assignment.primarySubject)) {
+    teacherSubjects.push(assignment.primarySubject);
+  }
+
+  // Check if any subject is General Pedagogy / CPD (which applies to all teachers)
   const isGeneralPedagogy =
-    matSubjectLower.includes('pedagogy') ||
-    matSubjectLower.includes('cpd') ||
-    matSubjectLower.includes('ስነ-ዘዴ') ||
-    matSubjectLower.includes('curriculum') ||
-    matSubjectLower.includes('ስርዓተ-ትምህርት') ||
-    material.tags.some((t) => t.toLowerCase().includes('pedagogy'));
+    matSubjects.some((s) => {
+      const lower = s.toLowerCase();
+      return (
+        lower.includes('pedagogy') ||
+        lower.includes('cpd') ||
+        lower.includes('ስነ-ዘዴ') ||
+        lower.includes('curriculum') ||
+        lower.includes('ስርዓተ-ትምህርት')
+      );
+    }) || material.tags.some((t) => t.toLowerCase().includes('pedagogy'));
 
-  const matchesSubject =
-    isGeneralPedagogy ||
-    matSubjectLower.includes(teacherSubjectLower.split(' ')[0].toLowerCase()) ||
-    teacherSubjectLower.includes(matSubjectLower.split(' ')[0].toLowerCase());
+  let matchesSubject = isGeneralPedagogy;
+
+  if (!matchesSubject) {
+    matchesSubject = matSubjects.some((matSub) => {
+      const matSubNorm = normalizeSubject(matSub).toLowerCase();
+      const matKeyword = matSubNorm.split(' ')[0].toLowerCase();
+      return teacherSubjects.some((tSub) => {
+        const tSubNorm = normalizeSubject(tSub).toLowerCase();
+        const tKeyword = tSubNorm.split(' ')[0].toLowerCase();
+        return (
+          matSubNorm.includes(tKeyword) ||
+          tSubNorm.includes(matKeyword) ||
+          matKeyword === tKeyword
+        );
+      });
+    });
+  }
 
   if (!matchesSubject) {
     return false;
   }
 
   // 2. Grade Level match:
-  // Material grade level range must overlap with at least one grade the teacher teaches
-  const materialGrades = parseGradeRange(material.gradeLevels);
+  // Material grade level range or explicit targetGradeList must overlap with at least one grade the teacher teaches
+  const materialGrades: number[] = [];
+  if (material.targetGradeList && material.targetGradeList.length > 0) {
+    materialGrades.push(...material.targetGradeList);
+  } else {
+    materialGrades.push(...parseGradeRange(material.gradeLevels));
+  }
+
   const matchesGrade = assignment.grades.some((g) => materialGrades.includes(g));
 
   return matchesGrade;

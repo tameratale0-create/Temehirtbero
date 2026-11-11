@@ -14,13 +14,18 @@ import {
   Building,
   ShieldCheck,
   Info,
-  Award
+  Award,
+  Paperclip,
+  Upload,
+  CheckCircle2
 } from 'lucide-react';
-import { Language, TrainingMaterial, AppUserSession } from '../types';
+import { Language, TrainingMaterial, TrainingAttachment, AppUserSession } from '../types';
 import { translations } from '../data/translations';
 import { StorageService } from '../utils/storage';
 import { OfflineSyncManager } from '../utils/offlineSync';
 import { AIExamGeneratorModal } from './AIExamGeneratorModal';
+import { TrainingAttachmentViewerModal } from './TrainingAttachmentViewerModal';
+import { UploadTrainingAttachmentModal } from './UploadTrainingAttachmentModal';
 import { getTeacherAssignment, isTrainingMaterialForTeacher } from '../utils/teacherAssignment';
 
 interface TrainingMaterialsHubProps {
@@ -53,14 +58,41 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
   const [showAIExamModal, setShowAIExamModal] = useState(false);
   const [selectedMaterialForAIExam, setSelectedMaterialForAIExam] = useState<string | undefined>(undefined);
 
-  // New training dispatch form state
+  // Attachment Viewer & Uploader Modals
+  const [viewerAttachment, setViewerAttachment] = useState<TrainingAttachment | null>(null);
+  const [viewerMaterialTitle, setViewerMaterialTitle] = useState<string>('');
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [uploadTargetMaterialId, setUploadTargetMaterialId] = useState<string | undefined>(undefined);
+
+  // New training dispatch form state (supports multiple subjects and multiple grade levels)
   const [newTitle, setNewTitle] = useState('');
-  const [newSubject, setNewSubject] = useState('Mathematics (ሂሳብ)');
-  const [newGradeLevels, setNewGradeLevels] = useState('Grades 7 - 12');
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(['Mathematics (ሂሳብ)']);
+  const [selectedGradeList, setSelectedGradeList] = useState<number[]>([9, 10]);
   const [newDepartment, setNewDepartment] = useState('ስርዓተ-ትምህርትና የመምህራን ልማት (Curriculum Dept)');
   const [newReadTime, setNewReadTime] = useState(15);
   const [newSummary, setNewSummary] = useState('');
   const [newFullContent, setNewFullContent] = useState('');
+  const [dispatchSuccessToast, setDispatchSuccessToast] = useState<string | null>(null);
+  const [dispatchFile, setDispatchFile] = useState<{
+    name: string;
+    type: 'pdf' | 'docx' | 'doc' | 'txt' | 'image' | 'other';
+    size: string;
+    text?: string;
+    dataUrl?: string;
+  } | null>(null);
+
+  const availableSubjectsList = [
+    'Mathematics (ሂሳብ)',
+    'Afaan Oromoo (ኦሮሚኛ)',
+    'English (እንግሊዝኛ)',
+    'Physics & Chemistry (ሳይንስ)',
+    'Biology (ባዮሎጂ)',
+    'Citizenship & Social Studies (ስነ-ዜጋ)',
+    'Assessment & Pedagogy (ምዘና እና ስነ-ዘዴ)',
+    'Educational Technology & ICT (የትምህርት ቴክኖሎጂ)'
+  ];
+
+  const availableGradesList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   const subjectsList = [
     'all',
@@ -104,22 +136,63 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const attachmentsList: TrainingAttachment[] = dispatchFile
+      ? [
+          {
+            id: `att-${Date.now()}`,
+            fileName: dispatchFile.name,
+            fileType: dispatchFile.type,
+            fileSize: dispatchFile.size,
+            textContent: dispatchFile.text,
+            dataUrl: dispatchFile.dataUrl,
+            uploadedAt: new Date().toISOString(),
+            uploadedBy: currentUser?.name || newDepartment
+          }
+        ]
+      : [];
+
+    const finalSubjects = selectedSubjects.length > 0 ? selectedSubjects : ['Mathematics (ሂሳብ)'];
+    const finalGrades = selectedGradeList.length > 0 ? selectedGradeList : [9, 10];
+    const gradeRangeStr =
+      finalGrades.length === 1
+        ? `Grade ${finalGrades[0]}`
+        : finalGrades.length === 12
+        ? 'All Grades (1 - 12)'
+        : `Grades ${Math.min(...finalGrades)} - ${Math.max(...finalGrades)}`;
+
     const newMaterial: TrainingMaterial = {
       id: `mat-${Date.now()}`,
-      title: newTitle,
-      subject: newSubject,
-      gradeLevels: newGradeLevels,
+      title: newTitle.trim(),
+      subject: finalSubjects.join(', '),
+      targetSubjects: finalSubjects,
+      gradeLevels: gradeRangeStr,
+      targetGradeList: finalGrades,
       authorDepartment: newDepartment,
       uploadedAt: new Date().toISOString().split('T')[0],
       readTimeMinutes: Number(newReadTime),
-      tags: [newSubject.split(' ')[0], 'Pedagogy', 'Curriculum'],
+      tags: [...finalSubjects.map((s) => s.split(' ')[0]), 'Pedagogy', 'Curriculum', 'Bureau Dispatch'],
       downloadCount: 1,
-      summary: newSummary,
-      fullContent: newFullContent
+      summary: newSummary.trim(),
+      fullContent: newFullContent.trim(),
+      attachments: attachmentsList
     };
 
     const updated = StorageService.addTrainingMaterial(newMaterial);
     onMaterialsChange(updated);
+
+    // Create a broadcast message notification for all matching teachers
+    // "ትምህርት ቢሮ የጪነው ፅሁፍ የሚመለከተው ከሆነ ሜሴጅ ይደረሰዋል ፅሁፍን አውርዶ ( ዳውንሎድ ) አርጉ ያጠናል"
+    StorageService.addTeacherTrainingNotification({
+      id: `notif-train-${Date.now()}`,
+      materialId: newMaterial.id,
+      materialTitle: newMaterial.title,
+      subject: newMaterial.subject,
+      gradeLevels: newMaterial.gradeLevels,
+      authorDepartment: newDepartment,
+      uploadedAt: new Date().toISOString(),
+      message: `አዲስ ይፋዊ የስልጠና ጽሑፍ ከትምህርት ቢሮ ተልኮሎታል! የትምህርት አይነት: ${newMaterial.subject} · የክፍል ደረጃ: ${newMaterial.gradeLevels}። እባክዎ ሰነዱን አውርደው (ዳውንሎድ) ያጥኑ።`,
+      isRead: false
+    });
 
     // Enqueue training material for offline sync
     OfflineSyncManager.enqueue(
@@ -135,15 +208,40 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
     );
 
     setShowDispatchModal(false);
+    setDispatchSuccessToast(`የስልጠና ጽሑፉ ለተመረጡት የትምህርት አይነቶች (${finalSubjects.join(', ')}) እና የክፍል ደረጃዎች (${gradeRangeStr}) መምህራን በስኬት ተልኳል! የማሳወቂያ መልእክትም ደርሷቸዋል።`);
 
     // Reset
     setNewTitle('');
+    setSelectedSubjects(['Mathematics (ሂሳብ)']);
+    setSelectedGradeList([9, 10]);
     setNewSummary('');
     setNewFullContent('');
+    setDispatchFile(null);
+
+    setTimeout(() => {
+      setDispatchSuccessToast(null);
+    }, 6000);
   };
 
   return (
     <div className="space-y-6">
+      {/* Toast feedback for successful dispatch */}
+      {dispatchSuccessToast && (
+        <div className="bg-emerald-900 text-emerald-100 p-4 rounded-2xl border border-emerald-400 flex items-center justify-between gap-3 shadow-lg animate-in fade-in duration-300">
+          <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold">
+            <CheckCircle2 className="w-5 h-5 text-emerald-300 shrink-0" />
+            <span>{dispatchSuccessToast}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDispatchSuccessToast(null)}
+            className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-1 rounded-lg cursor-pointer"
+          >
+            ዝጋ
+          </button>
+        </div>
+      )}
+
       {/* =========================================================================
           🌟 TRAINING TOP ACTION TOOLBAR: All actions unified at the top!
           "ሁሉም በየራሱ ገፅ ላይ ያሉ በተን ሳይዘበራረቅ ከላይ እንዲቀመጥ"
@@ -183,6 +281,18 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
                 </button>
 
                 <button
+                  type="button"
+                  onClick={() => {
+                    setUploadTargetMaterialId(undefined);
+                    setShowUploadModal(true);
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer border border-amber-300"
+                >
+                  <Upload className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                  <span>+ የስልጠና ጽሑፍ / አታችመንት ጫን</span>
+                </button>
+
+                <button
                   onClick={() => setShowDispatchModal(true)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
                 >
@@ -191,9 +301,22 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-bold">
-                <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
-                <span>ፈተና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው።</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadTargetMaterialId(undefined);
+                    setShowUploadModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer border border-amber-300"
+                >
+                  <Upload className="w-3.5 h-3.5 text-slate-950 stroke-[2.5]" />
+                  <span>+ የስልጠና ጽሑፍ ጫን</span>
+                </button>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-bold">
+                  <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>ፈተና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው።</span>
+                </div>
               </div>
             )}
           </div>
@@ -312,6 +435,39 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
                 {mat.summary}
               </p>
 
+              {/* Attached Documents */}
+              {mat.attachments && mat.attachments.length > 0 && (
+                <div className="mt-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-emerald-950">
+                    <span className="flex items-center gap-1">
+                      <Paperclip className="w-3 h-3 text-emerald-700" />
+                      <span>የተያያዙ ጽሑፎች ({mat.attachments.length})</span>
+                    </span>
+                    <span className="text-emerald-700 font-normal">ክፈት</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {mat.attachments.map((att) => (
+                      <button
+                        key={att.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewerAttachment(att);
+                          setViewerMaterialTitle(mat.title);
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-emerald-300 text-slate-800 text-[10px] font-medium hover:bg-emerald-100 hover:border-emerald-500 transition-colors cursor-pointer group shadow-2xs"
+                        title={`${att.fileName} - ለማንበብ ይጫኑ`}
+                      >
+                        <span className="font-bold text-[8px] uppercase px-1 rounded bg-emerald-200 text-emerald-900 group-hover:bg-emerald-700 group-hover:text-white">
+                          {att.fileType}
+                        </span>
+                        <span className="truncate max-w-[110px] font-semibold">{att.fileName}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {mat.tags.map((tag) => (
                   <span
@@ -329,6 +485,19 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
                 ደረጃ፡ <strong className="text-slate-700">{mat.gradeLevels}</strong>
               </span>
               <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUploadTargetMaterialId(mat.id);
+                    setShowUploadModal(true);
+                  }}
+                  className="p-1.5 text-slate-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                  title="ተጨማሪ የስልጠና ጽሑፍ / አታችመንት አያይዝ"
+                >
+                  <Paperclip className="w-3.5 h-3.5 text-emerald-700" />
+                </button>
+
                 <button
                   type="button"
                   onClick={(e) => {
@@ -388,6 +557,69 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
 
               <div className="whitespace-pre-line p-2 text-xs text-slate-800 font-sans leading-loose">
                 {activeReading.fullContent}
+              </div>
+
+              {/* Official Training Attachments & Documents Section */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                    <Paperclip className="w-4 h-4 text-emerald-700" />
+                    <span>የተያያዙ የስልጠና ጽሑፎችና ሰነዶች ({activeReading.attachments?.length || 0})</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadTargetMaterialId(activeReading.id);
+                      setShowUploadModal(true);
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>+ ሰነድ አያይዝ</span>
+                  </button>
+                </div>
+
+                {activeReading.attachments && activeReading.attachments.length > 0 ? (
+                  <div className="space-y-2">
+                    {activeReading.attachments.map((att) => (
+                      <div
+                        key={att.id}
+                        className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-center justify-between gap-2 shadow-2xs"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">
+                              {att.fileType}
+                            </span>
+                            <span className="font-bold text-xs text-slate-900">{att.fileName}</span>
+                            {att.fileSize && (
+                              <span className="text-[10px] text-slate-400">({att.fileSize})</span>
+                            )}
+                          </div>
+                          {att.description && (
+                            <p className="text-[11px] text-slate-500 line-clamp-1">{att.description}</p>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setViewerAttachment(att);
+                            setViewerMaterialTitle(activeReading.title);
+                          }}
+                          className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>አንብብ / ተመልከት</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic bg-white p-2 rounded-lg border border-dashed border-slate-300 text-center">
+                    ለዚህ ስልጠና እስካሁን የተያያዘ ተጨማሪ ሰነድ የለም።
+                  </p>
+                )}
               </div>
             </div>
 
@@ -465,36 +697,101 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት አይነት *
+              {/* Multiple Subjects Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-800">
+                    የዒላማ ትምህርት አይነቶች (Target Subjects - ከአንድ በላይ መምረጥ ይቻላል) *
                   </label>
-                  <select
-                    value={newSubject}
-                    onChange={(e) => setNewSubject(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden"
-                  >
-                    <option value="Mathematics (ሂሳብ)">Mathematics (ሂሳብ)</option>
-                    <option value="Afaan Oromoo (ኦሮሚኛ)">Afaan Oromoo (ኦሮሚኛ)</option>
-                    <option value="English (እንግሊዝኛ)">English (እንግሊዝኛ)</option>
-                    <option value="Physics & Chemistry (ሳይንስ)">Physics & Chemistry (ሳይንስ)</option>
-                    <option value="Biology (ባዮሎጂ)">Biology (ባዮሎጂ)</option>
-                    <option value="Pedagogy & Classroom Mgmt">Pedagogy & Classroom Mgmt</option>
-                  </select>
+                  <span className="text-[11px] text-emerald-700 font-bold">
+                    {selectedSubjects.length} ተመርጠዋል
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የዒላማ ክፍል ደረጃ
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 max-h-36 overflow-y-auto">
+                  {availableSubjectsList.map((subj) => {
+                    const isChecked = selectedSubjects.includes(subj);
+                    return (
+                      <label
+                        key={subj}
+                        className={`flex items-center gap-2 p-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                          isChecked ? 'bg-emerald-100 text-emerald-950 font-bold border border-emerald-300' : 'hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedSubjects([...selectedSubjects, subj]);
+                            } else {
+                              if (selectedSubjects.length > 1) {
+                                setSelectedSubjects(selectedSubjects.filter((s) => s !== subj));
+                              }
+                            }
+                          }}
+                          className="rounded text-emerald-700 focus:ring-emerald-500 w-3.5 h-3.5"
+                        />
+                        <span className="truncate">{subj}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Multiple Grades Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-800">
+                    የዒላማ የክፍል ደረጃዎች (Target Grade Levels - ከአንድ በላይ መምረጥ ይቻላል) *
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={newGradeLevels}
-                    onChange={(e) => setNewGradeLevels(e.target.value)}
-                    placeholder="Grades 7 - 12"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
-                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGradeList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])}
+                      className="text-[10px] text-emerald-700 hover:underline font-bold"
+                    >
+                      ሁሉንም ምረጥ (All)
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGradeList([9, 10, 11, 12])}
+                      className="text-[10px] text-emerald-700 hover:underline font-bold"
+                    >
+                      2ኛ ደረጃ (9-12)
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  {availableGradesList.map((g) => {
+                    const isChecked = selectedGradeList.includes(g);
+                    return (
+                      <label
+                        key={g}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold cursor-pointer transition-colors text-center border ${
+                          isChecked
+                            ? 'bg-emerald-800 text-white border-emerald-900 shadow-2xs'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedGradeList([...selectedGradeList, g].sort((a, b) => a - b));
+                            } else {
+                              if (selectedGradeList.length > 1) {
+                                setSelectedGradeList(selectedGradeList.filter((x) => x !== g));
+                              }
+                            }
+                          }}
+                          className="sr-only"
+                        />
+                        <span>ክፍል {g}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -526,6 +823,75 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
                 />
               </div>
 
+              {/* Optional Document Attachment Input */}
+              <div className="bg-emerald-50/60 border border-emerald-200/90 rounded-xl p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>ተጨማሪ የስልጠና ጽሑፍ / ሰነድ አያይዝ (አማራጭ - PDF/DOCX/TXT)</span>
+                  </label>
+                  {dispatchFile && (
+                    <button
+                      type="button"
+                      onClick={() => setDispatchFile(null)}
+                      className="text-[11px] text-red-600 hover:underline font-bold"
+                    >
+                      አስወግድ (Remove)
+                    </button>
+                  )}
+                </div>
+
+                {dispatchFile ? (
+                  <div className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-emerald-300 text-xs text-slate-800">
+                    <span className="font-bold flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-900 text-[10px] font-black uppercase">
+                        {dispatchFile.type}
+                      </span>
+                      <span>{dispatchFile.name}</span>
+                      <span className="text-slate-400 font-normal">({dispatchFile.size})</span>
+                    </span>
+                    <span className="text-emerald-700 text-[11px] font-bold">ተያይዟል ✓</span>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept=".pdf,.docx,.doc,.txt,image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const ext = file.name.split('.').pop()?.toLowerCase();
+                      let fType: 'pdf' | 'docx' | 'doc' | 'txt' | 'image' | 'other' = 'pdf';
+                      if (ext === 'docx') fType = 'docx';
+                      else if (ext === 'doc') fType = 'doc';
+                      else if (ext === 'txt') fType = 'txt';
+                      else if (file.type.startsWith('image/')) fType = 'image';
+
+                      const sizeStr = file.size > 1024 * 1024
+                        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                        : `${Math.round(file.size / 1024)} KB`;
+
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const res = reader.result as string;
+                        setDispatchFile({
+                          name: file.name,
+                          type: fType,
+                          size: sizeStr,
+                          dataUrl: res,
+                          text: fType === 'txt' ? res : undefined
+                        });
+                      };
+                      if (fType === 'txt') {
+                        reader.readAsText(file);
+                      } else {
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-700 file:text-white hover:file:bg-emerald-800 cursor-pointer"
+                  />
+                )}
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
@@ -554,6 +920,35 @@ export const TrainingMaterialsHub: React.FC<TrainingMaterialsHubProps> = ({
         currentLang={currentLang}
         onExamCreated={(newExam) => {
           // New exam registered into StorageService
+        }}
+      />
+
+      {/* Attachment Document Viewer Modal */}
+      <TrainingAttachmentViewerModal
+        attachment={viewerAttachment}
+        materialTitle={viewerMaterialTitle}
+        onClose={() => setViewerAttachment(null)}
+      />
+
+      {/* Attachment Uploader Modal */}
+      <UploadTrainingAttachmentModal
+        isOpen={showUploadModal}
+        onClose={() => {
+          setShowUploadModal(false);
+          setUploadTargetMaterialId(undefined);
+        }}
+        materials={materials}
+        preSelectedMaterialId={uploadTargetMaterialId}
+        currentUser={currentUser}
+        onAttachmentAdded={(updated) => {
+          onMaterialsChange(updated);
+          // If activeReading was updated, reflect new attachments
+          if (activeReading) {
+            const updatedActive = updated.find((m) => m.id === activeReading.id);
+            if (updatedActive) {
+              setActiveReading(updatedActive);
+            }
+          }
         }}
       />
     </div>

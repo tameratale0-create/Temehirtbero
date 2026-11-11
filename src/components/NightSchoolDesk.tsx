@@ -41,6 +41,7 @@ import {
   NightProgramType
 } from '../types';
 import { StorageService } from '../utils/storage';
+import { getLocalizedNightScheduleList } from '../utils/localizedData';
 import { OfflineSyncManager } from '../utils/offlineSync';
 import { StudentIDCardModal } from './StudentIDCardModal';
 
@@ -71,6 +72,11 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
   // Timetable State
   const [scheduleItems, setScheduleItems] = useState<NightClassScheduleItem[]>(() =>
     StorageService.getNightClassSchedule()
+  );
+
+  const localizedScheduleItems = useMemo(
+    () => getLocalizedNightScheduleList(scheduleItems, currentLang),
+    [scheduleItems, currentLang]
   );
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
   const [newPeriodNumber, setNewPeriodNumber] = useState<number>(1);
@@ -790,7 +796,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {scheduleItems.map((item) => (
+                  {localizedScheduleItems.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-4 py-3 font-black text-slate-900">
                         <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-950 flex items-center justify-center text-xs font-mono">

@@ -19,12 +19,21 @@ import {
   ShieldCheck,
   FileCheck,
   Tag,
-  Share2
+  Share2,
+  Paperclip,
+  Upload,
+  Download,
+  Eye,
+  FileText,
+  Bell,
+  BellRing
 } from 'lucide-react';
-import { TrainingMaterial, School, AppUserSession, Language, TeacherExam } from '../types';
+import { TrainingMaterial, TrainingAttachment, School, AppUserSession, Language, TeacherExam, TeacherTrainingNotification } from '../types';
 import { StorageService } from '../utils/storage';
 import { OfflineSyncManager } from '../utils/offlineSync';
 import { getTeacherAssignment, isTrainingMaterialForTeacher, parseGradeRange } from '../utils/teacherAssignment';
+import { TrainingAttachmentViewerModal } from './TrainingAttachmentViewerModal';
+import { UploadTrainingAttachmentModal } from './UploadTrainingAttachmentModal';
 
 interface TeacherSubjectTrainingDeskProps {
   school: School;
@@ -56,6 +65,12 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
   const [activeReading, setActiveReading] = useState<TrainingMaterial | null>(null);
   const [completionNotice, setCompletionNotice] = useState<string | null>(null);
 
+  // Training Attachment Viewer & Uploader Modals
+  const [viewerAttachment, setViewerAttachment] = useState<TrainingAttachment | null>(null);
+  const [viewerMaterialTitle, setViewerMaterialTitle] = useState<string>('');
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [uploadTargetMaterialId, setUploadTargetMaterialId] = useState<string | undefined>(undefined);
+
 
   // Search & tab filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +80,61 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
   const teacherAssignment = useMemo(() => {
     return getTeacherAssignment(currentUser);
   }, [currentUser]);
+
+  // Teacher notifications state from Bureau Dispatches
+  const [trainingNotifs, setTrainingNotifs] = useState<TeacherTrainingNotification[]>(() =>
+    StorageService.getTeacherTrainingNotifications(teacherIdentifier)
+  );
+  const [showNotifDrawer, setShowNotifDrawer] = useState(false);
+  const [activeToast, setActiveToast] = useState<TeacherTrainingNotification | null>(null);
+
+  // Play gentle notification sound
+  const playChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.2); // A5
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    } catch {
+      // autoplay fallback
+    }
+  };
+
+  // Listen for live dispatch events from Education Bureau
+  React.useEffect(() => {
+    const handleDispatched = (e: any) => {
+      const notif: TeacherTrainingNotification = e.detail;
+      const refreshed = StorageService.getTeacherTrainingNotifications(teacherIdentifier);
+      setTrainingNotifs(refreshed);
+
+      // Check if this newly dispatched material is intended for this teacher
+      const allMats = StorageService.getTrainingMaterials();
+      setMaterials(allMats);
+      const targetMat = allMats.find((m) => m.id === notif.materialId);
+      if (targetMat && isTrainingMaterialForTeacher(targetMat, teacherAssignment)) {
+        setActiveToast(notif);
+        playChime();
+      }
+    };
+
+    window.addEventListener('teacher_training_dispatched', handleDispatched);
+    return () => window.removeEventListener('teacher_training_dispatched', handleDispatched);
+  }, [teacherIdentifier, teacherAssignment]);
+
+  const unreadNotifsCount = useMemo(() => {
+    return trainingNotifs.filter((n) => !n.isRead).length;
+  }, [trainingNotifs]);
 
   // Current active subject (defaults to teacher's primary subject, allows switching if teaching multiple)
   const [selectedSubject, setSelectedSubject] = useState<string>(teacherAssignment.primarySubject);
@@ -180,6 +250,73 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
     }
   };
 
+  // Direct file download for offline study: "ፅሁፍን አውርዶ ( ዳውንሎድ ) አርጉ ያጠናል"
+  const handleDownloadDocument = (mat: TrainingMaterial, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    // Increment download count
+    const updated = StorageService.incrementDownload(mat.id);
+    setMaterials(updated);
+    if (onMaterialsUpdated) onMaterialsUpdated(updated);
+
+    // If material has an attached file with dataUrl, trigger download
+    const firstAttWithUrl = mat.attachments?.find((a) => a.dataUrl);
+    if (firstAttWithUrl && firstAttWithUrl.dataUrl) {
+      const link = document.createElement('a');
+      link.href = firstAttWithUrl.dataUrl;
+      link.download = firstAttWithUrl.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setCompletionNotice(`"${firstAttWithUrl.fileName}" በተሳካ ሁኔታ ወርዷል (Downloaded)! አሁን ማጥናት ይችላሉ።`);
+      setTimeout(() => setCompletionNotice(null), 4000);
+      return;
+    }
+
+    // Otherwise create a formatted study document text file (.doc / .txt)
+    const contentToDownload = `========================================================================
+የኦሮሚያ ብሔራዊ ክልላዊ መንግሥት · የሻሸመኔ ከተማ አስተዳደር ትምህርት ጽሕፈት ቤት
+የስርዓተ-ትምህርትና መምህራን ቀጣይነት ያለው የሙያ ማሻሻያ (CPD) ይፋዊ የስልጠና ሰነድ
+========================================================================
+
+ርዕስ (Title): ${mat.title}
+የትምህርት አይነት (Subject): ${mat.subject}
+የክፍል ደረጃ (Grade Level): ${mat.gradeLevels}
+የላከው ክፍል (Author): ${mat.authorDepartment}
+የተላከበት ቀን (Date): ${mat.uploadedAt}
+የተላከለት መምህር: ${currentUser?.name || 'መምህር'}
+
+------------------------------------------------------------------------
+አጠቃላይ ማጠቃለያ (Summary):
+------------------------------------------------------------------------
+${mat.summary}
+
+------------------------------------------------------------------------
+ሙሉ የስልጠና ጽሑፍና መመሪያ (Full Pedagogical Content):
+------------------------------------------------------------------------
+${mat.fullContent}
+
+========================================================================
+ይህ ሰነድ ከሻሸመኔ ከተማ ትምህርት ቢሮ ዲጂታል ፖርታል በቀጥታ ለመምህሩ የወረደ ይፋዊ የስልጠና ማስተማሪያ ማንዋል ነው።
+የወረደበት ቀንና ሰዓት: ${new Date().toLocaleString('am-ET')}
+========================================================================
+`;
+
+    const blob = new Blob([contentToDownload], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const cleanTitle = mat.title.replace(/[^a-zA-Z0-9\u1200-\u137F]/g, '_').substring(0, 40);
+    link.download = `${cleanTitle}_የስልጠና_ሰነድ.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setCompletionNotice(`"${mat.title}" የስልጠና ሰነድ በተሳካ ሁኔታ ወርዷል (Downloaded)! አሁን አውርደው ማጥናት ይችላሉ።`);
+    setTimeout(() => setCompletionNotice(null), 4000);
+  };
+
   const handlePrint = (mat: TrainingMaterial) => {
     // Avoid window.open in iframe environments by using a hidden iframe
     const iframe = document.createElement('iframe');
@@ -253,6 +390,56 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
 
   return (
     <div className="space-y-6">
+      {/* Real-time Bureau Training Dispatch Toast Alert */}
+      {activeToast && (
+        <aside aria-label="አዲስ የስልጠና ማሳወቂያ" className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-950 text-white rounded-2xl p-4 sm:p-4.5 shadow-2xl border-2 border-amber-400 ring-4 ring-amber-500/20 space-y-3 relative overflow-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black shadow-md shrink-0">
+                  <BellRing className="w-5 h-5 text-slate-950 animate-bounce" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                    አዲስ የስልጠና ጽሑፍ ከትምህርት ቢሮ
+                  </span>
+                  <h4 className="text-xs sm:text-sm font-black text-white mt-1 leading-snug">
+                    {activeToast.materialTitle}
+                  </h4>
+                  <p className="text-[11px] text-amber-200 mt-0.5">
+                    የትምህርት አይነት፡ {activeToast.subject} · ደረጃ፡ {activeToast.gradeLevels}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveToast(null)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-emerald-100 bg-white/10 p-2.5 rounded-xl border border-white/10 leading-relaxed">
+              {activeToast.message}
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetMat = materials.find((m) => m.id === activeToast.materialId);
+                  setActiveToast(null);
+                  if (targetMat) handleOpenReading(targetMat);
+                }}
+                className="px-4 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>አውርድና አጥና (Download & Study)</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
+
       {/* 1. Bureau Training Direct Dispatch Header */}
       <div className="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-xl border border-emerald-700/40 relative overflow-hidden">
         {/* Subtle background decoration */}
@@ -303,6 +490,123 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
                 <span>የተጠናቀቁ ስልጠናዎች፡ {completedIds.length}</span>
               </span>
+
+              {/* Bureau Messages & Dispatch Notifications Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowNotifDrawer(!showNotifDrawer)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md ${
+                    unreadNotifsCount > 0
+                      ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-black ring-2 ring-amber-300'
+                      : 'bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-500/40'
+                  }`}
+                  title="ከትምህርት ቢሮ የተላኩ የስልጠና መልእክቶች"
+                >
+                  <Bell className={`w-3.5 h-3.5 ${unreadNotifsCount > 0 ? 'fill-slate-950 text-slate-950' : 'text-amber-300'}`} />
+                  <span>የቢሮ መልእክቶች</span>
+                  {unreadNotifsCount > 0 ? (
+                    <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                      {unreadNotifsCount} አዲስ
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-emerald-300 font-mono">
+                      ({trainingNotifs.length})
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown Drawer */}
+                {showNotifDrawer && (
+                  <div className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-80 sm:w-96 bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="p-3.5 bg-gradient-to-r from-emerald-950 to-teal-900 text-white flex items-center justify-between border-b border-emerald-800">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-amber-300" />
+                        <h4 className="text-xs font-bold">ከትምህርት ቢሮ የተላኩ ይፋዊ የስልጠና ማሳወቂያዎች</h4>
+                      </div>
+                      {unreadNotifsCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = StorageService.markAllTeacherTrainingNotificationsAsRead(teacherIdentifier);
+                            setTrainingNotifs(updated);
+                          }}
+                          className="text-[10px] text-amber-300 hover:underline cursor-pointer"
+                        >
+                          ሁሉንም አንብብ
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 p-1">
+                      {trainingNotifs.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-slate-500">
+                          እስካሁን ምንም አዲስ የስልጠና ማሳወቂያ የለም
+                        </div>
+                      ) : (
+                        trainingNotifs.map((notif) => {
+                          const targetMat = materials.find((m) => m.id === notif.materialId);
+                          return (
+                            <div
+                              key={notif.id}
+                              className={`p-3 rounded-xl transition-all ${
+                                !notif.isRead
+                                  ? 'bg-amber-50/90 border-l-4 border-amber-500'
+                                  : 'hover:bg-slate-50'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  {notif.subject}
+                                </span>
+                                <span className="text-[9px] text-slate-400">
+                                  {notif.uploadedAt ? notif.uploadedAt.split('T')[0] : ''}
+                                </span>
+                              </div>
+                              <h5 className="text-xs font-black text-slate-900 mt-1 leading-tight">
+                                {notif.materialTitle}
+                              </h5>
+                              <p className="text-[11px] text-slate-700 mt-1 leading-snug">
+                                {notif.message}
+                              </p>
+                              <div className="flex items-center justify-between gap-2 mt-2 pt-1 border-t border-slate-100 text-[10px]">
+                                <span className="text-slate-500">{notif.gradeLevels}</span>
+                                {targetMat && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      StorageService.markTeacherTrainingNotificationAsRead(notif.id);
+                                      setTrainingNotifs(StorageService.getTeacherTrainingNotifications(teacherIdentifier));
+                                      setShowNotifDrawer(false);
+                                      handleOpenReading(targetMat);
+                                    }}
+                                    className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
+                                  >
+                                    <span>አውርድና አንብብ</span>
+                                    <ChevronRight className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadTargetMaterialId(undefined);
+                  setShowUploadModal(true);
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black flex items-center gap-2 shadow-md transition-all cursor-pointer text-xs"
+              >
+                <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>+ የስልጠና ጽሑፍ / አታችመንት ጫን</span>
+              </button>
             </div>
           </div>
 
@@ -489,6 +793,41 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
                     {mat.summary}
                   </p>
 
+                  {/* Attached Documents List */}
+                  {mat.attachments && mat.attachments.length > 0 && (
+                    <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-emerald-950">
+                        <span className="flex items-center gap-1.5">
+                          <Paperclip className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>የተያያዙ የስልጠና ጽሑፎች ({mat.attachments.length})</span>
+                        </span>
+                        <span className="text-[10px] text-emerald-700 font-medium">ለማንበብ ይጫኑ</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {mat.attachments.map((att) => (
+                          <button
+                            key={att.id}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewerAttachment(att);
+                              setViewerMaterialTitle(mat.title);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-emerald-300 text-slate-800 text-[11px] font-medium hover:bg-emerald-100 hover:border-emerald-500 transition-colors cursor-pointer group shadow-2xs"
+                            title={`${att.fileName} - ለማንበብ ይጫኑ`}
+                          >
+                            <span className="font-bold text-[9px] uppercase px-1 py-0.5 rounded bg-emerald-200 text-emerald-900 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
+                              {att.fileType}
+                            </span>
+                            <span className="truncate max-w-[130px] font-semibold">{att.fileName}</span>
+                            {att.fileSize && <span className="text-[10px] text-slate-400">({att.fileSize})</span>}
+                            <Eye className="w-3 h-3 text-emerald-700 ml-0.5" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Tags */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
@@ -526,6 +865,28 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
                   </button>
 
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setUploadTargetMaterialId(mat.id);
+                        setShowUploadModal(true);
+                      }}
+                      className="p-1.5 text-slate-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                      title="ተጨማሪ የስልጠና ጽሑፍ / አታችመንት አያይዝ"
+                    >
+                      <Paperclip className="w-4 h-4 text-emerald-700" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleDownloadDocument(mat, e)}
+                      className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-xs cursor-pointer border border-amber-600/30"
+                      title="የስልጠናውን ጽሑፍ አውርድና አጥና (Download & Study Document)"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>አውርድ (Download)</span>
+                    </button>
 
                     <button
                       type="button"
@@ -622,6 +983,80 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
                   <li>በትምህርት ክፍሉ ሳምንታዊ ስብሰባ (Department Meeting) ላይ ለባልደረቦች ማካፈል።</li>
                 </ul>
               </div>
+
+              {/* Official Training Attachments & Documents Section */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-black text-slate-900 text-xs sm:text-sm flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-emerald-700" />
+                    <span>የተያያዙ ይፋዊ የስልጠና ጽሑፎችና ሰነዶች (Attachments)</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      {activeReading.attachments?.length || 0} ሰነዶች
+                    </span>
+                  </h5>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadTargetMaterialId(activeReading.id);
+                      setShowUploadModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>+ ሰነድ / ጽሑፍ አያይዝ</span>
+                  </button>
+                </div>
+
+                {activeReading.attachments && activeReading.attachments.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {activeReading.attachments.map((att) => (
+                      <div
+                        key={att.id}
+                        className="bg-white p-3 rounded-xl border border-slate-200 hover:border-emerald-300 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                              {att.fileType}
+                            </span>
+                            <span className="font-bold text-xs text-slate-900">{att.fileName}</span>
+                            {att.fileSize && (
+                              <span className="text-[10px] text-slate-400">({att.fileSize})</span>
+                            )}
+                          </div>
+                          {att.description && (
+                            <p className="text-[11px] text-slate-600 line-clamp-1">{att.description}</p>
+                          )}
+                          {att.uploadedAt && (
+                            <p className="text-[10px] text-slate-400">
+                              የተያያዘበት ቀን፡ {new Date(att.uploadedAt).toLocaleDateString('am-ET')}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setViewerAttachment(att);
+                              setViewerMaterialTitle(activeReading.title);
+                            }}
+                            className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>ጽሑፉን አንብብ / ተመልከት</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic bg-white p-3 rounded-xl border border-dashed border-slate-300 text-center">
+                    ለዚህ ስልጠና እስካሁን የተያያዘ ተጨማሪ ሰነድ የለም። ከላይ ያለውን "+ ሰነድ / ጽሑፍ አያይዝ" በመጫን አዲስ አታችመንት ማያያዝ ይችላሉ።
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Modal Bottom Actions */}
@@ -651,6 +1086,16 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
 
                 <button
                   type="button"
+                  onClick={() => handleDownloadDocument(activeReading)}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all flex items-center gap-1.5 shadow-md cursor-pointer border border-amber-600/30"
+                  title="የስልጠናውን ጽሑፍ አውርድ (Download Document)"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>ፅሁፉን አውርድ (Download)</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => handlePrint(activeReading)}
                   className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
@@ -670,6 +1115,36 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
           </div>
         </div>
       )}
+
+      {/* Attachment Document Viewer Modal */}
+      <TrainingAttachmentViewerModal
+        attachment={viewerAttachment}
+        materialTitle={viewerMaterialTitle}
+        onClose={() => setViewerAttachment(null)}
+      />
+
+      {/* Attachment Uploader Modal */}
+      <UploadTrainingAttachmentModal
+        isOpen={showUploadModal}
+        onClose={() => {
+          setShowUploadModal(false);
+          setUploadTargetMaterialId(undefined);
+        }}
+        materials={materials}
+        preSelectedMaterialId={uploadTargetMaterialId}
+        currentUser={currentUser}
+        onAttachmentAdded={(updated) => {
+          setMaterials(updated);
+          onMaterialsUpdated?.(updated);
+          // If activeReading was updated, reflect new attachments
+          if (activeReading) {
+            const updatedActive = updated.find((m) => m.id === activeReading.id);
+            if (updatedActive) {
+              setActiveReading(updatedActive);
+            }
+          }
+        }}
+      />
     </div>
   );
 };

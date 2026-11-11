@@ -28,7 +28,8 @@ import {
   Landmark,
   Mail,
   HelpCircle,
-  Power
+  Power,
+  Globe
 } from 'lucide-react';
 import {
   School,
@@ -82,6 +83,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
   const [editPhone, setEditPhone] = useState<string>(config.developerPhone || '+251 91 102 9070');
   const [editSecondaryPhone, setEditSecondaryPhone] = useState<string>(config.secondaryPhone || '+251 70 137 0299');
   const [editEmail, setEditEmail] = useState<string>(config.developerEmail || 'tameratale09@gmail.com');
+  const [editWebsiteUrl, setEditWebsiteUrl] = useState<string>(config.websiteUrl || 'https://weshya-sofetyer-solshene.netlify.app/#deployment-modes');
   const [editInstructions, setEditInstructions] = useState<string>(config.instructionsAm || '');
   const [configSavedToast, setConfigSavedToast] = useState<boolean>(false);
 
@@ -119,6 +121,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
     setEditPhone(loadedConfig.developerPhone || '+251 91 102 9070');
     setEditSecondaryPhone(loadedConfig.secondaryPhone || '+251 70 137 0299');
     setEditEmail(loadedConfig.developerEmail || 'tameratale09@gmail.com');
+    setEditWebsiteUrl(loadedConfig.websiteUrl || 'https://weshya-sofetyer-solshene.netlify.app/#deployment-modes');
     setEditInstructions(loadedConfig.instructionsAm || '');
     setBankAccountsList(loadedConfig.bankAccounts || []);
     setNewAccountHolder(loadedConfig.accountHolder || 'ታምራት አሌ (Tamerat Ale)');
@@ -256,6 +259,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
       developerPhone: editPhone.trim(),
       secondaryPhone: editSecondaryPhone.trim(),
       developerEmail: editEmail.trim(),
+      websiteUrl: editWebsiteUrl.trim(),
       instructionsAm: editInstructions.trim(),
       bankAccounts: bankAccountsList
     };
@@ -1363,6 +1367,33 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                           type="email"
                           value={editEmail}
                           onChange={(e) => setEditEmail(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Globe className="w-3.5 h-3.5 text-amber-400" />
+                            <span>ይፋዊ ዌብ ገፅ / የዝርጋታ ሞዶች (Official Website / Deployment Modes)</span>
+                          </span>
+                          {editWebsiteUrl && (
+                            <a
+                              href={editWebsiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-amber-300 hover:underline inline-flex items-center gap-1"
+                            >
+                              <span>ዌብ ገፅ ክፈት</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </label>
+                        <input
+                          type="url"
+                          value={editWebsiteUrl}
+                          onChange={(e) => setEditWebsiteUrl(e.target.value)}
+                          placeholder="https://weshya-sofetyer-solshene.netlify.app/#deployment-modes"
                           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                         />
                       </div>

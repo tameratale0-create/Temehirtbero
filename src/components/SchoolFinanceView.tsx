@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   DollarSign,
   Plus,
@@ -20,10 +20,32 @@ import {
   X,
   FileText,
   Filter,
-  Lock
+  Lock,
+  Upload,
+  Eye,
+  Copy,
+  Edit2,
+  Trash2,
+  ShieldCheck,
+  AlertTriangle,
+  ChevronRight,
+  ExternalLink
 } from 'lucide-react';
-import { FeePaymentRecord, SchoolExpenseRecord, StudentRecord, School, Language, AppUserSession } from '../types';
+import {
+  FeePaymentRecord,
+  SchoolExpenseRecord,
+  StudentRecord,
+  School,
+  Language,
+  AppUserSession,
+  SchoolBankAccount
+} from '../types';
 import { StorageService } from '../utils/storage';
+import {
+  StudentAnnualFeeDesk,
+  ETHIOPIAN_ACADEMIC_MONTHS,
+  CURRENT_ACTIVE_MONTH_ORDER
+} from './StudentAnnualFeeDesk';
 
 interface SchoolFinanceViewProps {
   school: School;
@@ -39,19 +61,47 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
   currentLang
 }) => {
   const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
+  const isStudentOrParent = currentUser?.role === 'student' || currentUser?.role === 'parent';
+
+  // Live state
   const [payments, setPayments] = useState<FeePaymentRecord[]>(() =>
     StorageService.getFeePayments(school.id)
   );
   const [expenses, setExpenses] = useState<SchoolExpenseRecord[]>(() =>
     StorageService.getExpenses(school.id)
   );
+  const [bankAccounts, setBankAccounts] = useState<SchoolBankAccount[]>(() =>
+    StorageService.getSchoolBankAccounts(school.id)
+  );
 
-  const [activeTab, setActiveTab] = useState<'fees' | 'expenses' | 'statement'>('fees');
+  // Active Tab
+  const [activeTab, setActiveTab] = useState<
+    'fees' | 'receipts_queue' | 'bank_accounts' | 'annual_matrix' | 'expenses' | 'statement'
+  >('fees');
 
-  // Fee collection modal state
+  // Selected student for student/parent view or matrix detail
+  const [selectedStudentForAnnual, setSelectedStudentForAnnual] = useState<StudentRecord | null>(() => {
+    if (currentUser?.role === 'student') {
+      return (
+        students.find((s) => s.studentIdNumber === currentUser.identifier || s.id === currentUser.identifier) ||
+        students[0] ||
+        null
+      );
+    }
+    if (currentUser?.role === 'parent') {
+      return (
+        students.find((s) => s.parentAccessCode === currentUser.accessCode || s.parentName.toLowerCase().includes(currentUser.name.toLowerCase())) ||
+        students[0] ||
+        null
+      );
+    }
+    return students[0] || null;
+  });
+
+  // Modal states for Cashier Fee collection
   const [showCollectModal, setShowCollectModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [feeMonth, setFeeMonth] = useState('ጥቅምት 2017');
+  const [feeMonth, setFeeMonth] = useState('ኅዳር 2017');
   const [feeAmount, setFeeAmount] = useState(850);
   const [paymentMethod, setPaymentMethod] = useState<FeePaymentRecord['paymentMethod']>('telebirr');
   const [paymentNotes, setPaymentNotes] = useState('');
@@ -65,18 +115,72 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
   const [expenseApprovedBy, setExpenseApprovedBy] = useState('አቶ ጉተማ ዋቆ (ዋና ዳይሬክተር)');
   const [expenseNotes, setExpenseNotes] = useState('');
 
-  // Receipt modal state
-  const [selectedReceipt, setSelectedReceipt] = useState<FeePaymentRecord | null>(null);
-  const [searchStudentQuery, setSearchStudentQuery] = useState('');
-  const [reminderSentId, setReminderSentId] = useState<string | null>(null);
+  // Bank Account Modal state
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [editingBankId, setEditingBankId] = useState<string | null>(null);
+  const [bankNameInput, setBankNameInput] = useState('የኢትዮጵያ ንግድ ባንክ (CBE)');
+  const [accountNumberInput, setAccountNumberInput] = useState('');
+  const [accountHolderInput, setAccountHolderInput] = useState(school.name);
+  const [branchInput, setBranchInput] = useState('ሻሸመኔ ቅርንጫፍ');
+  const [instructionsInput, setInstructionsInput] = useState('በክፍያ ወቅት የተማሪውን ሙሉ ስም እና ክፍል ይጥቀሱ');
+  const [isBankActive, setIsBankActive] = useState(true);
 
-  // Financial summary
-  const totalRevenue = payments
-    .filter((p) => p.status === 'paid')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+  // Receipt Verification & Image Preview Modal state
+  const [previewReceiptPayment, setPreviewReceiptPayment] = useState<FeePaymentRecord | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<FeePaymentRecord | null>(null);
+  const [rejectionModalPayment, setRejectionModalPayment] = useState<FeePaymentRecord | null>(null);
+  const [rejectionReasonText, setRejectionReasonText] = useState('');
+
+  // Filters & search
+  const [searchStudentQuery, setSearchStudentQuery] = useState('');
+  const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>('all');
+  const [reminderSentId, setReminderSentId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [copiedBankId, setCopiedBankId] = useState<string | null>(null);
+
+  // Sync with storage events
+  useEffect(() => {
+    const handleFeeUpdates = () => setPayments(StorageService.getFeePayments(school.id));
+    const handleBankUpdates = () => setBankAccounts(StorageService.getSchoolBankAccounts(school.id));
+
+    window.addEventListener('fee_payments_updated', handleFeeUpdates);
+    window.addEventListener('school_bank_accounts_updated', handleBankUpdates);
+    window.addEventListener('storage', handleFeeUpdates);
+
+    return () => {
+      window.removeEventListener('fee_payments_updated', handleFeeUpdates);
+      window.removeEventListener('school_bank_accounts_updated', handleBankUpdates);
+      window.removeEventListener('storage', handleFeeUpdates);
+    };
+  }, [school.id]);
+
+  // Derived calculations
+  const pendingReceipts = useMemo(() => {
+    return payments.filter((p) => p.status === 'pending');
+  }, [payments]);
+
+  const verifiedReceipts = useMemo(() => {
+    return payments.filter((p) => p.status === 'paid');
+  }, [payments]);
+
+  const totalRevenue = verifiedReceipts.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalExpense = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const netBalance = totalRevenue - totalExpense;
 
+  // Filtered Payments for table
+  const filteredPayments = payments.filter((p) => {
+    if (!searchStudentQuery.trim()) return true;
+    const q = searchStudentQuery.toLowerCase();
+    return (
+      p.studentName.toLowerCase().includes(q) ||
+      p.receiptNumber.toLowerCase().includes(q) ||
+      p.parentName.toLowerCase().includes(q) ||
+      p.month.toLowerCase().includes(q) ||
+      (p.transactionRef && p.transactionRef.toLowerCase().includes(q))
+    );
+  });
+
+  // Action: Cashier Collects Fee in Cash or Manual
   const handleCollectFee = (e: React.FormEvent) => {
     e.preventDefault();
     const student = students.find((s) => s.id === selectedStudentId);
@@ -108,8 +212,109 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
     setSelectedReceipt(newPayment);
     setSelectedStudentId('');
     setPaymentNotes('');
+    setToastMessage(`የ${student.fullName} የ${feeMonth} ክፍያ ተመዝግቧል!`);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
+  // Action: Cashier Approves Submitted Receipt
+  const handleApproveReceipt = (payment: FeePaymentRecord) => {
+    const accountantName = currentUser?.name || 'ወ/ሮ ሰላማዊት አበራ (ዋና ሒሳብ ሹም)';
+    StorageService.verifyFeePayment(payment.id, accountantName);
+    const updated = StorageService.getFeePayments(school.id);
+    setPayments(updated);
+    setPreviewReceiptPayment(null);
+    setToastMessage(`የ${payment.studentName} የ${payment.month} ደረሰኝ ጸድቋል! የተማሪው ዓመታዊ ሰንጠረዥ ወደ አረንጓዴ ተቀይሯል።`);
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  // Action: Cashier Rejects Submitted Receipt
+  const handleConfirmReject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectionModalPayment) return;
+    const reason = rejectionReasonText.trim() || 'የተላከው ደረሰኝ ወይም የባንክ ግብይት ቁጥር ግልጽ አይደለም';
+    const accountantName = currentUser?.name || 'ወ/ሮ ሰላማዊት አበራ (ዋና ሒሳብ ሹም)';
+
+    StorageService.rejectFeePayment(rejectionModalPayment.id, reason, accountantName);
+    setPayments(StorageService.getFeePayments(school.id));
+    setRejectionModalPayment(null);
+    setPreviewReceiptPayment(null);
+    setRejectionReasonText('');
+    setToastMessage(`የደረሰኝ ማረጋገጫው ውድቅ ተደርጓል፤ ለተማሪው/ወላጁ ማሳሰቢያ ተልኳል።`);
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  // Action: Add / Update School Bank Account
+  const handleSaveBankAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accountNumberInput.trim()) return;
+
+    if (editingBankId) {
+      const existing = bankAccounts.find((b) => b.id === editingBankId);
+      if (existing) {
+        const updated: SchoolBankAccount = {
+          ...existing,
+          bankName: bankNameInput,
+          accountNumber: accountNumberInput.trim(),
+          accountHolder: accountHolderInput.trim(),
+          branch: branchInput.trim(),
+          instructions: instructionsInput.trim(),
+          isActive: isBankActive
+        };
+        StorageService.updateSchoolBankAccount(updated);
+      }
+    } else {
+      const newAcc: SchoolBankAccount = {
+        id: `bank-acc-${Date.now()}`,
+        schoolId: school.id,
+        bankName: bankNameInput,
+        accountNumber: accountNumberInput.trim(),
+        accountHolder: accountHolderInput.trim() || school.name,
+        branch: branchInput.trim(),
+        instructions: instructionsInput.trim(),
+        isActive: isBankActive,
+        postedBy: currentUser?.name || 'ወ/ሮ ሰላማዊት አበራ (ዋና ገንዘብ ያዥ / ሒሳብ ሹም)',
+        postedAt: new Date().toISOString().split('T')[0]
+      };
+      StorageService.addSchoolBankAccount(newAcc);
+    }
+
+    setBankAccounts(StorageService.getSchoolBankAccounts(school.id));
+    setShowBankModal(false);
+    setEditingBankId(null);
+    setAccountNumberInput('');
+    setToastMessage('የትምህርት ቤቱ የባንክ አካውንት በተሳካ ሁኔታ ተለጥፏል!');
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Delete Bank Account
+  const handleDeleteBankAccount = (id: string) => {
+    if (confirm('እርግጠኛ ኖት ይህንን የባንክ አካውንት ከፖርታሉ መሰረዝ ይፈልጋሉ?')) {
+      StorageService.deleteSchoolBankAccount(id);
+      setBankAccounts(StorageService.getSchoolBankAccounts(school.id));
+      setToastMessage('የባንክ አካውንቱ ተሰርዟል');
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
+
+  // Toggle Bank Active
+  const handleToggleBankActive = (acc: SchoolBankAccount) => {
+    StorageService.updateSchoolBankAccount({ ...acc, isActive: !acc.isActive });
+    setBankAccounts(StorageService.getSchoolBankAccounts(school.id));
+  };
+
+  // Open Edit Bank
+  const handleOpenEditBank = (acc: SchoolBankAccount) => {
+    setEditingBankId(acc.id);
+    setBankNameInput(acc.bankName);
+    setAccountNumberInput(acc.accountNumber);
+    setAccountHolderInput(acc.accountHolder);
+    setBranchInput(acc.branch || '');
+    setInstructionsInput(acc.instructions || '');
+    setIsBankActive(acc.isActive);
+    setShowBankModal(true);
+  };
+
+  // Add Expense Action
   const handleAddExpense = (e: React.FormEvent) => {
     e.preventDefault();
     if (!expenseTitle.trim()) return;
@@ -136,38 +341,56 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
     setExpenseNotes('');
   };
 
-  const handleSendReminder = (studentId: string) => {
-    setReminderSentId(studentId);
-    setTimeout(() => setReminderSentId(null), 3000);
+  // Copy Bank Account Number
+  const handleCopyAccount = (num: string, id: string) => {
+    navigator.clipboard.writeText(num);
+    setCopiedBankId(id);
+    setTimeout(() => setCopiedBankId(null), 2500);
   };
 
-  const filteredPayments = payments.filter((p) => {
-    if (!searchStudentQuery.trim()) return true;
-    const q = searchStudentQuery.toLowerCase();
+  // If the logged-in user is a student or parent, show the direct Annual Fee Desk & bank accounts view!
+  if (isStudentOrParent && selectedStudentForAnnual) {
     return (
-      p.studentName.toLowerCase().includes(q) ||
-      p.receiptNumber.toLowerCase().includes(q) ||
-      p.parentName.toLowerCase().includes(q) ||
-      p.month.toLowerCase().includes(q)
+      <div className="space-y-6">
+        <StudentAnnualFeeDesk
+          student={selectedStudentForAnnual}
+          school={school}
+          currentLang={currentLang}
+          currentUser={currentUser}
+        />
+      </div>
     );
-  });
+  }
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="bg-emerald-600 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-100" />
+            <p className="font-bold text-sm">{toastMessage}</p>
+          </div>
+          <button onClick={() => setToastMessage(null)} className="p-1 hover:bg-emerald-700 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Banner */}
       <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-900/80 border border-emerald-400/40 rounded-full text-xs font-semibold text-emerald-200">
               <DollarSign className="w-3.5 h-3.5 text-amber-300" />
-              <span>የትምህርት ቤት ፋይናንስ፣ የወር ክፍያ እና ወጪ መቆጣጠሪያ</span>
+              <span>የትምህርት ቤት ፋይናንስ፣ የወር ክፍያ ሰንጠረዥ እና ደረሰኝ ማረጋገጫ</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              የሒሳብ ክፍል እና ክፍያ አስተዳደር (Finance & Bursar Hub)
+              የሒሳብ ክፍል እና ክፍያ አስተዳደር (Finance & Cashier Hub)
             </h2>
             <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-              የተማሪዎችን ወርሃዊ ክፍያ በቴሌብር፣ በሲቢኢ ብርና በጥሬ ገንዘብ የመሰብሰብ፣ ይፋዊ ደረሰኝ የመቁረጥ
-              እና የት/ቤቱን አስተዳደራዊ ወጪዎች በሙሉ የመመዝገቢያ ክፍል
+              የትምህርት ቤቱን ይፋዊ የባንክ አካውንቶች ለተማሪዎችና ወላጆች የመለጠፍ፣ የተላኩ ደረሰኞችን የማረጋገጥ፣
+              እና የ10 ወራት ዓመታዊ የክፍያ ሰንጠረዥ (አረንጓዴ/ቀይ) የመቆጣጠሪያ ማዕከል
             </p>
           </div>
 
@@ -176,11 +399,24 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
               <>
                 <button
                   type="button"
+                  onClick={() => {
+                    setEditingBankId(null);
+                    setAccountNumberInput('');
+                    setShowBankModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-transform hover:scale-102 cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>+ አዲስ የባንክ አካውንት ለጥፍ</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setShowCollectModal(true)}
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>የወር ክፍያ ተቀበል (Collect Fee)</span>
+                  <span>ክፍያ ተቀበል / ደረሰኝ ቁረጥ</span>
                 </button>
 
                 <button
@@ -189,7 +425,7 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-700/80 hover:bg-rose-700 text-white text-xs font-bold rounded-xl border border-rose-500/40 transition-colors cursor-pointer"
                 >
                   <TrendingDown className="w-4 h-4" />
-                  <span>ወጪ መዝግብ (Expense)</span>
+                  <span>ወጪ መዝግብ</span>
                 </button>
               </>
             ) : (
@@ -203,7 +439,7 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
       </div>
 
       {/* Financial Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-3xl border border-emerald-100 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-slate-500 block mb-1">
@@ -213,14 +449,60 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
               <span className="text-2xl font-black text-emerald-700 font-mono">
                 {totalRevenue.toLocaleString()}
               </span>
-              <span className="text-xs font-bold text-slate-600">ETB (ብር)</span>
+              <span className="text-xs font-bold text-slate-600">ETB</span>
             </div>
             <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">
-              {payments.filter((p) => p.status === 'paid').length} ደረሰኞች ተቆርጠዋል
+              {verifiedReceipts.length} የተረጋገጡ ደረሰኞች
             </span>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shrink-0">
             <TrendingUp className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-3xl border border-amber-100 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-xs font-bold text-slate-500 block mb-1">
+              በማረጋገጥ ላይ ያሉ ደረሰኞች (Pending)
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-amber-600 font-mono">
+                {pendingReceipts.length}
+              </span>
+              <span className="text-xs font-bold text-slate-600">ደረሰኞች</span>
+            </div>
+            <button
+              onClick={() => setActiveTab('receipts_queue')}
+              className="text-[11px] text-amber-700 font-bold hover:underline mt-1 block"
+            >
+              አሁን አረጋግጥ →
+            </button>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200 shrink-0">
+            <Clock className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-3xl border border-indigo-100 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-xs font-bold text-slate-500 block mb-1">
+              የተለጠፉ የባንክ አካውንቶች (Accounts)
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-indigo-700 font-mono">
+                {bankAccounts.filter((b) => b.isActive).length}
+              </span>
+              <span className="text-xs font-bold text-slate-600">ይፋዊ አካውንቶች</span>
+            </div>
+            <button
+              onClick={() => setActiveTab('bank_accounts')}
+              className="text-[11px] text-indigo-600 font-semibold hover:underline mt-1 block"
+            >
+              አካውንቶችን አስተዳድር →
+            </button>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-200 shrink-0">
+            <Building2 className="w-6 h-6" />
           </div>
         </div>
 
@@ -233,44 +515,20 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
               <span className="text-2xl font-black text-rose-700 font-mono">
                 {totalExpense.toLocaleString()}
               </span>
-              <span className="text-xs font-bold text-slate-600">ETB (ብር)</span>
+              <span className="text-xs font-bold text-slate-600">ETB</span>
             </div>
             <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
-              {expenses.length} የወጪ መደቦች
+              ቀሪ ካዝና፡ {netBalance.toLocaleString()} ብር
             </span>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center border border-rose-200 shrink-0">
             <TrendingDown className="w-6 h-6" />
           </div>
         </div>
-
-        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-xs font-bold text-slate-500 block mb-1">
-              የተጣራ የካዝና ቀሪ (Net Balance)
-            </span>
-            <div className="flex items-baseline gap-1.5">
-              <span
-                className={`text-2xl font-black font-mono ${
-                  netBalance >= 0 ? 'text-teal-700' : 'text-rose-700'
-                }`}
-              >
-                {netBalance.toLocaleString()}
-              </span>
-              <span className="text-xs font-bold text-slate-600">ETB (ብር)</span>
-            </div>
-            <span className="text-[11px] text-slate-500 font-semibold mt-1 block">
-              የትምህርት ቤት የተጣራ ሂሳብ
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-200 shrink-0">
-            <Building2 className="w-6 h-6" />
-          </div>
-        </div>
       </div>
 
       {/* Sub Tabs navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-200 bg-white p-2 rounded-2xl">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white p-2 rounded-2xl">
         <button
           type="button"
           onClick={() => setActiveTab('fees')}
@@ -282,6 +540,50 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
         >
           <Receipt className="w-4 h-4" />
           <span>የወር ክፍያዎችና ደረሰኞች ({payments.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('receipts_queue')}
+          className={`py-2 px-4 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 relative ${
+            activeTab === 'receipts_queue'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>ከተማሪዎች/ወላጆች የተላኩ ደረሰኞች</span>
+          {pendingReceipts.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 bg-red-600 text-white text-[10px] font-black rounded-full animate-pulse">
+              {pendingReceipts.length} አዲስ
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('bank_accounts')}
+          className={`py-2 px-4 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${
+            activeTab === 'bank_accounts'
+              ? 'bg-indigo-700 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>የት/ቤቱ ይፋዊ የባንክ አካውንቶች ({bankAccounts.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('annual_matrix')}
+          className={`py-2 px-4 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${
+            activeTab === 'annual_matrix'
+              ? 'bg-emerald-900 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>የተማሪዎች ዓመታዊ የክፍያ ሰንጠረዥ (10 ወራት)</span>
         </button>
 
         <button
@@ -311,7 +613,9 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
         </button>
       </div>
 
-      {/* Tab 1: Collected Fees */}
+      {/* =========================================================================
+          TAB 1: COLLECTED FEES & RECEIPTS
+          ========================================================================= */}
       {activeTab === 'fees' && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -341,171 +645,311 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
                   <th className="py-3 px-3">የክፍያ ወር</th>
                   <th className="py-3 px-3">መጠን (ETB)</th>
                   <th className="py-3 px-3">የክፍያ ዘዴ</th>
+                  <th className="py-3 px-3">ሁኔታ</th>
                   <th className="py-3 px-3">ቀን</th>
-                  <th className="py-3 px-3">ተቀባይ</th>
-                  <th className="py-3 px-3 text-right">ደረሰኝ</th>
+                  <th className="py-3 px-3 text-right">እርምጃ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3 font-mono font-bold text-emerald-800">
-                      {p.receiptNumber}
-                    </td>
-                    <td className="py-3 px-3 font-bold text-slate-900">{p.studentName}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-600">
-                      {p.grade}ኛ ክፍል ({p.section})
-                    </td>
-                    <td className="py-3 px-3 font-medium text-slate-800">{p.month}</td>
-                    <td className="py-3 px-3 font-black text-slate-900 font-mono">
-                      {p.amount.toLocaleString()} ብር
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
-                        {p.paymentMethod}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-500 font-mono">{p.paymentDate}</td>
-                    <td className="py-3 px-3 text-slate-600">{p.collectedBy}</td>
-                    <td className="py-3 px-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedReceipt(p)}
-                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold text-[11px] inline-flex items-center gap-1 border border-emerald-200 cursor-pointer"
-                      >
-                        <Printer className="w-3 h-3" />
-                        <span>አትም</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredPayments.map((p) => {
+                  const isPaid = p.status === 'paid';
+                  const isPending = p.status === 'pending';
+                  const isRejected = p.status === 'rejected';
+
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-3 font-mono font-bold text-slate-900">
+                        {p.receiptNumber}
+                      </td>
+                      <td className="py-3 px-3 font-semibold text-slate-800">{p.studentName}</td>
+                      <td className="py-3 px-3 text-slate-500">
+                        {p.grade} ({p.section})
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-700">{p.month}</td>
+                      <td className="py-3 px-3 font-bold font-mono text-emerald-800">
+                        {p.amount.toLocaleString()} ብር
+                      </td>
+                      <td className="py-3 px-3 uppercase text-slate-600">
+                        {p.bankName || p.paymentMethod}
+                      </td>
+                      <td className="py-3 px-3">
+                        {isPaid ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            ተከፍሏል
+                          </span>
+                        ) : isPending ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            በማረጋገጥ ላይ
+                          </span>
+                        ) : isRejected ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px]">
+                            <AlertCircle className="w-3 h-3 text-rose-600" />
+                            ውድቅ የተደረገ
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[10px]">ያልተከፈለ</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-slate-500">{p.paymentDate}</td>
+                      <td className="py-3 px-3 text-right">
+                        {isPaid ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceipt(p)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>ደረሰኝ እይ</span>
+                          </button>
+                        ) : isPending ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewReceiptPayment(p)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500 text-white hover:bg-amber-600 rounded-lg text-xs font-bold shadow-xs"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>አረጋግጥ</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceipt(p)}
+                            className="text-xs text-slate-500 hover:underline"
+                          >
+                            ዝርዝር
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Tab 2: Expenses */}
-      {activeTab === 'expenses' && (
+      {/* =========================================================================
+          TAB 2: SUBMITTED RECEIPTS QUEUE (ከተማሪዎችና ወላጆች የተላኩ ደረሰኞች ማረጋገጫ)
+          ========================================================================= */}
+      {activeTab === 'receipts_queue' && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">የትምህርት ቤት አስተዳደራዊ ወጪዎች መዝገብ</h3>
-              <p className="text-xs text-slate-500">ለስራ ማስኬጃ፣ ደሞዝ፣ ጥገና እና ግብአቶች የወጡ ወጪዎች</p>
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-600" />
+                <h3 className="text-base font-bold text-slate-900">
+                  ከተማሪዎችና ወላጆች የተላኩ ደረሰኞች ማረጋገጫ (Receipt Verification Queue)
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                ተማሪዎችና ወላጆች የከፈሉበትን ደረሰኝ አያይዘው የላኩት እዚህ ይደርሳል። ካረጋገጡ በኋላ «አጽድቅ» ሲጫኑ የተማሪው የወር ክፍያ ሰንጠረዥ ወዲያውኑ አረንጓዴ ይሆናል።
+              </p>
+            </div>
+            <span className="px-3 py-1 bg-amber-100 text-amber-800 font-extrabold text-xs rounded-full border border-amber-300">
+              {pendingReceipts.length} ደረሰኞች በማረጋገጥ ላይ
+            </span>
+          </div>
+
+          {pendingReceipts.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 space-y-2">
+              <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-500/50" />
+              <p className="text-sm font-bold text-slate-600">
+                ምንም አዲስ ያልተረጋገጠ ደረሰኝ የለም!
+              </p>
+              <p className="text-xs text-slate-400">
+                ተማሪዎችና ወላጆች በፖርታላቸው ደረሰኝ ሲያያይዙ ወዲያውኑ እዚህ ይታያል።
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pendingReceipts.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="rounded-2xl border-2 border-amber-300 bg-amber-50/40 p-5 space-y-3 shadow-sm hover:shadow-md transition"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-200 text-amber-900 rounded-md">
+                        {rec.month}
+                      </span>
+                      <h4 className="font-extrabold text-sm text-slate-900 mt-1">
+                        {rec.studentName}
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        ክፍል {rec.grade} ({rec.section}) · ወላጅ: {rec.parentName}
+                      </p>
+                    </div>
+                    <span className="text-lg font-black font-mono text-emerald-800">
+                      {rec.amount} ETB
+                    </span>
+                  </div>
+
+                  {/* Attached receipt photo preview */}
+                  {rec.receiptImageUrl ? (
+                    <div
+                      onClick={() => setPreviewReceiptPayment(rec)}
+                      className="border border-slate-300 rounded-xl overflow-hidden bg-white max-h-40 cursor-pointer group relative"
+                    >
+                      <img
+                        src={rec.receiptImageUrl}
+                        alt="Attached receipt"
+                        className="w-full h-36 object-contain p-1 group-hover:scale-105 transition"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1">
+                        <Eye className="w-4 h-4" />
+                        <span>ሙሉ ፎቶ እይ</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-white/70 rounded-xl border border-slate-200 text-xs text-slate-400 text-center italic">
+                      ፎቶ አልተያያዘም (የግብይት ቁጥር ብቻ)
+                    </div>
+                  )}
+
+                  <div className="space-y-1 text-xs text-slate-600 bg-white/80 p-2.5 rounded-xl border border-slate-200/80">
+                    <p>
+                      <strong>ባንክ፡</strong> {rec.bankName || rec.paymentMethod}
+                    </p>
+                    <p className="font-mono">
+                      <strong>የግብይት ቁጥር (Ref):</strong> {rec.transactionRef || 'አልተጠቀሰም'}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      የተላከበት ቀን፡ {rec.submittedAt?.split('T')[0] || rec.paymentDate}
+                    </p>
+                    {rec.notes && (
+                      <p className="text-[11px] text-slate-500 italic">ማስታወሻ: {rec.notes}</p>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => handleApproveReceipt(rec)}
+                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1 transition"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>አጽድቅና ቁረጥ</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRejectionModalPayment(rec);
+                        setRejectionReasonText('');
+                      }}
+                      className="py-2 px-3 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>ውድቅ አድርግ</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 3: SCHOOL OFFICIAL BANK ACCOUNTS (የትምህርት ቤቱ ገንዘብ ያዥ የሚለጥፋቸው የባንክ አካውንቶች)
+          ========================================================================= */}
+      {activeTab === 'bank_accounts' && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-base font-bold text-slate-900">
+                  የትምህርት ቤቱ ይፋዊ የባንክ አካውንቶች ማኔጀር (Cashier's Official Bank Accounts)
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                እዚህ የተለጠፉት አካውንቶች በቀጥታ በተማሪውና በወላጅ ገፅ ላይ ይታያሉ። ወላጆች ወደ እነዚህ አካውንቶች ከፍለው ደረሰኝ ያያይዛሉ።
+              </p>
             </div>
             <button
               type="button"
-              onClick={() => setShowExpenseModal(true)}
-              className="px-3.5 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+              onClick={() => {
+                setEditingBankId(null);
+                setAccountNumberInput('');
+                setBankNameInput('የኢትዮጵያ ንግድ ባንክ (CBE)');
+                setShowBankModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>አዲስ ወጪ መዝግብ</span>
+              <span>+ አዲስ የባንክ አካውንት ለጥፍ</span>
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 text-slate-600 font-bold border-y border-slate-200">
-                <tr>
-                  <th className="py-3 px-3">የወጪ ርዕስ</th>
-                  <th className="py-3 px-3">ምድብ (Category)</th>
-                  <th className="py-3 px-3">የወጪ መጠን</th>
-                  <th className="py-3 px-3">የተከፈለለት አካል</th>
-                  <th className="py-3 px-3">ያጸደቀው ኃላፊ</th>
-                  <th className="py-3 px-3">ቀን</th>
-                  <th className="py-3 px-3">የሰነድ ቁጥር</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-3 font-bold text-slate-900">{e.title}</td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 uppercase">
-                        {e.category}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 font-black text-rose-700 font-mono">
-                      -{e.amount.toLocaleString()} ብር
-                    </td>
-                    <td className="py-3 px-3 text-slate-700 font-medium">{e.paidTo}</td>
-                    <td className="py-3 px-3 text-slate-600">{e.approvedBy}</td>
-                    <td className="py-3 px-3 text-slate-500 font-mono">{e.date}</td>
-                    <td className="py-3 px-3 font-mono text-slate-600">
-                      {e.receiptDocNumber || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 3: Unpaid Students & Reminders */}
-      {activeTab === 'statement' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              የጥቅምት ወር ክፍያ ያልከፈሉ ተማሪዎች እና ማሳሰቢያ መላኪያ
-            </h3>
-            <p className="text-xs text-slate-500">ለተማሪዎችና ወላጆች ፈጣን የስልክ እና የሲስተም ማሳሰቢያ</p>
-          </div>
-
-          <div className="space-y-3">
-            {students.map((st) => {
-              const paid = payments.some(
-                (p) => p.studentId === st.id && p.month.includes('ጥቅምት') && p.status === 'paid'
-              );
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {bankAccounts.map((acc) => {
+              const isCopied = copiedBankId === acc.id;
               return (
                 <div
-                  key={st.id}
-                  className="p-4 rounded-2xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
+                  key={acc.id}
+                  className={`rounded-2xl p-5 border-2 transition ${
+                    acc.isActive ? 'border-slate-300 bg-white' : 'border-slate-200 bg-slate-50 opacity-60'
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                        paid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-xs font-black uppercase text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                      {acc.bankName}
+                    </span>
+                    <button
+                      onClick={() => handleToggleBankActive(acc)}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        acc.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
                       }`}
                     >
-                      {paid ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900">{st.fullName}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">
-                          ({st.grade}ኛ ክፍል - {st.section})
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        ወላጅ፡ {st.parentName} · ስልክ፡{' '}
-                        <span className="font-mono">{st.parentPhone}</span>
-                      </p>
+                      {acc.isActive ? 'ይፋዊ / ይታያል' : 'የተዘጋ'}
+                    </button>
+                  </div>
+
+                  <div className="my-3 space-y-1">
+                    <p className="text-[11px] text-slate-400 font-medium">የሂሳብ ቁጥር፡</p>
+                    <div className="flex items-center justify-between gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                      <span className="font-mono font-black text-slate-900 text-sm select-all">
+                        {acc.accountNumber}
+                      </span>
+                      <button
+                        onClick={() => handleCopyAccount(acc.accountNumber, acc.id)}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-600 text-xs"
+                      >
+                        {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {paid ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        የጥቅምት ወር ተከፍሏል (850 ብር)
-                      </span>
-                    ) : (
-                      <>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                          ያልተከፈለ ቀሪ፡ 850 ብር
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleSendReminder(st.id)}
-                          className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 shadow-xs cursor-pointer"
-                        >
-                          <Send className="w-3 h-3" />
-                          <span>
-                            {reminderSentId === st.id ? 'ማሳሰቢያ ተልኳል!' : 'ማሳሰቢያ ላክ'}
-                          </span>
-                        </button>
-                      </>
+                  <div className="space-y-1 text-xs text-slate-600 mb-4">
+                    <p className="font-semibold text-slate-800">{acc.accountHolder}</p>
+                    {acc.branch && <p className="text-[11px] text-slate-400">ቅርንጫፍ፡ {acc.branch}</p>}
+                    {acc.instructions && (
+                      <p className="text-[11px] text-slate-500 italic">"{acc.instructions}"</p>
                     )}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="text-[10px] text-slate-400">{acc.postedBy}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditBank(acc)}
+                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600"
+                        title="አስተካክል"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBankAccount(acc.id)}
+                        className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-600"
+                        title="ሰርዝ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -514,136 +958,633 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
         </div>
       )}
 
-      {/* Modal: Collect Fee Form */}
-      {showCollectModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="bg-gradient-to-r from-emerald-800 to-teal-950 px-6 py-5 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Receipt className="w-5 h-5 text-amber-300" />
-                <h3 className="font-bold text-base">የወር ክፍያ መሰብሰቢያ እና ደረሰኝ መቁረጫ</h3>
+      {/* =========================================================================
+          TAB 4: ANNUAL 10-MONTH FEE SCHEDULE MATRIX (የተማሪዎች ዓመታዊ ሰንጠረዥ)
+          - መከፈሉ ሲረጋገጥ: አረንጓዴ ቀለም (GREEN)
+          - ወሩ ገብቶ ያልተከፈለ ከሆነ: ቀይ ቀለም (RED)
+          ========================================================================= */}
+      {activeTab === 'annual_matrix' && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-emerald-700" />
+                የተማሪዎች የ10 ወራት ዓመታዊ የክፍያ ሰንጠረዥ ማትሪክስ (Annual 10-Month Matrix)
+              </h3>
+              <p className="text-xs text-slate-500">
+                የእያንዳንዱን ተማሪ የ10ሩም ወራት ክፍያ ሁኔታ በሰንጠረዡ ላይ ይመልከቱ። አረንጓዴ (ተከፍሏል)፣ ቀይ (ወሩ ገብቶ ያልተከፈለ)።
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> ተከፍሏል (አረንጓዴ)
+                </span>
+                <span className="inline-flex items-center gap-1 font-bold text-rose-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> ያልተከፈለ (ቀይ)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="py-3 px-3">ተማሪ</th>
+                  <th className="py-3 px-2">ክፍል</th>
+                  {ETHIOPIAN_ACADEMIC_MONTHS.map((m) => (
+                    <th key={m.key} className="py-3 px-2 text-center whitespace-nowrap">
+                      {m.key}
+                    </th>
+                  ))}
+                  <th className="py-3 px-3 text-right">የተከፈለው / ጠቅላላ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {students.map((stu) => {
+                  const studentPayments = payments.filter((p) => p.studentId === stu.id);
+                  const paidCount = ETHIOPIAN_ACADEMIC_MONTHS.filter((m) =>
+                    studentPayments.some(
+                      (p) => p.status === 'paid' && p.month.toLowerCase().includes(m.key.toLowerCase())
+                    )
+                  ).length;
+
+                  return (
+                    <tr
+                      key={stu.id}
+                      onClick={() => setSelectedStudentForAnnual(stu)}
+                      className="hover:bg-slate-50 transition cursor-pointer"
+                    >
+                      <td className="py-2.5 px-3 font-semibold text-slate-900">
+                        {stu.fullName}
+                      </td>
+                      <td className="py-2.5 px-2 text-slate-500 font-mono">
+                        {stu.grade}{stu.section}
+                      </td>
+                      {ETHIOPIAN_ACADEMIC_MONTHS.map((m) => {
+                        const rec = studentPayments.find((p) =>
+                          p.month.toLowerCase().includes(m.key.toLowerCase())
+                        );
+                        const isPaid = rec?.status === 'paid';
+                        const isPending = rec?.status === 'pending';
+                        const isOverdue = !isPaid && !isPending && m.order <= CURRENT_ACTIVE_MONTH_ORDER;
+
+                        return (
+                          <td key={m.key} className="py-2.5 px-1 text-center">
+                            {isPaid ? (
+                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shadow-xs">
+                                ✓ ተከፍሏል
+                              </span>
+                            ) : isPending ? (
+                              <span className="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-400 text-slate-900">
+                                በማረጋገጥ ላይ
+                              </span>
+                            ) : isOverdue ? (
+                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                                ✕ ያልተከፈለ
+                              </span>
+                            ) : (
+                              <span className="inline-block px-1.5 py-0.5 rounded-full text-[9px] text-slate-400 bg-slate-100">
+                                ገና ነው
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="py-2.5 px-3 text-right font-bold text-slate-800">
+                        {paidCount} / 10 ወር ({paidCount * 850} ብር)
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* If a student is clicked in matrix, show their full individual schedule desk */}
+          {selectedStudentForAnnual && (
+            <div className="mt-6 pt-6 border-t border-slate-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-extrabold text-base text-slate-900">
+                  የተማሪ {selectedStudentForAnnual.fullName} የግል ዓመታዊ የክፍያ ሰንጠረዥና ደረሰኝ
+                </h4>
+                <button
+                  onClick={() => setSelectedStudentForAnnual(null)}
+                  className="text-xs text-slate-500 hover:text-slate-800 underline"
+                >
+                  ዝጋ
+                </button>
+              </div>
+              <StudentAnnualFeeDesk
+                student={selectedStudentForAnnual}
+                school={school}
+                currentLang={currentLang}
+                currentUser={currentUser}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 5: OPERATIONAL EXPENSES
+          ========================================================================= */}
+      {activeTab === 'expenses' && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">የትምህርት ቤት አስተዳደራዊ ወጪዎች</h3>
+              <p className="text-xs text-slate-500">ለዕቃዎች፣ ለጥገና እና ለአገልግሎቶች የወጡ ወጪዎች</p>
+            </div>
+            <span className="text-xs font-bold text-slate-500">
+              ጠቅላላ ወጪ፡ <strong className="text-rose-700">{totalExpense.toLocaleString()} ETB</strong>
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-600 font-bold border-y border-slate-200">
+                <tr>
+                  <th className="py-3 px-3">የወጪ ርዕስ</th>
+                  <th className="py-3 px-3">ምድብ</th>
+                  <th className="py-3 px-3">መጠን (ETB)</th>
+                  <th className="py-3 px-3">የተከፈለለት</th>
+                  <th className="py-3 px-3">ያጸደቀው</th>
+                  <th className="py-3 px-3">ቀን</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {expenses.map((e) => (
+                  <tr key={e.id} className="hover:bg-slate-50 transition">
+                    <td className="py-3 px-3 font-semibold text-slate-900">{e.title}</td>
+                    <td className="py-3 px-3">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-mono text-[10px]">
+                        {e.category}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 font-bold font-mono text-rose-700">
+                      {e.amount.toLocaleString()} ብር
+                    </td>
+                    <td className="py-3 px-3 text-slate-600">{e.paidTo}</td>
+                    <td className="py-3 px-3 text-slate-600">{e.approvedBy}</td>
+                    <td className="py-3 px-3 text-slate-500">{e.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 6: OVERDUE NOTICES (ያልከፈሉ ተማሪዎች)
+          ========================================================================= */}
+      {activeTab === 'statement' && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">ያልከፈሉ ተማሪዎችና የወላጅ ማሳሰቢያ</h3>
+            <p className="text-xs text-slate-500">
+              የያዝነውን ወር ክፍያ ያልፈጸሙ ተማሪዎች ዝርዝርና ለወላጅ ማሳሰቢያ መላኪያ
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-600 font-bold border-y border-slate-200">
+                <tr>
+                  <th className="py-3 px-3">የተማሪ ስም</th>
+                  <th className="py-3 px-3">ክፍል</th>
+                  <th className="py-3 px-3">የወላጅ ስም</th>
+                  <th className="py-3 px-3">ስልክ</th>
+                  <th className="py-3 px-3">ያልተከፈለ ወር</th>
+                  <th className="py-3 px-3">ያልተከፈለ መጠን</th>
+                  <th className="py-3 px-3 text-right">ማሳሰቢያ ላክ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {students.map((stu) => {
+                  const hasPaidCurrent = payments.some(
+                    (p) =>
+                      p.studentId === stu.id &&
+                      p.status === 'paid' &&
+                      p.month.includes('ኅዳር')
+                  );
+                  if (hasPaidCurrent) return null;
+
+                  return (
+                    <tr key={stu.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-3 font-semibold text-slate-900">{stu.fullName}</td>
+                      <td className="py-3 px-3 text-slate-500">
+                        {stu.grade} ({stu.section})
+                      </td>
+                      <td className="py-3 px-3 text-slate-700">{stu.parentName}</td>
+                      <td className="py-3 px-3 font-mono text-slate-500">{stu.parentPhone}</td>
+                      <td className="py-3 px-3">
+                        <span className="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-bold text-[10px]">
+                          ኅዳር 2017 (ያልተከፈለ)
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 font-bold text-rose-700">850 ብር</td>
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReminderSentId(stu.id);
+                            setTimeout(() => setReminderSentId(null), 3000);
+                          }}
+                          className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 ml-auto ${
+                            reminderSentId === stu.id
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                          }`}
+                        >
+                          {reminderSentId === stu.id ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>ተልኳል!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-3.5 h-3.5" />
+                              <span>ማሳሰቢያ ላክ</span>
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: ADD / EDIT BANK ACCOUNT
+          ========================================================================= */}
+      {showBankModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-base text-slate-900">
+                  {editingBankId ? 'የባንክ አካውንት ማስተካከያ' : 'አዲስ ይፋዊ የባንክ አካውንት ለጥፍ'}
+                </h3>
               </div>
               <button
-                type="button"
-                onClick={() => setShowCollectModal(false)}
-                className="text-emerald-200 hover:text-white p-1 rounded-lg"
+                onClick={() => setShowBankModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCollectFee} className="p-6 space-y-4">
+            <form onSubmit={handleSaveBankAccount} className="space-y-3.5 mt-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የተማሪ ስም ይምረጡ *
+                  የባንኩ ስም (Bank Name) *
                 </label>
                 <select
+                  value={bankNameInput}
+                  onChange={(e) => setBankNameInput(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
                   required
+                >
+                  <option value="የኢትዮጵያ ንግድ ባንክ (CBE)">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                  <option value="ቴሌብር (Telebirr)">ቴሌብር (Telebirr)</option>
+                  <option value="አዋሽ ባንክ (Awash Bank)">አዋሽ ባንክ (Awash Bank)</option>
+                  <option value="ዳሽን ባንክ (Dashen Bank)">ዳሽን ባንክ (Dashen Bank)</option>
+                  <option value="ወጋገን ባንክ (Wegagen Bank)">ወጋገን ባንክ (Wegagen Bank)</option>
+                  <option value="ሕብረት ባንክ (Hibret Bank)">ሕብረት ባንክ (Hibret Bank)</option>
+                  <option value="ኦሮሚያ ባንክ (Oromia Bank)">ኦሮሚያ ባንክ (Oromia Bank)</option>
+                  <option value="አቢሲንያ ባንክ (Bank of Abyssinia)">አቢሲንያ ባንክ (Bank of Abyssinia)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  የሂሳብ ቁጥር / አካውንት ቁጥር *
+                </label>
+                <input
+                  type="text"
+                  value={accountNumberInput}
+                  onChange={(e) => setAccountNumberInput(e.target.value)}
+                  placeholder="ለምሳሌ፡ 1000123456789"
+                  className="w-full p-2.5 font-mono font-bold bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  የአካውንቱ ስም (Account Holder) *
+                </label>
+                <input
+                  type="text"
+                  value={accountHolderInput}
+                  onChange={(e) => setAccountHolderInput(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ቅርንጫፍ</label>
+                  <input
+                    type="text"
+                    value={branchInput}
+                    onChange={(e) => setBranchInput(e.target.value)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ሁኔታ</label>
+                  <select
+                    value={isBankActive ? 'active' : 'inactive'}
+                    onChange={(e) => setIsBankActive(e.target.value === 'active')}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="active">ይፋዊ / ይታያል</option>
+                    <option value="inactive">ዝግ ነው</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  ለተማሪዎችና ወላጆች መመሪያ (Instructions)
+                </label>
+                <textarea
+                  value={instructionsInput}
+                  onChange={(e) => setInstructionsInput(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowBankModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  ሰርዝ
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md"
+                >
+                  {editingBankId ? 'አዘምን' : 'ለጥፍ'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: PREVIEW ATTACHED RECEIPT FOR APPROVAL
+          ========================================================================= */}
+      {previewReceiptPayment && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-amber-600" />
+                <h3 className="font-bold text-base text-slate-900">
+                  የተያያዘ ደረሰኝ ማረጋገጫ (Verify Submitted Receipt)
+                </h3>
+              </div>
+              <button
+                onClick={() => setPreviewReceiptPayment(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mt-4">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-slate-400 block text-[10px]">ተማሪ፡</span>
+                  <span className="font-bold text-slate-900">{previewReceiptPayment.studentName}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">ክፍል፡</span>
+                  <span className="font-bold text-slate-900">
+                    {previewReceiptPayment.grade} ({previewReceiptPayment.section})
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">ወር፡</span>
+                  <span className="font-bold text-emerald-800">{previewReceiptPayment.month}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">መጠን፡</span>
+                  <span className="font-bold font-mono text-emerald-800 text-sm">
+                    {previewReceiptPayment.amount} ETB
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">ባንክ፡</span>
+                  <span className="font-medium text-slate-800">
+                    {previewReceiptPayment.bankName || previewReceiptPayment.paymentMethod}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">የግብይት ቁጥር (Ref):</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    {previewReceiptPayment.transactionRef || 'አልተጠቀሰም'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Full Image Preview */}
+              {previewReceiptPayment.receiptImageUrl && (
+                <div className="border-2 border-slate-300 rounded-2xl overflow-hidden bg-slate-900/5 max-h-80 flex items-center justify-center p-2">
+                  <img
+                    src={previewReceiptPayment.receiptImageUrl}
+                    alt="Submitted Receipt Full"
+                    className="max-h-72 object-contain mx-auto rounded-lg shadow-sm"
+                  />
+                </div>
+              )}
+
+              {/* Approval Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRejectionModalPayment(previewReceiptPayment);
+                    setRejectionReasonText('');
+                  }}
+                  className="px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold rounded-xl text-xs flex items-center gap-1"
+                >
+                  <X className="w-4 h-4" />
+                  <span>ውድቅ አድርግ</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleApproveReceipt(previewReceiptPayment)}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>አጽድቅና ደረሰኝ ቁረጥ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: REJECT REASON DIALOG
+          ========================================================================= */}
+      {rejectionModalPayment && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <h4 className="font-bold text-sm text-slate-900 mb-1">
+              ደረሰኙን ውድቅ የማድረጊያ ምክንያት
+            </h4>
+            <p className="text-xs text-slate-500 mb-3">
+              ተማሪውና ወላጁ የተሳሳተውን አስተካክለው እንደገና እንዲልኩ ምክንያቱን ይጥቀሱ።
+            </p>
+            <form onSubmit={handleConfirmReject} className="space-y-3">
+              <textarea
+                value={rejectionReasonText}
+                onChange={(e) => setRejectionReasonText(e.target.value)}
+                placeholder="ለምሳሌ፡ የባንክ ግብይት ቁጥሩ በባንክ ገቢ ውስጥ አልተገኘም ወይም ደረሰኙ ግልጽ አይደለም"
+                rows={3}
+                required
+                className="w-full p-3 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 outline-none"
+              />
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRejectionModalPayment(null)}
+                  className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
+                >
+                  ሰርዝ
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm"
+                >
+                  ውድቅ መሆኑን አረጋግጥ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CASHIER COLLECT FEE FORM
+          ========================================================================= */}
+      {showCollectModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="font-bold text-base text-slate-900">
+                የወር ክፍያ መሰብሰቢያና ደረሰኝ መቁረጫ
+              </h3>
+              <button
+                onClick={() => setShowCollectModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCollectFee} className="space-y-3 mt-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">ተማሪ ምረጥ *</label>
+                <select
                   value={selectedStudentId}
                   onChange={(e) => setSelectedStudentId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                  required
                 >
                   <option value="">-- ተማሪ ይምረጡ --</option>
-                  {students.map((st) => (
-                    <option key={st.id} value={st.id}>
-                      {st.fullName} - {st.grade}ኛ ክፍል ({st.section}) - ወላጅ: {st.parentName}
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.fullName} - {s.grade}{s.section} ({s.studentIdNumber})
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የክፍያ ወር *
-                  </label>
-                  <select
-                    value={feeMonth}
-                    onChange={(e) => setFeeMonth(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white"
-                  >
-                    <option value="መስከረም 2017">መስከረም 2017</option>
-                    <option value="ጥቅምት 2017">ጥቅምት 2017</option>
-                    <option value="ህዳር 2017">ህዳር 2017</option>
-                    <option value="ታህሳስ 2017">ታህሳስ 2017</option>
-                    <option value="ጥር 2017">ጥር 2017</option>
-                    <option value="የካቲት 2017">የካቲት 2017</option>
-                    <option value="መጋቢት 2017">መጋቢት 2017</option>
-                    <option value="ሚያዝያ 2017">ሚያዝያ 2017</option>
-                    <option value="ግንቦት 2017">ግንቦት 2017</option>
-                    <option value="ሰኔ 2017">ሰኔ 2017</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">የክፍያ ወር *</label>
+                <select
+                  value={feeMonth}
+                  onChange={(e) => setFeeMonth(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                  required
+                >
+                  {ETHIOPIAN_ACADEMIC_MONTHS.map((m) => (
+                    <option key={m.key} value={`${m.key} 2017`}>
+                      {currentLang === 'om' ? (m.labelOm || m.labelAm) : currentLang === 'en' ? (m.labelEn || m.labelAm) : m.labelAm}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የክፍያ መጠን (ETB ብር) *
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">መጠን (ብር) *</label>
                   <input
                     type="number"
-                    min={1}
-                    required
                     value={feeAmount}
                     onChange={(e) => setFeeAmount(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 rounded-xl"
+                    className="w-full p-2.5 font-mono font-bold bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+                    required
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የክፍያ ዘዴ (Payment Channel) *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
-                  {[
-                    { id: 'telebirr', label: 'ቴሌብር (Telebirr)' },
-                    { id: 'cbe_birr', label: 'CBE Birr' },
-                    { id: 'cash', label: 'በጥሬ ገንዘብ (Cash)' },
-                    { id: 'bank_transfer', label: 'የባንክ ዝውውር' }
-                  ].map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setPaymentMethod(m.id as FeePaymentRecord['paymentMethod'])}
-                      className={`py-2 px-2 rounded-xl border text-center transition-all ${
-                        paymentMethod === m.id
-                          ? 'bg-emerald-800 text-white border-emerald-900 shadow-xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">የክፍያ መንገድ *</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    <option value="telebirr">ቴሌብር (Telebirr)</option>
+                    <option value="cbe_birr">ሲቢኢ ብር (CBE Birr)</option>
+                    <option value="bank_transfer">የባንክ ዝውውር</option>
+                    <option value="cash">ጥሬ ገንዘብ (Cash)</option>
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ተጨማሪ ማስታወሻ (አማራጭ)
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">ተጨማሪ ማስታወሻ</label>
                 <input
                   type="text"
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
-                  placeholder="የግብይት ማረጋገጫ ቁጥር ወይም ሌላ ማስታወሻ..."
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl"
+                  placeholder="አስፈላጊ ከሆነ..."
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowCollectModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
                   ሰርዝ
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                  <span>ክፍያውን ተቀበል እና ደረሰኝ ቁረጥ</span>
+                  ክፍያውን መዝግብና ደረሰኝ ቁረጥ
                 </button>
               </div>
             </form>
@@ -651,116 +1592,97 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
         </div>
       )}
 
-      {/* Modal: Record Expense */}
+      {/* =========================================================================
+          MODAL: ADD EXPENSE FORM
+          ========================================================================= */}
       {showExpenseModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="bg-gradient-to-r from-rose-800 to-slate-950 px-6 py-5 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <TrendingDown className="w-5 h-5 text-rose-300" />
-                <h3 className="font-bold text-base">የትምህርት ቤት አስተዳደራዊ ወጪ መመዝገቢያ</h3>
-              </div>
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="font-bold text-base text-slate-900">የትምህርት ቤት ወጪ መዝግብ</h3>
               <button
-                type="button"
                 onClick={() => setShowExpenseModal(false)}
-                className="text-rose-200 hover:text-white p-1 rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddExpense} className="p-6 space-y-4">
+            <form onSubmit={handleAddExpense} className="space-y-3 mt-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የወጪ ርዕስ / ምክንያት *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">የወጪው ርዕስ *</label>
                 <input
                   type="text"
-                  required
                   value={expenseTitle}
                   onChange={(e) => setExpenseTitle(e.target.value)}
-                  placeholder="ምሳሌ፡ የመማሪያ ክፍሎች ጥገና፣ የላብራቶሪ ዕቃዎች..."
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-600 focus:outline-hidden"
+                  placeholder="ለምሳሌ፡ የላብራቶሪ ኬሚካሎች ግዢ..."
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 outline-none"
+                  required
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የወጪ ምድብ (Category) *
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ምድብ *</label>
                   <select
                     value={expenseCategory}
-                    onChange={(e) =>
-                      setExpenseCategory(e.target.value as SchoolExpenseRecord['category'])
-                    }
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white"
+                    onChange={(e) => setExpenseCategory(e.target.value as any)}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-rose-500 outline-none"
                   >
-                    <option value="salary">የሰራተኞች ደሞዝ</option>
-                    <option value="supplies">የትምህርት ግብአቶችና ዕቃዎች</option>
-                    <option value="utilities">መብራት፣ ውሃ እና ኢንተርኔት</option>
+                    <option value="supplies">የትምህርት ግብአቶች</option>
+                    <option value="utilities">መብራትና ውሃ</option>
                     <option value="maintenance">ጥገና እና እድሳት</option>
-                    <option value="events">ስፖርት እና ሁነቶች</option>
-                    <option value="other">ሌሎች ወጪዎች</option>
+                    <option value="salary">ደሞዝ / አበል</option>
+                    <option value="events">ሁነቶች</option>
+                    <option value="other">ሌሎች</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የወጪ መጠን (ETB ብር) *
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">መጠን (ብር) *</label>
                   <input
                     type="number"
-                    min={1}
-                    required
                     value={expenseAmount}
                     onChange={(e) => setExpenseAmount(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 rounded-xl"
+                    className="w-full p-2.5 font-mono font-bold bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 outline-none"
+                    required
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የተከፈለለት አካል / ድርጅት
-                  </label>
-                  <input
-                    type="text"
-                    value={expensePaidTo}
-                    onChange={(e) => setExpensePaidTo(e.target.value)}
-                    placeholder="አቅራቢ ድርጅት ወይም ግለሰብ..."
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ያጸደቀው ኃላፊ
-                  </label>
-                  <input
-                    type="text"
-                    value={expenseApprovedBy}
-                    onChange={(e) => setExpenseApprovedBy(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">የተከፈለለት አካል</label>
+                <input
+                  type="text"
+                  value={expensePaidTo}
+                  onChange={(e) => setExpensePaidTo(e.target.value)}
+                  placeholder="አቅራቢ ድርጅት ወይም ግለሰብ..."
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 outline-none"
+                />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">ያጸደቀው ኃላፊ</label>
+                <input
+                  type="text"
+                  value={expenseApprovedBy}
+                  onChange={(e) => setExpenseApprovedBy(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowExpenseModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
                   ሰርዝ
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-rose-800 hover:bg-rose-900 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2 bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-md"
                 >
-                  <TrendingDown className="w-4 h-4" />
-                  <span>ወጪውን መዝግብ</span>
+                  ወጪውን መዝግብ
                 </button>
               </div>
             </form>
@@ -768,11 +1690,12 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
         </div>
       )}
 
-      {/* Official Printable Digital Receipt Modal */}
+      {/* =========================================================================
+          MODAL: OFFICIAL PRINTABLE RECEIPT
+          ========================================================================= */}
       {selectedReceipt && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            {/* Printable Receipt Body */}
             <div className="p-6 space-y-4 print:p-8" id="printable-fee-receipt">
               <div className="text-center border-b-2 border-dashed border-slate-200 pb-4 space-y-1">
                 <span className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider">
@@ -809,7 +1732,7 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500 font-medium">የክፍያ ዘዴ፡</span>
                   <span className="font-mono font-bold uppercase text-slate-800">
-                    {selectedReceipt.paymentMethod}
+                    {selectedReceipt.bankName || selectedReceipt.paymentMethod}
                   </span>
                 </div>
                 <div className="flex justify-between py-2.5 bg-emerald-50/80 px-3 rounded-xl border border-emerald-200 text-sm">
@@ -820,8 +1743,21 @@ export const SchoolFinanceView: React.FC<SchoolFinanceViewProps> = ({
                 </div>
               </div>
 
+              {selectedReceipt.receiptImageUrl && (
+                <div className="pt-2 border-t border-dashed border-slate-200">
+                  <span className="text-[10px] text-slate-400 block mb-1">የተያያዘ የባንክ ደረሰኝ ፎቶ፡</span>
+                  <div className="max-h-40 overflow-hidden rounded-xl border border-slate-200">
+                    <img
+                      src={selectedReceipt.receiptImageUrl}
+                      alt="Receipt attached"
+                      className="max-h-36 w-full object-contain mx-auto"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="pt-2 text-center text-[10px] text-slate-400 space-y-1">
-                <p>ክፍያውን የተቀበለው ሒሳብ ሹም፡ {selectedReceipt.collectedBy}</p>
+                <p>ክፍያውን ያረጋገጠው ሒሳብ ሹም፡ {selectedReceipt.collectedBy}</p>
                 <p className="font-medium text-emerald-800">
                   ስለፈጸሙት ክፍያ እናመሰግናለን! ይህ ደረሰኝ በሲስተም የተረጋገጠ ነው።
                 </p>

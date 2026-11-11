@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Building2,
   Users,
@@ -25,7 +25,9 @@ import {
   X,
   Maximize2,
   Minimize2,
-  ArrowLeft
+  ArrowLeft,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import {
   Language,
@@ -41,6 +43,17 @@ import {
   StudentRecord
 } from './types';
 import { translations } from './data/translations';
+import {
+  getLocalizedSchool,
+  getLocalizedSchools,
+  getLocalizedStaffList,
+  getLocalizedTrainingList,
+  getLocalizedStudents,
+  getLocalizedCredentials,
+  getLocalizedExams,
+  getLocalizedStandards,
+  getLocalizedStudent
+} from './utils/localizedData';
 import { StorageService } from './utils/storage';
 import { Header } from './components/Header';
 import { BureauDashboard } from './components/BureauDashboard';
@@ -123,6 +136,40 @@ export default function App() {
   const activeSchool =
     schools.find((s) => s.id === selectedSchoolId) || schools[0];
 
+  // Localized entities for dynamic Afaan Oromoo / Amharic / English switching
+  const localizedSchools = useMemo(
+    () => getLocalizedSchools(schools, currentLang),
+    [schools, currentLang]
+  );
+  const localizedStaff = useMemo(
+    () => getLocalizedStaffList(staff, currentLang),
+    [staff, currentLang]
+  );
+  const localizedCredentials = useMemo(
+    () => getLocalizedCredentials(credentials, currentLang),
+    [credentials, currentLang]
+  );
+  const localizedTrainingMaterials = useMemo(
+    () => getLocalizedTrainingList(trainingMaterials, currentLang),
+    [trainingMaterials, currentLang]
+  );
+  const localizedStandards = useMemo(
+    () => getLocalizedStandards(standards, currentLang),
+    [standards, currentLang]
+  );
+  const localizedStudents = useMemo(
+    () => getLocalizedStudents(students, currentLang),
+    [students, currentLang]
+  );
+  const localizedExams = useMemo(
+    () => getLocalizedExams(exams, currentLang),
+    [exams, currentLang]
+  );
+  const localizedActiveSchool = useMemo(
+    () => (activeSchool ? getLocalizedSchool(activeSchool, currentLang) : activeSchool),
+    [activeSchool, currentLang]
+  );
+
   // When user logs in with role
   const handleLoginSuccess = (session: AppUserSession) => {
     setCurrentUser(session);
@@ -168,6 +215,11 @@ export default function App() {
         s.id === currentUser?.identifier
     ) || students[0];
 
+  const localizedActiveStudent = useMemo(
+    () => (activeStudent ? getLocalizedStudent(activeStudent, currentLang) : activeStudent),
+    [activeStudent, currentLang]
+  );
+
   // Navigation Items depending on active role
   const isBureauRole =
     currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
@@ -210,27 +262,75 @@ export default function App() {
   const getActivityTitle = (tab: string): string => {
     switch (tab) {
       case 'dashboard':
-        return currentLang === 'en' ? 'Executive Dashboard' : 'ዋናው ዳሽቦርድ እና የትምህርት ጥራት ማጠቃለያ';
+        return currentLang === 'om'
+          ? 'Daashboordii Hojii fi Qulqullina Barnootaa'
+          : currentLang === 'en'
+          ? 'Executive Dashboard'
+          : 'ዋናው ዳሽቦርድ እና የትምህርት ጥራት ማጠቃለያ';
       case 'schools':
-        return currentLang === 'en' ? 'Schools Registry' : 'የትምህርት ቤቶች ይፋዊ ምዝገባ እና ካታሎግ';
+        return currentLang === 'om'
+          ? 'Galmee fi Kaataloogii Manneen Barnootaa'
+          : currentLang === 'en'
+          ? 'Schools Registry'
+          : 'የትምህርት ቤቶች ይፋዊ ምዝገባ እና ካታሎግ';
       case 'staff':
-        return currentLang === 'en' ? 'Staff Management' : 'የትምህርት ቢሮ ሰራተኞች እና አመራር መዝገብ';
+        return currentLang === 'om'
+          ? 'Hojjettoota fi Hoggansa Biiroo Barnootaa'
+          : currentLang === 'en'
+          ? 'Staff Management'
+          : 'የትምህርት ቢሮ ሰራተኞች እና አመራር መዝገብ';
       case 'reports':
-        return currentLang === 'en' ? 'Semester Reports' : 'የትምህርት ቤቶች ሴሚስተር ሪፖርት መቀበያ እና ኦዲት';
+        return currentLang === 'om'
+          ? 'Gabaasa Semisteeraa fi Ooditii Manneen Barnootaa'
+          : currentLang === 'en'
+          ? 'Semester Reports'
+          : 'የትምህርት ቤቶች ሴሚስተር ሪፖርት መቀበያ እና ኦዲት';
       case 'credentials':
-        return currentLang === 'en' ? 'Credentials Audit' : 'የመምህራን ብቃትና የትምህርት ማስረጃዎች ኦዲት (Fayda)';
+        return currentLang === 'om'
+          ? 'Ooditii Ragaa Gahumsa Barsiisotaa (Fayda)'
+          : currentLang === 'en'
+          ? 'Credentials Audit'
+          : 'የመምህራን ብቃትና የትምህርት ማስረጃዎች ኦዲት (Fayda)';
       case 'exams':
-        return currentLang === 'en' ? 'Teacher Exams' : 'የመምህራን ኦንላይን ብቃት መመዘኛ ፈተና ክፍል';
+        return currentLang === 'om'
+          ? 'Qormaata Intarneetii Gahumsa Barsiisotaa'
+          : currentLang === 'en'
+          ? 'Teacher Exams'
+          : 'የመምህራን ኦንላይን ብቃት መመዘኛ ፈተና ክፍል';
       case 'training':
-        return currentLang === 'en' ? 'Training Hub' : 'የስልጠና ሞጁሎች እና ዲጂታል ሰነዶች ማዕከል';
+        return currentLang === 'om'
+          ? 'Wiirtuu Moojuloota Leenjii fi Sanadoota Dijitaalaa'
+          : currentLang === 'en'
+          ? 'Training Hub'
+          : 'የስልጠና ሞጁሎች እና ዲጂታል ሰነዶች ማዕከል';
       case 'standards':
-        return currentLang === 'en' ? 'Quality Standards' : 'የትምህርት ጥራት መስፈርቶችና መመሪያዎች (Standards)';
+        return currentLang === 'om'
+          ? 'Ulaagaalee fi Qajeelfamoota Qulqullina Barnootaa'
+          : currentLang === 'en'
+          ? 'Quality Standards'
+          : 'የትምህርት ጥራት መስፈርቶችና መመሪያዎች (Standards)';
       case 'school_portal':
-        return activeSchool ? `${activeSchool.name} · የት/ቤት አስተዳደር ፖርታል` : (currentLang === 'en' ? 'School Portal' : 'የትምህርት ቤት ፖርታል');
+        return localizedActiveSchool
+          ? `${localizedActiveSchool.name} · ${
+              currentLang === 'om'
+                ? 'Poortaalii Hoggansa Mana Barumsaa'
+                : currentLang === 'en'
+                ? 'School Administration Portal'
+                : 'የት/ቤት አስተዳደር ፖርታል'
+            }`
+          : currentLang === 'om'
+          ? 'Poortaalii Mana Barumsaa'
+          : currentLang === 'en'
+          ? 'School Portal'
+          : 'የትምህርት ቤት ፖርታል';
       case 'student_portal':
-        return currentLang === 'en' ? 'Student & Parent Portal' : 'የተማሪ እና ወላጅ የግል ገጽ';
+        return currentLang === 'om'
+          ? 'Fuula Dhuunfaa Barataa fi Maatii'
+          : currentLang === 'en'
+          ? 'Student & Parent Portal'
+          : 'የተማሪ እና ወላጅ የግል ገጽ';
       default:
-        return 'አክቲቪቲ';
+        return currentLang === 'om' ? 'Hojii' : currentLang === 'en' ? 'Activity' : 'አክቲቪቲ';
     }
   };
 
@@ -408,15 +508,15 @@ export default function App() {
         return (
           <BureauDashboard
             currentLang={currentLang}
-            schools={schools}
-            staff={staff}
-            credentials={credentials}
+            schools={localizedSchools}
+            staff={localizedStaff}
+            credentials={localizedCredentials}
             reports={reports}
-            exams={exams}
+            exams={localizedExams}
             onNavigateTab={(tab) => navigateToActivity(tab)}
             onNavigateSchoolSubTab={(subTab) => navigateToActivity('school_portal', subTab)}
             currentUser={currentUser}
-            activeSchool={activeSchool}
+            activeSchool={localizedActiveSchool}
             onOpenQuickRoleModal={() => setShowQuickRoleModal(true)}
             onOpenRegisterSchool={() => {
               setLoginModalTab('school_reg');
@@ -429,7 +529,7 @@ export default function App() {
         return (
           <SchoolsRegistry
             currentLang={currentLang}
-            schools={schools}
+            schools={localizedSchools}
             onSchoolsChange={(updated) => setSchools(updated)}
           />
         );
@@ -437,7 +537,7 @@ export default function App() {
         return (
           <StaffManagement
             currentLang={currentLang}
-            staff={staff}
+            staff={localizedStaff}
             onStaffChange={(updated) => setStaff(updated)}
           />
         );
@@ -454,7 +554,7 @@ export default function App() {
         return (
           <TeacherCredentialsAudit
             currentLang={currentLang}
-            credentials={credentials}
+            credentials={localizedCredentials}
             onCredentialsChange={(updated) => setCredentials(updated)}
             currentOfficerName={currentUser?.name}
           />
@@ -463,10 +563,13 @@ export default function App() {
         return (
           <TeacherOnlineExams
             currentLang={currentLang}
-            exams={exams}
+            exams={localizedExams}
             onExamsChange={(updated) => setExams(updated)}
-            currentTeacherName={currentUser?.name || 'መ/ር በፈቃዱ ጥላሁን'}
-            currentSchoolName={activeSchool?.name}
+            currentTeacherName={
+              currentUser?.name ||
+              (currentLang === 'om' ? 'B/saa Bafqaaduu Xilahun' : 'መ/ር በፈቃዱ ጥላሁን')
+            }
+            currentSchoolName={localizedActiveSchool?.name}
             isBureauOfficer={isBureauRole}
             currentUser={currentUser}
           />
@@ -475,7 +578,7 @@ export default function App() {
         return (
           <TrainingMaterialsHub
             currentLang={currentLang}
-            materials={trainingMaterials}
+            materials={localizedTrainingMaterials}
             onMaterialsChange={(updated) => setTrainingMaterials(updated)}
             isBureauOfficer={isBureauRole}
             currentUser={currentUser}
@@ -483,7 +586,7 @@ export default function App() {
         );
       case 'standards':
         return (
-          <BureauStandards currentLang={currentLang} standards={standards} />
+          <BureauStandards currentLang={currentLang} standards={localizedStandards} />
         );
       case 'school_portal':
         return (
@@ -493,14 +596,20 @@ export default function App() {
               <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                 <span className="font-bold text-slate-700 flex items-center gap-1.5">
                   <Building2 className="w-4 h-4 text-emerald-700" />
-                  <span>የትምህርት ቤት ተቋም ምረጥ (Switch School Institution):</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Dhaabbata Mana Barumsaa Filadhu (Switch School Institution):'
+                      : currentLang === 'en'
+                      ? 'Select School Institution:'
+                      : 'የትምህርት ቤት ተቋም ምረጥ (Switch School Institution):'}
+                  </span>
                 </span>
                 <select
                   value={selectedSchoolId}
                   onChange={(e) => setSelectedSchoolId(e.target.value)}
                   className="w-full sm:w-auto px-3 py-1.5 border border-slate-300 rounded-xl bg-white font-medium text-slate-800 text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 >
-                  {schools.map((s) => (
+                  {localizedSchools.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.code}) - {s.subcity}
                     </option>
@@ -511,8 +620,8 @@ export default function App() {
 
             <SchoolPortal
               currentLang={currentLang}
-              school={activeSchool}
-              students={students.filter((s) => s.schoolId === activeSchool.id || true)}
+              school={localizedActiveSchool}
+              students={localizedStudents.filter((s) => s.schoolId === activeSchool.id || true)}
               onStudentsChange={(updated) => setStudents(updated)}
               currentUser={currentUser}
               onNavigateToBureauExams={() => navigateToActivity('exams')}
@@ -532,8 +641,8 @@ export default function App() {
         return (
           <StudentPortalView
             currentLang={currentLang}
-            student={activeStudent}
-            school={activeSchool}
+            student={localizedActiveStudent}
+            school={localizedActiveSchool}
           />
         );
       default:
@@ -1083,17 +1192,43 @@ export default function App() {
                     +251 70 137 0299
                   </a>
                 </div>
-                <div className="font-mono text-slate-400">tameratale09@gmail.com</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="font-mono text-slate-400">tameratale09@gmail.com</div>
+                  <span className="text-slate-600">·</span>
+                  <a
+                    href="https://weshya-sofetyer-solshene.netlify.app/#deployment-modes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-bold text-amber-300 hover:text-white underline underline-offset-2"
+                  >
+                    <Globe className="w-3 h-3 text-amber-400" />
+                    <span>weshya-sofetyer-solshene.netlify.app</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-amber-400" />
+                  </a>
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowDeveloperProfileModal(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-              >
-                <span>ሙሉ የአበልፃጊ መረጃ</span>
-                <span>→</span>
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <a
+                  href="https://weshya-sofetyer-solshene.netlify.app/#deployment-modes"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shrink-0"
+                >
+                  <Globe className="w-3.5 h-3.5 text-amber-400" />
+                  <span>ይፋዊ ዌብ ገፅ</span>
+                  <ExternalLink className="w-3 h-3 text-amber-400" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDeveloperProfileModal(true)}
+                  className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <span>ሙሉ የአበልፃጊ መረጃ</span>
+                  <span>→</span>
+                </button>
+              </div>
             </div>
           </div>
 

@@ -19,7 +19,8 @@ import {
   ExternalLink,
   RotateCcw,
   Eye,
-  Landmark
+  Landmark,
+  Globe
 } from 'lucide-react';
 import { School, DeveloperPaymentReceipt, DeveloperPaymentConfig } from '../types';
 import { StorageService } from '../utils/storage';
@@ -310,7 +311,21 @@ export const DeveloperPaymentModal: React.FC<DeveloperPaymentModalProps> = ({
                 +251 70 137 0299
               </a>
             </div>
-            <span className="text-[10px] font-mono text-amber-300/80">tameratale09@gmail.com</span>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-mono text-amber-300/80">tameratale09@gmail.com</span>
+              <span className="text-slate-600">·</span>
+              <a
+                href={config.websiteUrl || 'https://weshya-sofetyer-solshene.netlify.app/#deployment-modes'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-white underline underline-offset-2"
+              >
+                <Globe className="w-3 h-3 text-amber-400" />
+                <span>ዌብሳይት (Deployment Modes)</span>
+                <ExternalLink className="w-2.5 h-2.5 text-amber-400" />
+              </a>
+            </div>
           </div>
         </div>
 

@@ -34,7 +34,8 @@ import {
   X,
   ChevronRight,
   Eye,
-  Volume2
+  Volume2,
+  ShieldAlert
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -59,13 +60,17 @@ import {
   SchoolAnnouncement,
   AcademicPeriodType,
   AcademicGradeWorkflowBatch,
-  StudentReportNotification
+  StudentReportNotification,
+  AppUserSession
 } from '../types';
 import { translations } from '../data/translations';
 import { StorageService } from '../utils/storage';
+import { getLocalizedSchool, getLocalizedStudents } from '../utils/localizedData';
 import { StudentIDCardModal } from './StudentIDCardModal';
 import { StudentQRAttendanceModal } from './StudentQRAttendanceModal';
 import { TeacherEvaluationModal } from './TeacherEvaluationModal';
+import { StudentDisciplineDesk } from './StudentDisciplineDesk';
+import { StudentAnnualFeeDesk } from './StudentAnnualFeeDesk';
 import { AudioTranscriber } from './AudioTranscriber';
 import { SchoolLogo } from './SchoolLogo';
 
@@ -83,12 +88,19 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
   school
 }) => {
   const t = translations[currentLang];
+  const [portalTab, setPortalTab] = useState<'report_card' | 'tuition_fee'>('report_card');
   const [showIdCardModal, setShowIdCardModal] = useState(false);
   const [showQrAttendanceModal, setShowQrAttendanceModal] = useState(false);
   const [showTeacherEvaluationModal, setShowTeacherEvaluationModal] = useState(false);
+  const [showDisciplineModal, setShowDisciplineModal] = useState(false);
   const [chartMode, setChartMode] = useState<ChartViewMode>('stacked');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [selectedPeriod, setSelectedPeriod] = useState<AcademicPeriodType>('semester_1');
+
+  // Student Fee records for badge status
+  const studentFeePayments = useMemo(() => {
+    return StorageService.getFeePayments(student.schoolId, student.id);
+  }, [student.schoolId, student.id]);
 
   // Academic Grade Workflows for Period Tracking & Official Approval Seal
   const schoolGradeWorkflows = useMemo(() => {
@@ -409,13 +421,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
   const lowestSubject = sortedScores[sortedScores.length - 1];
 
   const resolvedSchool = useMemo(() => {
-    if (school) return school;
+    if (school) return getLocalizedSchool(school, currentLang);
     const allSchools = StorageService.getSchools();
-    return (
+    const found =
       allSchools.find((s) => s.id === student.schoolId || s.name === student.schoolName) ||
-      allSchools[0]
-    );
-  }, [school, student.schoolId, student.schoolName]);
+      allSchools[0];
+    return getLocalizedSchool(found, currentLang);
+  }, [school, student.schoolId, student.schoolName, currentLang]);
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto relative">
@@ -620,6 +632,15 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
 
             <button
               type="button"
+              onClick={() => setShowDisciplineModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer border border-rose-400/50"
+              title="ስነ-ምግባር ችግር ያለባቸውን ተማሪዎች ለትምህርት ቤት ዳይሬክተር በምስጢር ወይም በግልጽ መጠቆሚያ"
+            >
+              <ShieldAlert className="w-4 h-4 text-amber-300" />
+              <span>🚨 የስነ-ምግባር ጥቆማ ለዳይሬክተር (Report Misconduct)</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setShowTeacherEvaluationModal(true)}
               className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer"
             >
@@ -648,12 +669,61 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               <Printer className="w-4 h-4" />
               <span>{t.btn_print_card}</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setPortalTab(portalTab === 'tuition_fee' ? 'report_card' : 'tuition_fee')}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer ${
+                portalTab === 'tuition_fee'
+                  ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300'
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white'
+              }`}
+            >
+              <Receipt className="w-4 h-4 text-white" />
+              <span>የወር ክፍያና ደረሰኝ (Tuition Fees)</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Automated Status Update Alert Callout Banner */}
-      {unreadNotifications.length > 0 && (
+      {/* Top Main Navigation Tabs: Report Card vs Annual Tuition Fees */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-200/90 rounded-2xl border border-slate-300">
+        <button
+          type="button"
+          onClick={() => setPortalTab('report_card')}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+            portalTab === 'report_card'
+              ? 'bg-white text-emerald-950 shadow-md ring-1 ring-slate-200'
+              : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4 text-emerald-700" />
+          <span>የተማሪ የውጤት ካርድና ትምህርታዊ ትንታኔ (Report Card)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setPortalTab('tuition_fee')}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+            portalTab === 'tuition_fee'
+              ? 'bg-emerald-900 text-white shadow-md ring-2 ring-emerald-500/50'
+              : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+          }`}
+        >
+          <Receipt className="w-4 h-4 text-emerald-300" />
+          <span>የአመቱ ሙሉ የወር ክፍያ ሰንጠረዥና ደረሰኝ (Annual Tuition Fees)</span>
+        </button>
+      </div>
+
+      {portalTab === 'tuition_fee' ? (
+        <StudentAnnualFeeDesk
+          student={student}
+          school={resolvedSchool}
+          currentLang={currentLang}
+        />
+      ) : (
+        <>
+          {/* Automated Status Update Alert Callout Banner */}
+          {unreadNotifications.length > 0 && (
         <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white rounded-2xl p-4 sm:p-4.5 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-2 border-emerald-400/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shrink-0">
@@ -1440,6 +1510,8 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Student ID Card Modal */}
       <StudentIDCardModal
@@ -1470,6 +1542,56 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         school={resolvedSchool}
         student={student}
       />
+
+      {/* Student Misconduct Tip-off Modal for Students / Parents */}
+      {showDisciplineModal && (
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 my-4 max-h-[94vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-800 text-white flex items-center justify-center shadow-md">
+                  <ShieldAlert className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                    የስነ-ምግባር ችግር ጥቆማ ለትምህርት ቤት ዳይሬክተር
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {student.fullName} · ክፍል {student.grade} ክፍልፋይ {student.section} · {resolvedSchool.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDisciplineModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <StudentDisciplineDesk
+              school={resolvedSchool}
+              students={getLocalizedStudents(
+                StorageService.getStudents(resolvedSchool.id),
+                currentLang
+              )}
+              currentUser={{
+                name: student.fullName,
+                role: 'student',
+                schoolId: resolvedSchool.id,
+                schoolName: resolvedSchool.name,
+                identifier: student.studentIdNumber,
+                accessCode: student.accessCode
+              }}
+              currentLang={currentLang}
+              preSelectedGrade={student.grade}
+              preSelectedSection={student.section}
+              onCloseModal={() => setShowDisciplineModal(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

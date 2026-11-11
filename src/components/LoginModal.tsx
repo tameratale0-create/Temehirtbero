@@ -36,6 +36,7 @@ import {
 } from '../types';
 import { translations } from '../data/translations';
 import { StorageService } from '../utils/storage';
+import { getLocalizedSchool, getLocalizedSchoolCode } from '../utils/localizedData';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -258,13 +259,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     const matchedSchool = schools.find((s) => s.accessCode.toUpperCase() === cleanCode);
 
     if (matchedSchool) {
+      const locSchool = getLocalizedSchool(matchedSchool, currentLang);
       onLoginSuccess({
         role: 'school_admin',
-        name: `${matchedSchool.principalName} (${matchedSchool.name})`,
-        schoolId: matchedSchool.id,
-        schoolName: matchedSchool.name,
-        identifier: matchedSchool.id,
-        accessCode: matchedSchool.accessCode
+        name: `${locSchool.principalName} (${locSchool.name})`,
+        schoolId: locSchool.id,
+        schoolName: locSchool.name,
+        identifier: locSchool.id,
+        accessCode: locSchool.accessCode
       });
       onClose();
       return;
@@ -274,13 +276,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     const schoolCodes = StorageService.getSchoolCodes();
     const matchedCode = schoolCodes.find((c) => c.accessCode.toUpperCase() === cleanCode);
     if (matchedCode) {
+      const locCode = getLocalizedSchoolCode(matchedCode, currentLang);
       onLoginSuccess({
-        role: matchedCode.role,
-        name: matchedCode.fullName,
-        schoolId: matchedCode.schoolId,
-        schoolName: matchedCode.schoolName,
-        identifier: matchedCode.id,
-        accessCode: matchedCode.accessCode
+        role: locCode.role,
+        name: locCode.fullName,
+        schoolId: locCode.schoolId,
+        schoolName: locCode.schoolName,
+        identifier: locCode.id,
+        accessCode: locCode.accessCode
       });
       onClose();
       return;

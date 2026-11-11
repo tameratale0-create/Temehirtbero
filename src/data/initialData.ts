@@ -18,7 +18,9 @@ import {
   ExamSubmission,
   NightClassScheduleItem,
   DeveloperPaymentReceipt,
-  DeveloperPaymentConfig
+  DeveloperPaymentConfig,
+  StudentDisciplineReport,
+  SchoolBankAccount
 } from '../types';
 
 export const initialSchools: School[] = [
@@ -727,7 +729,47 @@ export const initialTrainingMaterials: TrainingMaterial[] = [
 ጂኦጄብራ (GeoGebra) እና ሌሎች ነፃ መተግበሪያዎችን በመጠቀም የግራፍና የጂኦሜትሪ ትምህርቶችን በእይታ ማስደገፍ።
 
 4. ቀጣይነት ያለው ግብረ-መልስ፡
-በየሳምንቱ አጫጭር የ 5 ደቂቃ ፈተናዎችን በመስጠት ተማሪዎች ያልገባቸውን ቀድሞ መለየት።`
+በየሳምንቱ አጫጭር የ 5 ደቂቃ ፈተናዎችን በመስጠት ተማሪዎች ያልገባቸውን ቀድሞ መለየት።`,
+    attachments: [
+      {
+        id: 'att-mat1-01',
+        fileName: 'የሂሳብ_ትምህርት_ስነዘዴ_እና_የምዘና_ዝርዝር_መመሪያ_2017.pdf',
+        fileType: 'pdf',
+        fileSize: '1.8 MB',
+        uploadedAt: '2025-01-05',
+        uploadedBy: 'የስርዓተ-ትምህርትና የመምህራን ልማት ዳይሬክቶሬት',
+        description: 'ለመካከለኛና 2ኛ ደረጃ የሂሳብ መምህራን የተዘጋጀ ተግባራዊ የማስተማሪያ ማኑዋል እና የክፍለ-ጊዜ እቅድ ማዘጋጃ ሰነድ።',
+        textContent: `የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ - የሂሳብ ትምህርት ስነ-ዘዴ ዝርዝር አታችመንት ሰነድ
+የትምህርት ዘመን፡ 2016/2017 ዓ.ም
+
+1. የቁጥር አስተሳሰብን (Number Sense) ማጎልበት፡
+- ተማሪዎች ቁጥሮችን በዓይነ-ህሊናቸው እንዲስሉ ማገዝ።
+- በየዕለቱ የ 3 ደቂቃ የአዕምሮ ሂሳብ (Mental Math) ማካሄድ።
+
+2. አልጀብራና ጂኦሜትሪን ማስተሳሰር፡
+- የሬሾና ፕሮፖርሽን ጽንሰ-ሀሳቦችን በገበታ እና በምስል ማሳየት።
+- ቀጥታ ቀመር ከመስጠት ይልቅ ተማሪዎች ቀመሩ እንዴት እንደመጣ እንዲመረምሩ ማበረታታት።
+
+3. የተማሪዎች የቡድን ምዘና ሩብሪክስ (Assessment Rubrics):
+- ትብብር እና ተሳትፎ፡ 25%
+- የሂሳባዊ ችግር አፈታት ሂደት፡ 40%
+- ትክክለኛ ምላሽና አቀራረብ፡ 35%`
+      },
+      {
+        id: 'att-mat1-02',
+        fileName: 'የክፍል_ውስጥ_የተግባር_ስራዎችና_የቡድን_ጥያቄዎች.docx',
+        fileType: 'docx',
+        fileSize: '640 KB',
+        uploadedAt: '2025-01-06',
+        uploadedBy: 'የሂሳብ ትምህርት ጥራት ማረጋገጫ',
+        description: 'በክፍል ውስጥ ለተማሪዎች የሚሰጡ የቡድን ስራዎች እና የሳምንታዊ የቤት ስራ ጥያቄዎች ዝግጅት ማስተካከያ።',
+        textContent: `የሂሳብ የተግባር ስራዎች ማዘጋጃ ሰነድ (Worksheet Document):
+ክፍል 9 - 12 የሂሳብ ጥያቄዎች ማዘጋጃ፡
+1. ኳድራቲክ ኢኩዌሽን (Quadratic Equations) በግራፍ እና በፋክተራይዜሽን የመፍታት ዘዴ።
+2. የትሪጎኖሜትሪ ተግባራዊ አጠቃቀም (የህንፃዎችና የዛፎች ርዝመት መለካት)።
+3. የማትሪክስ እና ቬክተር ቀመሮች በምህንድስና ስራዎች ውስጥ ያላቸው ፋይዳ።`
+      }
+    ]
   },
   {
     id: 'mat-2',
@@ -752,7 +794,28 @@ Mana kitaabaa keessatti kitaabota afaan Oromoo fi og-barruu durii fi ammayyaa ak
 Seerluga akka seeraatti qofa osoo hin taane, barreeffama guyyaa guyyaa keessatti fayyadama isaa agarsiisuu.
 
 4. Og-afaan (Oral Literature) Hojiirra Oolchuu:
-Mammaaksa, hibboo fi jechamoota oromoo jireenya barattootaa wajjin wal-qabsiisuun barsiisuu.`
+Mammaaksa, hibboo fi jechamoota oromoo jireenya barattootaa wajjin wal-qabsiisuun barsiisuu.`,
+    attachments: [
+      {
+        id: 'att-mat2-01',
+        fileName: 'Qajeelfama_Ogbarruu_fi_Dubbisuu_Afaan_Oromoo.pdf',
+        fileType: 'pdf',
+        fileSize: '1.2 MB',
+        uploadedAt: '2025-01-08',
+        uploadedBy: 'Kutaa Qophii fi Misooma Sirna Barnootaa',
+        description: 'Manni kitaabaa fi dareen barnootaa haala kamiin aadaa dubbisuu gabbisuu akka qaban kan ibsu qajeelfama gabaabaa.',
+        textContent: `Biiroo Barnootaa Bulchiinsa Magaalaa Shashamannee
+Qajeelfama Og-barruu fi Dubbisuu Afaan Oromoo
+
+1. Dandeettii Dubbisuu Cimsachuu:
+- Barattoonni guyyaa guyyaan daqiiqaa 15 akka dubbisan taasisuu.
+- Mammaaksota, asoosamoota gabaaboo fi seenaawwan aadaa daree keessatti dhiyeessuu.
+
+2. Shaakala Barreessuu (Writing Skills):
+- Barattoonni yaada mataa isaanii barreeffamaan akka ibsatan jajjabeessuu.
+- Seerluga sirriitti fayyadamuun barreessuu leenjisuu.`
+      }
+    ]
   },
   {
     id: 'mat-3',
@@ -777,7 +840,29 @@ Avoid interrupting students during fluency-based activities. Note systemic error
 Never teach words in isolation. Always teach collocations, idioms, and vocabulary embedded in contextual reading passages.
 
 4. Integrating Listening Comprehension:
-Use audio recordings, short news clips, or teacher read-alouds with clear pre-listening, while-listening, and post-listening tasks.`
+Use audio recordings, short news clips, or teacher read-alouds with clear pre-listening, while-listening, and post-listening tasks.`,
+    attachments: [
+      {
+        id: 'att-mat3-01',
+        fileName: 'CLT_Communicative_Activities_Handbook.pdf',
+        fileType: 'pdf',
+        fileSize: '2.1 MB',
+        uploadedAt: '2025-01-12',
+        uploadedBy: 'English Language Quality Assurance Unit',
+        description: '40 Practical speaking and listening activities for Grade 9-12 English teachers.',
+        textContent: `COMMUNICATIVE LANGUAGE TEACHING HANDBOOK
+Shashemene City Administration Education Bureau
+
+SECTION 1: SPEAKING ACTIVITIES
+1. Information Gap Tasks: Student A has half the schedule, Student B has the other half. They must ask each other in English to complete the timetable without peeking.
+2. Speed Debates: 2-minute timed arguments on modern societal topics to build rapid oral fluency.
+3. Roleplay Scenarios: Ordering at a restaurant, job interviews, asking for directions in Shashemene.
+
+SECTION 2: FORMATIVE ASSESSMENT
+- Fluency vs Accuracy marking scheme
+- Peer evaluation checklists`
+      }
+    ]
   },
   {
     id: 'mat-4',
@@ -2311,6 +2396,7 @@ export const initialDeveloperConfig: DeveloperPaymentConfig = {
   frontendEngineer: 'ታምራት አሌ (Tamerat Ale)',
   designer: 'ታምራት አሌ (Tamerat Ale)',
   address: 'ሻሸመኔ፣ ኢትዮጵያ (Shashemene, Ethiopia)',
+  websiteUrl: 'https://weshya-sofetyer-solshene.netlify.app/#deployment-modes',
   instructionsAm: 'ክፍያውን በንግድ ባንክ ወይም በቴሌብር ከፈጸሙ በኋላ የደረሰኙን ወይም የስሊፑን ፎቶ / ስክሪንሾት እና የትራንዛክሽን ቁጥር (Transaction Reference) በማስገባት ይላኩ። በአበልፃጊው በ10 ደቂቃ ውስጥ ተረጋግጦ ይከፈታል!',
   bankAccounts: [
     {
@@ -2400,5 +2486,142 @@ export const initialDeveloperPayments: DeveloperPaymentReceipt[] = [
     notes: 'በቴሌብር የተከፈለ የ5,000 ብር ደረሰኝ ማረጋገጫ በመጠባበቅ ላይ'
   }
 ];
+
+export const initialDisciplineReports: StudentDisciplineReport[] = [
+  {
+    id: 'disc-001',
+    schoolId: 'sch-1',
+    schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+    targetStudentId: 'stu-3',
+    targetStudentName: 'ናሆም ዳንኤል ታደሰ (Nahom Daniel Tadese)',
+    targetStudentCode: 'SHAS-ST-2024-003',
+    grade: 10,
+    section: 'A',
+    reporterType: 'student',
+    reporterName: 'የክፍሉ አብሮ ተማሪ',
+    reporterCode: 'STU-KIYAR-01',
+    isConfidential: true,
+    category: 'classroom_disruption',
+    severity: 'medium',
+    incidentDate: '2026-11-05',
+    incidentTime: '4:15 ከሰዓት',
+    incidentLocation: 'በ 10A ክፍል ውስጥ በሂሳብ ክፍለ-ጊዜ',
+    description: 'በክፍለ-ጊዜ ወቅት ሌሎች ተማሪዎችን በመረበሽ እና መምህሩ ሲያስተምሩ ተገቢ ያልሆነ ድምፅ በማውጣት ትኩረት እንዳይሰጥ እያደረገ ይገኛል። በተደጋጋሚ ማስጠንቀቂያ ተሰጥቶታል።',
+    witnesses: 'የ10A ተማሪዎች እና የክፍሉ ተጠሪ',
+    status: 'counseling_given',
+    directorRemarks: 'ከተማሪው እና ከክፍል ተጠሪው መምህር ጋር ተነጋግረናል፤ የስነ-ልቦና ምክር ተሰጥቶ የቃል ቃልኪዳን አስገብቷል። በድጋሚ ከተደጋገመ ወላጅ ይጠራል።',
+    actionTaken: 'የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል',
+    actionDate: '2026-11-06',
+    reviewedByDirectorName: 'አቶ ጉተማ ዋቆ (ርዕሰ መምህር)',
+    isAcknowledged: true,
+    acknowledgedByDirectorName: 'አቶ ጉተማ ዋቆ (ርዕሰ መምህር)',
+    directorAcknowledgedAt: '2026-11-06T10:15:00',
+    createdAt: '2026-11-05T16:30:00'
+  },
+  {
+    id: 'disc-002',
+    schoolId: 'sch-1',
+    schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+    targetStudentId: 'stu-4',
+    targetStudentName: 'ሮቤል ሰለሞን ሀብቴ (Robel Solomon Habte)',
+    targetStudentCode: 'SHAS-ST-2024-004',
+    grade: 10,
+    section: 'B',
+    reporterType: 'teacher',
+    reporterName: 'መምህር አለማየሁ ደጀኔ (የክፍል ተጠሪ መምህር)',
+    reporterPhone: '+251 91 144 5566',
+    isConfidential: false,
+    category: 'fighting_violence',
+    severity: 'high',
+    incidentDate: '2026-11-07',
+    incidentTime: '6:30 ከሰዓት (ከምሳ በኋላ)',
+    incidentLocation: 'በትምህርት ቤቱ መውጫ በር አቅራቢያ',
+    description: 'ከክፍል ጓደኛው ጋር የቃላት ጭቅጭቅ ፈጥሮ ወደ አካላዊ ፀብ በመግባት የደንብ ልብስ ቀዷል እና ሌሎችን ተማሪዎች አስፈራርቷል። ይህ ሁኔታ ለተማሪዎች ደህንነት አሳሳቢ ነው።',
+    witnesses: 'የግቢው ጥበቃ እና የ10B ተማሪዎች',
+    status: 'parent_conference',
+    directorRemarks: 'የተማሪው ወላጆች ለአስቸኳይ ውይይት ተጠርተዋል። ከሁለቱም ወገን ወላጆች ጋር በዳይሬክተሩ ቢሮ ውይይት ይደረጋል።',
+    actionTaken: 'የወላጅ አስቸኳይ ውይይት መጥሪያ ተልኳል',
+    actionDate: '2026-11-07',
+    reviewedByDirectorName: 'አቶ ጉተማ ዋቆ (ርዕሰ መምህር)',
+    isAcknowledged: true,
+    acknowledgedByDirectorName: 'አቶ ጉተማ ዋቆ (ርዕሰ መምህር)',
+    directorAcknowledgedAt: '2026-11-07T14:45:00',
+    createdAt: '2026-11-07T14:10:00'
+  },
+  {
+    id: 'disc-003',
+    schoolId: 'sch-1',
+    schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+    targetStudentName: 'ሄኖክ አበበ (Henok Abebe)',
+    grade: 11,
+    section: 'A',
+    reporterType: 'teacher',
+    reporterName: 'መምህርት መሰረት ታደሰ (የእንግሊዝኛ መምህርት)',
+    isConfidential: false,
+    category: 'substance_smoking_khat',
+    severity: 'critical',
+    incidentDate: '2026-11-08',
+    incidentTime: '7:45 ጧት',
+    incidentLocation: 'ከትምህርት ቤቱ የኋላ አጥር ስር',
+    description: 'በትምህርት ቤት ሰዓት የትምህርት ቤት ዩኒፎርም ለብሶ ከአጥሩ ጀርባ ሲጋራ ሲያጨስ እና ወደ ግቢው ሲገባ ታይቷል። አፋጣኝ የዳይሬክተር ክትትልና የዲሲፕሊን እርምጃ ያስፈልገዋል።',
+    status: 'pending_review',
+    isAcknowledged: false,
+    createdAt: '2026-11-08T08:15:00'
+  }
+];
+
+// Initial School Official Bank Accounts posted by Cashier (የትምህርት ቤቱ ገንዘብ ያዥ የለጠፋቸው የባንክ አካውንቶች)
+export const initialSchoolBankAccounts: SchoolBankAccount[] = [
+  {
+    id: 'bank-acc-1',
+    schoolId: 'sch-1',
+    bankName: 'የኢትዮጵያ ንግድ ባንክ (CBE)',
+    accountNumber: '1000189345218',
+    accountHolder: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት (Shashemene Sec School)',
+    branch: 'ሻሸመኔ ዋና ቅርንጫፍ (Shashemene Main)',
+    instructions: 'በሲቢኢ ብር (CBE Birr) ወይም በሞባይል ባንኪንግ ሲከፍሉ በምክንያት (Reason) ቦታ የተማሪውን ሙሉ ስም እና ክፍል ይጥቀሱ። ደረሰኙን ፎቶ አንስተው እዚህ ፖርታል ላይ ያያይዙ።',
+    isActive: true,
+    postedBy: 'ወ/ሮ ሰላማዊት አበራ (ዋና ገንዘብ ያዥ / ሒሳብ ሹም)',
+    postedAt: '2024-09-02'
+  },
+  {
+    id: 'bank-acc-2',
+    schoolId: 'sch-1',
+    bankName: 'ቴሌብር (Telebirr SuperApp)',
+    accountNumber: '+251911029070',
+    telebirrNumber: '0911029070',
+    accountHolder: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ት/ቤት - የክፍያ አካውንት',
+    instructions: 'በቴሌብር ክፍያ ፈጽመው የግብይት ቁጥሩን (Transaction ID) እና የተጠናቀቀበትን ስክሪንሾት በማያያዝ ያስገቡ።',
+    isActive: true,
+    postedBy: 'ወ/ሮ ሰላማዊት አበራ (ዋና ገንዘብ ያዥ / ሒሳብ ሹም)',
+    postedAt: '2024-09-02'
+  },
+  {
+    id: 'bank-acc-3',
+    schoolId: 'sch-1',
+    bankName: 'አዋሽ ባንክ (Awash Bank)',
+    accountNumber: '01320492817200',
+    accountHolder: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+    branch: 'አዋሾ ቅርንጫፍ (Awasho Branch)',
+    instructions: 'በቀጥታ በቅርንጫፍ ወይም በሞባይል ባንኪንግ ገቢ ያድርጉ፤ የባንክ ማህተም ያለበትን ደረሰኝ ፎቶ ያያይዙ።',
+    isActive: true,
+    postedBy: 'ወ/ሮ ሰላማዊት አበራ (ዋና ገንዘብ ያዥ / ሒሳብ ሹም)',
+    postedAt: '2024-09-03'
+  },
+  {
+    id: 'bank-acc-4',
+    schoolId: 'sch-1',
+    bankName: 'ዳሽን ባንክ (Dashen Bank / Amole)',
+    accountNumber: '5082194820194',
+    accountHolder: 'Shashemene Secondary School General Fund',
+    branch: 'አባ ጅፋር ቅርንጫፍ (Abba Jifar Branch)',
+    instructions: 'በአሞሌ ወይም በቅርንጫፍ ክፍያ መፈጸም ይቻላል።',
+    isActive: true,
+    postedBy: 'ወ/ሮ ሰላማዊት አበራ (ዋና ገንዘብ ያዥ / ሒሳብ ሹም)',
+    postedAt: '2024-09-05'
+  }
+];
+
+
 
 

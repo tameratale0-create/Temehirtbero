@@ -144,11 +144,25 @@ export interface ExamSubmission {
   answers: SubmissionAnswer[];
 }
 
+export interface TrainingAttachment {
+  id: string;
+  fileName: string;
+  fileType: 'pdf' | 'docx' | 'doc' | 'txt' | 'image' | 'other';
+  fileSize: string; // e.g. "1.2 MB"
+  dataUrl?: string; // base64 or file URL for downloading
+  textContent?: string; // full text content of the attached training document
+  description?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
 export interface TrainingMaterial {
   id: string;
   title: string;
-  subject: string;
-  gradeLevels: string;
+  subject: string; // primary subject label
+  targetSubjects?: string[]; // multiple selected subjects e.g. ['Mathematics (ሂሳብ)', 'Physics (ፊዚክስ)']
+  gradeLevels: string; // grade range string e.g. "Grades 9 - 10"
+  targetGradeList?: number[]; // multiple selected grades e.g. [9, 10, 11]
   authorDepartment: string;
   uploadedAt: string;
   summary: string;
@@ -156,6 +170,21 @@ export interface TrainingMaterial {
   readTimeMinutes: number;
   tags: string[];
   downloadCount: number;
+  attachments?: TrainingAttachment[];
+}
+
+export interface TeacherTrainingNotification {
+  id: string;
+  materialId: string;
+  materialTitle: string;
+  subject: string;
+  gradeLevels: string;
+  authorDepartment: string;
+  uploadedAt: string;
+  message: string;
+  isRead: boolean;
+  schoolId?: string;
+  teacherId?: string;
 }
 
 export interface StudentScore {
@@ -434,10 +463,37 @@ export interface FeePaymentRecord {
   paymentDate: string;
   paymentMethod: 'telebirr' | 'cbe_birr' | 'cash' | 'bank_transfer';
   receiptNumber: string;
-  status: 'paid' | 'pending' | 'overdue';
+  status: 'paid' | 'pending' | 'overdue' | 'rejected';
   collectedBy: string; // Accountant name
   notes?: string;
+
+  // Receipt Attachment & Online Submission
+  receiptImageUrl?: string; // base64 / file URL of the attached bank deposit receipt
+  transactionRef?: string; // Bank transaction reference / FT code / Telebirr transaction ID
+  bankName?: string; // Bank where payment was made
+  submittedByRole?: 'student' | 'parent' | 'accountant';
+  submittedByName?: string;
+  submittedAt?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  rejectionReason?: string;
 }
+
+// School Official Bank Accounts posted by Cashier (የትምህርት ቤቱ ገንዘብ ያዥ የሚለጥፋቸው ይፋዊ የባንክ አካውንቶች)
+export interface SchoolBankAccount {
+  id: string;
+  schoolId: string;
+  bankName: string; // e.g. 'የኢትዮጵያ ንግድ ባንክ (CBE)', 'ቴሌብር (Telebirr)', 'አዋሽ ባንክ (Awash Bank)'
+  accountNumber: string;
+  accountHolder: string; // e.g. 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት'
+  telebirrNumber?: string;
+  branch?: string;
+  instructions?: string;
+  isActive: boolean;
+  postedBy?: string; // e.g. 'ወ/ሮ ሰላማዊት አበራ (ሒሳብ ሹም)'
+  postedAt?: string;
+}
+
 
 // 5. School Operational Expenses (የትምህርት ቤት አስተዳደራዊ ወጪ)
 export interface SchoolExpenseRecord {
@@ -724,6 +780,74 @@ export interface DeveloperPaymentConfig {
   frontendEngineer?: string;
   designer?: string;
   address?: string;
+  websiteUrl?: string;
+}
+
+// ============================================================================
+// STUDENT DISCIPLINE & MISCONDUCT TIP-OFF (የተማሪዎች ስነ-ምግባር ክትትልና መጠቆሚያ)
+// ============================================================================
+
+export type MisconductCategory =
+  | 'fighting_violence'          // ፀብ እና አካላዊ ጥቃት / ማስፈራራት (Fighting / Violence / Bullying)
+  | 'verbal_abuse_harassment'    // ስድብ፣ ዛቻ እና ማሸማቀቅ (Verbal Abuse / Harassment / Threat)
+  | 'classroom_disruption'       // የክፍል ረብሻ እና መምህራንን አለማክበር (Classroom Disruption / Disrespect)
+  | 'substance_smoking_khat'     // አደንዛዥ እፅ፣ ጫት ወይም ሲጋራ (Substance Abuse / Khat / Smoking)
+  | 'property_damage_vandalism'  // የትምህርት ቤት ንብረት ማውደም (Vandalism / Property Damage)
+  | 'truancy_skipping_class'     // ከትምህርት ቤት ማምለጥና አለመገኘት (Truancy / Skipping Class)
+  | 'exam_cheating'              // ፈተና ማጭበርበር እና ስርቆት (Exam Cheating / Stealing)
+  | 'digital_mobile_misuse'      // የስልክ ተገቢ ያልሆነ አጠቃቀም (Inappropriate Mobile / Digital Use)
+  | 'other_misconduct';          // ሌላ የስነ-ምግባር ጉድለት (Other Conduct Violation)
+
+export type DisciplineReportSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export type DisciplineReportStatus =
+  | 'pending_review'      // አዲስ ጥቆማ (ያልታየ)
+  | 'under_investigation' // በዳይሬክተር ምርመራ ላይ
+  | 'parent_conference'   // ከወላጅ ጋር ውይይት ተጠርቷል
+  | 'counseling_given'    // የምክር አገልግሎት ተሰጥቷል
+  | 'action_taken'        // አስተዳደራዊ እርምጃ ተወስዷል
+  | 'resolved_closed';    // ተጠናቆ ተዘግቷል
+
+export interface StudentDisciplineReport {
+  id: string;
+  schoolId: string;
+  schoolName: string;
+
+  // Target Student (የተጠቆመበት ተማሪ)
+  targetStudentId?: string;
+  targetStudentName: string;
+  targetStudentCode?: string;
+  grade: number;
+  section: string;
+
+  // Reporter Information (የጠቋሚው ማንነት)
+  reporterType: 'student' | 'parent' | 'teacher' | 'anonymous';
+  reporterName?: string;
+  reporterPhone?: string;
+  reporterCode?: string;
+  isConfidential: boolean; // ሚስጥራዊ ጥቆማ
+
+  // Incident Details (የስነ-ምግባር ጥሰቱ ዝርዝር)
+  category: MisconductCategory;
+  customCategoryTitle?: string;
+  severity: DisciplineReportSeverity;
+  incidentDate: string; // e.g. "2026-11-08"
+  incidentTime?: string; // e.g. "4:30 ከሰዓት"
+  incidentLocation?: string; // e.g. "በክፍል ውስጥ", "በግቢው በር ላይ", "በካፍቴሪያ"
+  description: string; // ዝርዝር መግለጫ
+  witnesses?: string; // የዓይን እማኞች / አብረው የነበሩ ተማሪዎች
+
+  // Director Resolution, Acknowledgment & Action (የዳይሬክተር ውሳኔ፣ ዕውቅና መስጫና እርምጃ)
+  status: DisciplineReportStatus;
+  directorRemarks?: string;
+  actionTaken?: string;
+  actionDate?: string;
+  reviewedByDirectorName?: string;
+  isAcknowledged?: boolean; // ዳይሬክተሩ ማየቱን/ዕውቅና መስጠቱን የሚያረጋግጥ
+  acknowledgedByDirectorName?: string; // ዕውቅና የሰጠው ዳይሬክተር ስም
+  directorAcknowledgedAt?: string; // ይፋዊ ቀንና ሰዓት (Timestamp, e.g. "2026-11-08T06:50:00Z")
+  createdAt: string;
+  updatedAt?: string;
 }
 
 

@@ -17,7 +17,8 @@ import {
   UserCheck,
   Award,
   X,
-  CreditCard
+  CreditCard,
+  Globe
 } from 'lucide-react';
 import { DeveloperPaymentConfig } from '../types';
 import { StorageService } from '../utils/storage';
@@ -53,6 +54,7 @@ export const SystemDeveloperProfileModal: React.FC<SystemDeveloperProfileModalPr
   const creatorName = config.leadProgrammer || 'ታምራት አሌ (Tamerat Ale)';
   const location = config.address || 'ሻሸመኔ፣ ኢትዮጵያ (Shashemene, Ethiopia)';
   const email = config.developerEmail || 'tameratale09@gmail.com';
+  const websiteUrl = config.websiteUrl || 'https://weshya-sofetyer-solshene.netlify.app/#deployment-modes';
 
   const roles = [
     {
@@ -160,6 +162,18 @@ export const SystemDeveloperProfileModal: React.FC<SystemDeveloperProfileModalPr
                 <p className="text-[11px] text-slate-300 mt-1">
                   ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)
                 </p>
+                <div className="mt-2 pt-2 border-t border-amber-500/20 flex items-center justify-between">
+                  <span className="text-[10px] text-amber-300/80">ይፋዊ ዌብ ገፅ፡</span>
+                  <a
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-white underline underline-offset-2"
+                  >
+                    <span>weshya-sofetyer-solshene.netlify.app</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -332,6 +346,61 @@ export const SystemDeveloperProfileModal: React.FC<SystemDeveloperProfileModalPr
                   )}
                 </button>
               </div>
+
+              {/* Official Website & Deployment Modes (ይፋዊ ዌብ ገፅ) */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gradient-to-r from-amber-950/40 via-slate-900 to-emerald-950/30 rounded-xl border-2 border-amber-500/40 shadow-md">
+                <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                  <div className="p-2 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 shrink-0 shadow-md">
+                    <Globe className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-amber-300 font-black uppercase tracking-wider">
+                        ይፋዊ ዌብ ገፅ (Official Website)
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-200 text-[9px] font-mono font-bold border border-amber-400/40">
+                        #DEPLOYMENT-MODES
+                      </span>
+                    </div>
+                    <a
+                      href={websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs font-black text-amber-200 hover:text-white hover:underline flex items-center gap-1.5 mt-0.5 break-all"
+                    >
+                      <span className="truncate max-w-[280px] sm:max-w-md">{websiteUrl}</span>
+                      <ExternalLink className="w-3 h-3 text-amber-400 shrink-0 inline" />
+                    </a>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      ውሽዬ ሶፍትዌር ሶሉሽን - የሲስተም ዝርጋታ አማራጮች፣ ዶክመንቴሽን እና አገልግሎቶች
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <a
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-md hover:scale-102"
+                  >
+                    <span>ዌብ ገፅ ክፈት</span>
+                    <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(websiteUrl, 'web')}
+                    className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition border border-slate-700"
+                    title="የዌብ ገፅ ሊንኩን ቅዳ"
+                  >
+                    {copiedKey === 'web' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -342,7 +411,18 @@ export const SystemDeveloperProfileModal: React.FC<SystemDeveloperProfileModalPr
             © 2016-2017 ዓ.ም | <span className="text-amber-300 font-semibold">{sisterCompany}</span> · {location}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center justify-center gap-1.5"
+            >
+              <Globe className="w-3.5 h-3.5 text-amber-400" />
+              <span>ይፋዊ ዌብሳይት</span>
+              <ExternalLink className="w-3 h-3 text-amber-400" />
+            </a>
+
             {onOpenPaymentModal && (
               <button
                 type="button"
