@@ -40,11 +40,22 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
   school
 }) => {
   const t = translations[currentLang];
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [cardSide, setCardSide] = useState<'both' | 'front' | 'back'>('both');
 
   const resolvedSchoolName =
-    schoolName || student.schoolName || school?.name || 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት';
+    schoolName ||
+    student.schoolName ||
+    school?.name ||
+    t3(
+      'Mana Barumsaa Sadarkaa 2ffaa Waliigalaa Shaashamannee',
+      'Shashemene Comprehensive Secondary School',
+      'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት'
+    );
 
   useEffect(() => {
     if (!student) return;
@@ -127,7 +138,7 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
         {/* View Toggle (Both / Front / Back) */}
         <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200 text-xs">
           <span className="font-semibold text-slate-600 pl-2">
-            የእይታ አማራጭ (Card View):
+            {t3('Filannoo Ilaalchaa (Card View):', 'Card View:', 'የእይታ አማራጭ (Card View):')}
           </span>
           <div className="flex items-center gap-1">
             <button
@@ -139,7 +150,7 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                   : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              ሁለቱም (Front & Back)
+              {t3('Lamaanuu (Front & Back)', 'Both (Front & Back)', 'ሁለቱም (Front & Back)')}
             </button>
             <button
               type="button"
@@ -187,7 +198,13 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
                       <Moon className="w-3 h-3 text-amber-300" />
-                      <span>የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · የማታ ፕሮግራም</span>
+                      <span>
+                        {t3(
+                          'Biiroo Barnootaa Magaalaa Shaashamannee · Sagantaa Galgalaa',
+                          'Shashemene City Education Bureau · Night Program',
+                          'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · የማታ ፕሮግራም'
+                        )}
+                      </span>
                     </span>
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-0.5">
@@ -202,14 +219,22 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                     </h4>
                   </div>
                   <p className="text-[9px] text-amber-200 font-semibold uppercase tracking-wider mt-0.5">
-                    🌙 የማታ ተማሪ ይፋዊ መታወቂያ · Night Extension Student ID
+                    {t3(
+                      '🌙 Waraqaa Eenyummaa Barataa Galgalaa (Night Student ID)',
+                      '🌙 Official Night Extension Student ID',
+                      '🌙 የማታ ተማሪ ይፋዊ መታወቂያ · Night Extension Student ID'
+                    )}
                   </p>
                 </div>
               ) : (
                 <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white pt-6 pb-3 px-4 text-center relative border-b-2 border-amber-400">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100">
-                      የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ
+                      {t3(
+                        'Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee',
+                        'Shashemene City Administration Education Bureau',
+                        'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ'
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-0.5">
@@ -224,7 +249,11 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                     </h4>
                   </div>
                   <p className="text-[9px] text-amber-200 font-semibold uppercase tracking-wider mt-0.5">
-                    የተማሪ ይፋዊ መታወቂያ ካርድ · Student ID Card
+                    {t3(
+                      'Kaardii Eenyummaa Barataa Seera Qabeessa · Student ID Card',
+                      'Official Student ID Card',
+                      'የተማሪ ይፋዊ መታወቂያ ካርድ · Student ID Card'
+                    )}
                   </p>
                 </div>
               )}
@@ -245,7 +274,7 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div>
                       <span className="text-[9px] text-slate-400 font-semibold block uppercase">
-                        የተማሪ ስም / Full Name
+                        {t3('Maqaa Barataa / Full Name', 'Full Name', 'የተማሪ ስም / Full Name')}
                       </span>
                       <h5 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight truncate">
                         {student.fullName}
@@ -254,26 +283,36 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
 
                     <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                       <div>
-                        <span className="text-slate-400 block text-[9px]">መታወቂያ ቁጥር</span>
+                        <span className="text-slate-400 block text-[9px]">
+                          {t3('Lakk. Eenyummaa', 'ID Number', 'መታወቂያ ቁጥር')}
+                        </span>
                         <span className="font-mono font-bold text-emerald-950">
                           {student.studentIdNumber}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[9px]">ክፍል / Section</span>
+                        <span className="text-slate-400 block text-[9px]">
+                          {t3('Kutaa / Section', 'Grade / Section', 'ክፍል / Section')}
+                        </span>
                         <span className="font-bold text-slate-800">
                           {student.grade} - {student.section}
-                          {student.shift === 'night_shift' && ' (ማታ)'}
+                          {student.shift === 'night_shift' && t3(' (Galgala)', ' (Night)', ' (ማታ)')}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[9px]">ፆታ (Gender)</span>
+                        <span className="text-slate-400 block text-[9px]">
+                          {t3('Saala (Gender)', 'Gender', 'ፆታ (Gender)')}
+                        </span>
                         <span className="font-semibold text-slate-800">
-                          {student.gender === 'M' ? 'ወንድ (Male)' : 'ሴት (Female)'}
+                          {student.gender === 'M'
+                            ? t3('Dhiira (Male)', 'Male', 'ወንድ (Male)')
+                            : t3('Dhalaa (Female)', 'Female', 'ሴት (Female)')}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[9px]">ደረጃ (Rank)</span>
+                        <span className="text-slate-400 block text-[9px]">
+                          {t3('Sadarkaa (Rank)', 'Rank', 'ደረጃ (Rank)')}
+                        </span>
                         <span className="font-bold text-emerald-800">
                           #{student.rank}
                         </span>
@@ -286,22 +325,34 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                 {student.shift === 'night_shift' || student.occupation ? (
                   <div className="bg-indigo-50/80 border border-indigo-200 p-2.5 rounded-xl grid grid-cols-2 gap-2 text-[10px]">
                     <div>
-                      <span className="text-[9px] text-indigo-700 font-bold block">የቀን ስራ / ሞያ:</span>
-                      <strong className="text-slate-900 block truncate">{student.occupation || 'የግል ስራ'}</strong>
+                      <span className="text-[9px] text-indigo-700 font-bold block">
+                        {t3('Hojii Guyyaa / Ogummaa:', 'Day Occupation:', 'የቀን ስራ / ሞያ:')}
+                      </span>
+                      <strong className="text-slate-900 block truncate">
+                        {student.occupation || t3('Hojii Dhuunfaa', 'Self-Employed', 'የግል ስራ')}
+                      </strong>
                     </div>
                     <div>
-                      <span className="text-[9px] text-indigo-700 font-bold block">የማታ ሰዓት:</span>
-                      <strong className="text-slate-900 font-mono">11:30 - 3:00 ማታ</strong>
+                      <span className="text-[9px] text-indigo-700 font-bold block">
+                        {t3('Sa\'aatii Galgalaa:', 'Night Hours:', 'የማታ ሰዓት:')}
+                      </span>
+                      <strong className="text-slate-900 font-mono">
+                        {t3('11:30 - 3:00 Galgala', '5:30 - 9:00 PM', '11:30 - 3:00 ማታ')}
+                      </strong>
                     </div>
                   </div>
                 ) : (
                   <div className="bg-emerald-50/70 border border-emerald-200 p-2.5 rounded-xl grid grid-cols-2 gap-2 text-[10px]">
                     <div>
-                      <span className="text-[9px] text-slate-500 block">የወላጅ ስም / Parent:</span>
+                      <span className="text-[9px] text-slate-500 block">
+                        {t3('Maqaa Maatii / Parent:', 'Parent Name:', 'የወላጅ ስም / Parent:')}
+                      </span>
                       <strong className="text-slate-900 block truncate">{student.parentName}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] text-slate-500 block">ስልክ / Phone:</span>
+                      <span className="text-[9px] text-slate-500 block">
+                        {t3('Bilbila / Phone:', 'Phone:', 'ስልክ / Phone:')}
+                      </span>
                       <strong className="text-slate-900 font-mono">{student.parentPhone}</strong>
                     </div>
                   </div>
@@ -310,20 +361,30 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                 {/* Bottom Bar: Access Code, Validity & Seal */}
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[10px]">
                   <div>
-                    <span className="text-[9px] text-slate-400 block">የትምህርት ዘመን (A.Y)</span>
-                    <strong className="text-slate-800 font-mono">2016-2017 ዓ.ም</strong>
+                    <span className="text-[9px] text-slate-400 block">
+                      {t3('Bara Barnootaa (A.Y)', 'Academic Year', 'የትምህርት ዘመን (A.Y)')}
+                    </span>
+                    <strong className="text-slate-800 font-mono">
+                      {t3('2016-2017 B.A.', '2016-2017 E.C.', '2016-2017 ዓ.ም')}
+                    </strong>
                   </div>
 
                   <div className="text-center">
-                    <span className="text-[9px] text-slate-400 block">የመግቢያ ኮድ</span>
+                    <span className="text-[9px] text-slate-400 block">
+                      {t3('Koodii Seensaa', 'Access Code', 'የመግቢያ ኮድ')}
+                    </span>
                     <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono font-bold text-emerald-900 text-[10px]">
                       {student.accessCode}
                     </code>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[9px] text-slate-400 block">የሚያበቃበት</span>
-                    <strong className="text-emerald-800 font-semibold">ሐምሌ 2017</strong>
+                    <span className="text-[9px] text-slate-400 block">
+                      {t3('Kan Dhumatu', 'Valid Until', 'የሚያበቃበት')}
+                    </span>
+                    <strong className="text-emerald-800 font-semibold">
+                      {t3('Adoolessa 2017', 'July 2025', 'ሐምሌ 2017')}
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -353,7 +414,7 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
                 <div className="flex items-center justify-center gap-1.5 mb-0.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-200">
-                    ትክክለኛነት ማረጋገጫ · SECURITY VERIFICATION
+                    {t3('Mirkaneessa Sirrummaa · SECURITY VERIFICATION', 'Security Verification', 'ትክክለኛነት ማረጋገጫ · SECURITY VERIFICATION')}
                   </span>
                 </div>
                 <p className="text-[9px] text-slate-400">
@@ -388,10 +449,13 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
 
                 {/* Instructions Text */}
                 <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-[10px] text-slate-600 text-left leading-relaxed space-y-1">
-                  <p className="font-semibold text-slate-800">ደንብ እና መመሪያ (Regulations):</p>
+                  <p className="font-semibold text-slate-800">
+                    {t3('Seera fi Qajeelfama (Regulations):', 'Regulations:', 'ደንብ እና መመሪያ (Regulations):')}
+                  </p>
                   <p>{t.id_card_instructions}</p>
                   <p className="text-slate-500">
-                    ለጥያቄዎች ወይም መረጃ፡ <strong className="text-slate-800">{school?.phone || '+251 46 110 2420'}</strong>
+                    {t3('Gaaffii fi odeeffannoof:', 'For inquiries:', 'ለጥያቄዎች ወይም መረጃ፡')}{' '}
+                    <strong className="text-slate-800">{school?.phone || '+251 46 110 2420'}</strong>
                   </p>
                 </div>
 
@@ -427,7 +491,11 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
         {/* Action Controls & Printing Note */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs">
           <p className="text-[11px] text-slate-500">
-            💡 <strong>ማስታወሻ፡</strong> ይህ መታወቂያ ለፕሪንት ዝግጁ ሆኖ የተዘጋጀ ነው። &quot;መታወቂያውን አትም&quot; የሚለውን ቁልፍ ሲጫኑ በቀጥታ በA4 ወረቀት ወይም በፕላስቲክ ካርድ ፕሪንተር ማተም ወይም በPDF ማስቀመጥ ይችላሉ።
+            {t3(
+              '💡 Yaadachiisa: Waraqaan eenyummaa kun maxxansaaf qophaa\'aa dha. Qabduu "Maxxansi" yoo cuqaastan kallattiin waraqaa A4 ykn kaardii pilaastikaa irratti maxxansuu ykn PDF taasisuu dandeessu.',
+              '💡 Note: This ID card is print-ready. Click "Print ID Card" to print directly to A4/plastic card printers or save as PDF.',
+              '💡 ማስታወሻ፡ ይህ መታወቂያ ለፕሪንት ዝግጁ ሆኖ የተዘጋጀ ነው። "መታወቂያውን አትም" የሚለውን ቁልፍ ሲጫኑ በቀጥታ በA4 ወረቀት ወይም በፕላስቲክ ካርድ ፕሪንተር ማተም ወይም በPDF ማስቀመጥ ይችላሉ።'
+            )}
           </p>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -436,7 +504,7 @@ export const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
             >
-              ዝጋ
+              {t3('Cufi', 'Close', 'ዝጋ')}
             </button>
             <button
               type="button"

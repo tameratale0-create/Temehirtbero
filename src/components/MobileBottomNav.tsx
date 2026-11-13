@@ -92,7 +92,23 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               )}
             </div>
             <span className="truncate max-w-[58px]">
-              {isStudentOrParent ? 'ፖርታል' : isBureauAdmin ? 'ዳሽቦርድ' : 'ዋና ገፅ'}
+              {isStudentOrParent
+                ? currentLang === 'om'
+                  ? 'Poortaalii'
+                  : currentLang === 'en'
+                  ? 'Portal'
+                  : 'ፖርታል'
+                : isBureauAdmin
+                ? currentLang === 'om'
+                  ? 'Daashboordii'
+                  : currentLang === 'en'
+                  ? 'Dashboard'
+                  : 'ዳሽቦርድ'
+                : currentLang === 'om'
+                ? 'Fuula Duraa'
+                : currentLang === 'en'
+                ? 'Home'
+                : 'ዋና ገፅ'}
             </span>
           </button>
 
@@ -121,7 +137,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <Building2 className="w-5 h-5" />
             </div>
             <span className="truncate max-w-[58px]">
-              {isBureauAdmin ? 'ት/ቤቶች' : 'ትምህርት ቤት'}
+              {isBureauAdmin
+                ? currentLang === 'om'
+                  ? 'M/Barnootaa'
+                  : currentLang === 'en'
+                  ? 'Schools'
+                  : 'ት/ቤቶች'
+                : currentLang === 'om'
+                ? 'M/Barumsaa'
+                : currentLang === 'en'
+                ? 'School'
+                : 'ትምህርት ቤት'}
             </span>
           </button>
 
@@ -138,7 +164,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <Users className="w-5 h-5" />
             </div>
             <span className="truncate max-w-[58px] font-black text-amber-900">
-              ሚና ቀይር
+              {currentLang === 'om' ? 'Gahee Jijjiiri' : currentLang === 'en' ? 'Switch Role' : 'ሚና ቀይር'}
             </span>
           </button>
 
@@ -159,7 +185,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <CreditCard className="w-5 h-5 text-indigo-700" />
             </div>
             <span className="truncate max-w-[58px]">
-              ፈቃድ & ክፍያ
+              {currentLang === 'om' ? 'Hayyama & Kaffaltii' : currentLang === 'en' ? 'License' : 'ፈቃድ & ክፍያ'}
             </span>
           </button>
 
@@ -175,7 +201,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               {showMoreMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </div>
             <span className="truncate max-w-[58px]">
-              ተጨማሪ
+              {currentLang === 'om' ? 'Dabalata' : currentLang === 'en' ? 'More' : 'ተጨማሪ'}
             </span>
           </button>
         </div>
@@ -196,10 +222,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">
-                    ፈጣን የሞባይል አገልግሎቶች (Mobile Hub)
+                    {currentLang === 'om'
+                      ? 'Tajaajila Mobaayilaa Saffisaa (Mobile Hub)'
+                      : currentLang === 'en'
+                      ? 'Quick Mobile Services (Mobile Hub)'
+                      : 'ፈጣን የሞባይል አገልግሎቶች (Mobile Hub)'}
                   </h4>
                   <p className="text-[10px] text-slate-500">
-                    የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ
+                    {currentLang === 'om'
+                      ? 'Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene City Education Bureau'
+                      : 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ'}
                   </p>
                 </div>
               </div>
@@ -223,8 +257,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 className="p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-left flex flex-col gap-1 transition"
               >
                 <Users className="w-5 h-5 text-amber-700" />
-                <span className="font-bold text-amber-950">ሚና መቀየሪያ</span>
-                <span className="text-[10px] text-amber-800">ዳይሬክተር፣ መምህር፣ ተማሪ</span>
+                <span className="font-bold text-amber-950">
+                  {currentLang === 'om' ? 'Jijjiirraa Gahee' : currentLang === 'en' ? 'Role Switcher' : 'ሚና መቀየሪያ'}
+                </span>
+                <span className="text-[10px] text-amber-800">
+                  {currentLang === 'om' ? 'Daarektara, Barsiisaa, Barataa' : currentLang === 'en' ? 'Director, Teacher, Student' : 'ዳይሬክተር፣ መምህር፣ ተማሪ'}
+                </span>
               </button>
 
               <button
@@ -236,8 +274,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 className="p-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-left flex flex-col gap-1 transition"
               >
                 <KeyRound className="w-5 h-5 text-indigo-700" />
-                <span className="font-bold text-indigo-950">የአበልፃጊ ሚስጥር በር</span>
-                <span className="text-[10px] text-indigo-800">ኮድ: tameratale6576</span>
+                <span className="font-bold text-indigo-950">
+                  {currentLang === 'om' ? 'Karra Iccitii Misoosaa' : currentLang === 'en' ? 'Developer Portal' : 'የአበልፃጊ ሚስጥር በር'}
+                </span>
+                <span className="text-[10px] text-indigo-800">
+                  {currentLang === 'om' ? 'Koodii: tameratale6576' : 'ኮድ: tameratale6576'}
+                </span>
               </button>
 
               {onOpenDeveloperProfile && (
@@ -250,8 +292,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   className="p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 border border-amber-300 text-left flex flex-col gap-1 transition"
                 >
                   <Code2 className="w-5 h-5 text-amber-700" />
-                  <span className="font-bold text-amber-950">ሲስተሙን ማን ገነባው?</span>
-                  <span className="text-[10px] text-amber-800">ታሜና ሥራው · ውሽዬ ሶፍትዌር</span>
+                  <span className="font-bold text-amber-950">
+                    {currentLang === 'om' ? 'Sirnicha Eenyutu Ijaare?' : currentLang === 'en' ? 'Who Built It?' : 'ሲስተሙን ማን ገነባው?'}
+                  </span>
+                  <span className="text-[10px] text-amber-800">
+                    {currentLang === 'om' ? 'Taammee & Siraawu · Wushiye' : 'ታሜና ሥራው · ውሽዬ ሶፍትዌር'}
+                  </span>
                 </button>
               )}
 
@@ -265,8 +311,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   className="p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-left flex flex-col gap-1 transition"
                 >
                   <CreditCard className="w-5 h-5 text-emerald-700" />
-                  <span className="font-bold text-emerald-950">የክፍያ ደረሰኝ መላኪያ</span>
-                  <span className="text-[10px] text-emerald-800">ባንክ & ቴሌብር</span>
+                  <span className="font-bold text-emerald-950">
+                    {currentLang === 'om' ? 'Ergaa Nagahee Kaffaltii' : currentLang === 'en' ? 'Send Payment Receipt' : 'የክፍያ ደረሰኝ መላኪያ'}
+                  </span>
+                  <span className="text-[10px] text-emerald-800">
+                    {currentLang === 'om' ? 'Baankii & Telebirr' : 'ባንክ & ቴሌብር'}
+                  </span>
                 </button>
               )}
 
@@ -280,8 +330,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left flex flex-col gap-1 transition"
                 >
                   <Download className="w-5 h-5 text-slate-700" />
-                  <span className="font-bold text-slate-900">ዳታ ምትኬ (Backup)</span>
-                  <span className="text-[10px] text-slate-500">ኦፍላይን ዳታ ቅዳ</span>
+                  <span className="font-bold text-slate-900">
+                    {currentLang === 'om' ? 'Kuusaa Daataa (Backup)' : currentLang === 'en' ? 'Data Backup' : 'ዳታ ምትኬ (Backup)'}
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    {currentLang === 'om' ? 'Daataa toora alaa waraabi' : 'ኦፍላይን ዳታ ቅዳ'}
+                  </span>
                 </button>
               )}
 
@@ -295,8 +349,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   className="p-3 rounded-2xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-left flex flex-col gap-1 transition"
                 >
                   <ShieldCheck className="w-5 h-5 text-purple-700" />
-                  <span className="font-bold text-purple-950">ኮድ ማስገቢያ በር</span>
-                  <span className="text-[10px] text-purple-800">የግል ኮድ መግቢያ</span>
+                  <span className="font-bold text-purple-950">
+                    {currentLang === 'om' ? 'Karra Koodii Seensaa' : currentLang === 'en' ? 'Access Code Gate' : 'ኮድ ማስገቢያ በር'}
+                  </span>
+                  <span className="text-[10px] text-purple-800">
+                    {currentLang === 'om' ? 'Seensa koodii dhuunfaa' : 'የግል ኮድ መግቢያ'}
+                  </span>
                 </button>
               )}
 
@@ -309,8 +367,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 className="p-3 rounded-2xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-left flex flex-col gap-1 transition"
               >
                 <Award className="w-5 h-5 text-teal-700" />
-                <span className="font-bold text-teal-950">የመምህራን ፈተና</span>
-                <span className="text-[10px] text-teal-800">ኦንላይን ፈተና</span>
+                <span className="font-bold text-teal-950">
+                  {currentLang === 'om' ? 'Qormaata Barsiisotaa' : currentLang === 'en' ? 'Teacher Exams' : 'የመምህራን ፈተና'}
+                </span>
+                <span className="text-[10px] text-teal-800">
+                  {currentLang === 'om' ? 'Qormaata toora irraa' : 'ኦንላይን ፈተና'}
+                </span>
               </button>
             </div>
 
@@ -320,7 +382,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               onClick={() => setShowMoreMenu(false)}
               className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 text-center transition"
             >
-              ዝጋ (Close Menu)
+              {currentLang === 'om' ? 'Cufi (Close Menu)' : currentLang === 'en' ? 'Close Menu' : 'ዝጋ (Close Menu)'}
             </button>
           </div>
         </div>

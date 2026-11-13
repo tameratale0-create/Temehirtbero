@@ -50,6 +50,39 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
   currentUser,
   currentLang
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
+  const getSubjectDisplay = (subj: string) => {
+    const lower = subj.toLowerCase();
+    if (lower.includes('math') || lower.includes('ሂሳብ') || lower.includes('ሒሳብ')) {
+      return t3('Herrega (Mathematics)', 'Mathematics', 'Mathematics (ሒሳብ)');
+    }
+    if (lower.includes('oromo') || lower.includes('ኦሮሚኛ')) {
+      return t3('Afaan Oromoo', 'Afaan Oromoo', 'Afaan Oromoo (ኦሮሚኛ)');
+    }
+    if (lower.includes('english') || lower.includes('እንግሊዝኛ')) {
+      return t3('Ingiliffaa (English)', 'English', 'English (እንግሊዝኛ)');
+    }
+    if (lower.includes('physics') && lower.includes('chemistry')) {
+      return t3('Fiiziksii fi Keemistirii (Saayinsii)', 'Physics & Chemistry', 'Physics & Chemistry (ሳይንስ)');
+    }
+    if (lower.includes('physics') || lower.includes('ፊዚክስ')) {
+      return t3('Fiiziksii (Physics)', 'Physics', 'Physics (ፊዚክስ)');
+    }
+    if (lower.includes('chemistry') || lower.includes('ኬሚስትሪ')) {
+      return t3('Keemistirii (Chemistry)', 'Chemistry', 'Chemistry (ኬሚስትሪ)');
+    }
+    if (lower.includes('bio') || lower.includes('ባዮ')) {
+      return t3('Baayoolojii (Biology)', 'Biology', 'Biology (ባዮሎጂ)');
+    }
+    if (lower.includes('civic') || lower.includes('citizen') || lower.includes('ዜጋ')) {
+      return t3('Lammummaa fi Barnoota Hawaasaa', 'Citizenship & Social Studies', 'Citizenship & Social Studies (ስነ-ዜጋ)');
+    }
+    return subj;
+  };
+
   const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [activeTab, setActiveTab] = useState<'bureau_training' | 'homework' | 'attendance'>('bureau_training');
 
@@ -102,6 +135,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
   );
   const [showAddHwModal, setShowAddHwModal] = useState(false);
   const [selectedAssignmentForReview, setSelectedAssignmentForReview] = useState<HomeworkAssignment | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // New Homework Form state
   const [hwSubject, setHwSubject] = useState(detectedTeacherSubject);
@@ -139,7 +173,9 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
       schoolId: school.id,
       schoolName: school.name,
       teacherId: currentUser?.identifier || 'tch-1',
-      teacherName: currentUser?.name || 'መ/ር በፈቃዱ ጥላሁን',
+      teacherName:
+        currentUser?.name ||
+        t3('Barsiisaa Bafaqaaduu Xilaahun', 'Teacher Befekadu Tilahun', 'መ/ር በፈቃዱ ጥላሁን'),
       grade: Number(hwGrade),
       section: hwSection,
       subject: hwSubject,
@@ -158,9 +194,12 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
   };
 
   const handleDeleteHomework = (id: string) => {
-    if (confirm('ይህን የቤት ስራ መሰረዝ ይፈልጋሉ?')) {
+    if (confirmDeleteId === id) {
       StorageService.deleteHomework(id);
       setAssignments(StorageService.getHomework(school.id));
+      setConfirmDeleteId(null);
+    } else {
+      setConfirmDeleteId(id);
     }
   };
 
@@ -183,11 +222,20 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
       section: student.section,
       date: selectedDate,
       status,
-      recordedBy: currentUser?.name || 'መ/ር በፈቃዱ ጥላሁን'
+      recordedBy:
+        currentUser?.name ||
+        t3('Barsiisaa Bafaqaaduu Xilaahun', 'Teacher Befekadu Tilahun', 'መ/ር በፈቃዱ ጥላሁን')
     };
 
     StorageService.markAttendance(record);
     setAttendanceRecords(StorageService.getAttendance(school.id, undefined, selectedDate));
+
+    const statusLabel =
+      status === 'present'
+        ? t3('Argameera', 'Present', 'ተገኝቷል')
+        : status === 'absent'
+        ? t3('Hafeera', 'Absent', 'ቀሪ')
+        : t3('Hayyama', 'Excused', 'ፈቃድ');
 
     // Enqueue attendance for offline synchronization
     OfflineSyncManager.enqueue(
@@ -196,9 +244,13 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
       record.id,
       record,
       {
-        authorName: currentUser?.name || 'መምህር',
+        authorName: currentUser?.name || t3('Barsiisaa', 'Teacher', 'መምህር'),
         schoolName: school.name,
-        description: `የተማሪ ${student.fullName} የመገኘት ሁኔታ (${status === 'present' ? 'ተገኝቷል' : status === 'absent' ? 'ቀሪ' : 'ፈቃድ'})`
+        description: t3(
+          `Haala argama barataa ${student.fullName} (${statusLabel})`,
+          `Attendance status for ${student.fullName} (${statusLabel})`,
+          `የተማሪ ${student.fullName} የመገኘት ሁኔታ (${statusLabel})`
+        )
       }
     );
 
@@ -206,8 +258,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
     setTimeout(() => setAttendanceSavedMessage(false), 2000);
   };
 
-  // Strict Work Isolation for Teachers:
-  // "አንዱ የአንዱን ስራ ሳያይ ሁሉም የየራሳቸውን ስራ እንዲሰሩ"
+  // Strict Work Isolation for Teachers
   const isTeacherUser = currentUser?.role === 'teacher';
 
   const localizedAssignments = useMemo(
@@ -237,14 +288,27 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-900/80 border border-amber-400/40 rounded-full text-xs font-semibold text-amber-200">
               <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-              <span>የመምህራን እና የአካዳሚክ ስራ አመራር ክፍል</span>
+              <span>
+                {t3(
+                  'Kutaa Barsiisotaa fi Hoggansa Hojii Barnootaa',
+                  'Teachers & Academic Operations Department',
+                  'የመምህራን እና የአካዳሚክ ስራ አመራር ክፍል'
+                )}
+              </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              የቤት ስራ (Homework) እና ዕለታዊ መገኘት (Attendance)
+              {t3(
+                'Hojii Manaa (Homework) fi Argama Guyyaa (Attendance)',
+                'Homework Assignments & Daily Attendance',
+                'የቤት ስራ (Homework) እና ዕለታዊ መገኘት (Attendance)'
+              )}
             </h2>
             <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed">
-              ለመማሪያ ክፍሎች የቤት ስራ የመስጠት፣ የተማሪዎችን መልስ የማረም እና ነጥብ የመስጠት፤ እንዲሁም
-              የተማሪዎችን ዕለታዊ መገኘት በቅጽበት የመመዝገቢያ ማዕከል
+              {t3(
+                'Dareewwaniif hojii manaa kennuu, deebii barattootaa sirreessuu fi qabxii kennuu; akkasumas argama guyyaa barattootaa battalumatti galmeessuu.',
+                'Assign homework to classes, grade student submissions, and record daily student attendance in real time.',
+                'ለመማሪያ ክፍሎች የቤት ስራ የመስጠት፣ የተማሪዎችን መልስ የማረም እና ነጥብ የመስጠት፤ እንዲሁም የተማሪዎችን ዕለታዊ መገኘት በቅጽበት የመመዝገቢያ ማዕከል'
+              )}
             </p>
           </div>
 
@@ -256,12 +320,12 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>አዲስ የቤት ስራ ስጥ (New Homework)</span>
+                <span>{t3('Hojii Manaa Haaraa Kenni (New)', 'Assign New Homework', 'አዲስ የቤት ስራ ስጥ (New Homework)')}</span>
               </button>
             ) : (
               <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
                 <Lock className="w-4 h-4 text-amber-300" />
-                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+                <span>{t3('Ilaalcha Biiroo Barnootaa (Dubbisuu Qofa)', 'Bureau View (Read-Only)', 'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)')}</span>
               </div>
             )}
           </div>
@@ -277,16 +341,18 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
-                ይፋዊ የትምህርት ቢሮ ስልጠና
+                {t3('Leenjii Idilee Biiroo Barnootaa', 'Official Bureau Training', 'ይፋዊ የትምህርት ቢሮ ስልጠና')}
               </span>
               <span className="text-[10px] text-amber-300 font-medium">
-                ቀጥታ የተላከለት መምህር
+                {t3('Kallattiin Barsiisaa Ergamedha', 'Dispatched Directly to Teacher', 'ቀጥታ የተላከለት መምህር')}
               </span>
             </div>
             <h3 className="text-xs sm:text-sm font-black text-white mt-0.5">
-              ለመምህር {currentUser?.name || 'በፈቃዱ ጥላሁን'} ለሚያስተምሩት{' '}
-              <span className="text-amber-300 underline font-bold">[{detectedTeacherSubject}]</span>{' '}
-              ትምህርት የተላኩ ይፋዊ የስልጠና ሞጁሎች
+              {t3('Barsiisaa/tuu', 'For Teacher', 'ለመምህር')}{' '}
+              {currentUser?.name || t3('Bafaqaaduu Xilaahun', 'Befekadu Tilahun', 'በፈቃዱ ጥላሁን')}{' '}
+              {t3('gosa barnootaa', 'teaching', 'ለሚያስተምሩት')}{' '}
+              <span className="text-amber-300 underline font-bold">[{getSubjectDisplay(detectedTeacherSubject)}]</span>{' '}
+              {t3('moojuulota leenjii idilee ergaman', 'official training modules dispatched', 'ትምህርት የተላኩ ይፋዊ የስልጠና ሞጁሎች')}
             </h3>
           </div>
         </div>
@@ -301,7 +367,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>{activeTab === 'bureau_training' ? 'ስልጠናውን እየተመለከቱ ነው' : 'ስልጠናዎችን ተመልከት'}</span>
+          <span>
+            {activeTab === 'bureau_training'
+              ? t3('Leenjii Ilaalaa Jirtu', 'Viewing Training', 'ስልጠናውን እየተመለከቱ ነው')
+              : t3('Leenjiiwwan Ilaali', 'View Trainings', 'ስልጠናዎችን ተመልከት')}
+          </span>
         </button>
       </div>
 
@@ -317,9 +387,9 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           }`}
         >
           <Award className="w-4 h-4 text-amber-300" />
-          <span>ከትምህርት ቢሮ የተላኩ ስልጠናዎች</span>
+          <span>{t3('Leenjiiwwan Biiroo Barnootaarraa Ergaman', 'Bureau Dispatched Trainings', 'ከትምህርት ቢሮ የተላኩ ስልጠናዎች')}</span>
           <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">
-            ይፋዊ ሞጁሎች
+            {t3('Moojuulii Idilee', 'Official Modules', 'ይፋዊ ሞጁሎች')}
           </span>
         </button>
 
@@ -335,8 +405,8 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           <BookOpen className="w-4 h-4" />
           <span>
             {isTeacherUser
-              ? `የእኔ የቤት ስራዎች (${visibleAssignments.length})`
-              : `የቤት ስራዎች እና ምልጃዎች (${visibleAssignments.length})`}
+              ? t3(`Hojii Manaa Koo (${visibleAssignments.length})`, `My Homework (${visibleAssignments.length})`, `የእኔ የቤት ስራዎች (${visibleAssignments.length})`)
+              : t3(`Hojii Manaa fi Deebii (${visibleAssignments.length})`, `Homework & Submissions (${visibleAssignments.length})`, `የቤት ስራዎች እና ምልጃዎች (${visibleAssignments.length})`)}
           </span>
         </button>
 
@@ -350,7 +420,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>የተማሪዎች ዕለታዊ መገኘት (Daily Attendance Sheet)</span>
+          <span>{t3('Argama Guyyaa Barattootaa (Attendance)', 'Daily Attendance Sheet', 'የተማሪዎች ዕለታዊ መገኘት (Daily Attendance Sheet)')}</span>
         </button>
       </div>
 
@@ -374,13 +444,16 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   🔒
                 </span>
                 <span>
-                  <strong>የተከለለ የመምህር የስራ ገጽ ({currentUser?.name})፡</strong> ለእርስዎ የተመደቡ
-                  የትምህርት ክፍለ ጊዜያትና የቤት ስራዎች ብቻ ተለይተዋል። ሌሎች መምህራን የእርስዎን አያዩም፤ እርስዎም የሌሎችን
-                  አያዩም።
+                  <strong>{t3(`Fuula Hojii Barsiisaa Dhuunfaa (${currentUser?.name}):`, `Isolated Teacher Workspace (${currentUser?.name}):`, `የተከለለ የመምህር የስራ ገጽ (${currentUser?.name})፡`)}</strong>{' '}
+                  {t3(
+                    'Wayitii barumsaa fi hojii manaa isiniif ramadaman qofatu adda ba’e. Barsiisonni biroo kan keessan hin argan; isinis kan warra kaanii hin argitan.',
+                    'Only your assigned periods and homework tasks are shown. Other teachers cannot view yours, and you do not view theirs.',
+                    'ለእርስዎ የተመደቡ የትምህርት ክፍለ ጊዜያትና የቤት ስራዎች ብቻ ተለይተዋል። ሌሎች መምህራን የእርስዎን አያዩም፤ እርስዎም የሌሎችን አያዩም።'
+                  )}
                 </span>
               </div>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 uppercase font-mono shrink-0">
-                የተለየ የስራ ወሰን
+                {t3('Daangaa Hojii Dhuunfaa', 'Private Scope', 'የተለየ የስራ ወሰን')}
               </span>
             </div>
           )}
@@ -388,9 +461,15 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           {visibleAssignments.length === 0 ? (
             <div className="bg-white rounded-3xl p-8 border border-slate-200 text-center space-y-3">
               <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
-              <p className="text-xs font-bold text-slate-700">ምንም የተመደበ የቤት ስራ የለም</p>
+              <p className="text-xs font-bold text-slate-700">
+                {t3('Hojii manaa ramadame tokkollee hin jiru', 'No homework assignments yet', 'ምንም የተመደበ የቤት ስራ የለም')}
+              </p>
               <p className="text-[11px] text-slate-500">
-                በቀኝ በኩል ያለውን "አዲስ የቤት ስራ ስጥ" ቁልፍ በመጫን ለክፍልዎ የቤት ስራ መስጠት ይችላሉ።
+                {t3(
+                  'Qabduu "Hojii Manaa Haaraa Kenni" isa mirgarra jiru cuqaasuun daree keessaniif hojii manaa kennuu dandeessu.',
+                  'Click "Assign New Homework" above to create an assignment for your class.',
+                  'በቀኝ በኩል ያለውን "አዲስ የቤት ስራ ስጥ" ቁልፍ በመጫን ለክፍልዎ የቤት ስራ መስጠት ይችላሉ።'
+                )}
               </p>
             </div>
           ) : (
@@ -407,23 +486,44 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                     <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
                       <div>
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                          {hw.subject}
+                          {getSubjectDisplay(hw.subject)}
                         </span>
                         <h3 className="text-sm font-bold text-slate-900 mt-1">{hw.title}</h3>
                         <p className="text-[11px] text-slate-500">
-                          ክፍል፡ {hw.grade}ኛ ({hw.section}) · መምህር፡ {hw.teacherName}
+                          {t3('Kutaa:', 'Grade:', 'ክፍል፡')} {hw.grade}{t3('ffaa', '', 'ኛ')} ({hw.section}) · {t3('Barsiisaa:', 'Teacher:', 'መምህር፡')} {hw.teacherName}
                         </p>
                       </div>
 
                       {canDelete && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteHomework(hw.id)}
-                          className="text-slate-400 hover:text-rose-600 p-1"
-                          title="ሰርዝ"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {confirmDeleteId === hw.id ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteHomework(hw.id)}
+                                className="px-2 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-bold cursor-pointer"
+                              >
+                                {t3('Mirkaneessi', 'Confirm', 'አረጋግጥ')}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold cursor-pointer"
+                              >
+                                {t3('Dhiisi', 'Cancel', 'ተው')}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteHomework(hw.id)}
+                              className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                              title={t3('Haqi', 'Delete', 'ሰርዝ')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -434,16 +534,16 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
                     <span className="text-slate-500 font-medium font-mono flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-amber-600" />
-                      የመጨረሻ ቀን፡ {hw.dueDate}
+                      {t3('Guyyaa Xumuraa:', 'Due Date:', 'የመጨረሻ ቀን፡')} {hw.dueDate}
                     </span>
                     <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
-                      ከፍተኛ ነጥብ፡ {hw.maxScore}
+                      {t3('Qabxii Ol’aanaa:', 'Max Score:', 'ከፍተኛ ነጥብ፡')} {hw.maxScore}
                     </span>
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-[11px] text-slate-500 font-medium">
-                      የገቡ መልሶች፡ <strong>{hwSubs.length}</strong> (የታረሙ፡ {gradedCount})
+                      {t3('Deebiiwwan Galan:', 'Submissions:', 'የገቡ መልሶች፡')} <strong>{hwSubs.length}</strong> ({t3('Kan Sirreeffaman:', 'Graded:', 'የታረሙ፡')} {gradedCount})
                     </span>
                     <button
                       type="button"
@@ -451,7 +551,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                       className="px-3 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
                     >
                       <Award className="w-3.5 h-3.5" />
-                      <span>የተማሪዎችን መልስ እረም ({hwSubs.length})</span>
+                      <span>{t3(`Deebii Barattootaa Sirreessi (${hwSubs.length})`, `Review Submissions (${hwSubs.length})`, `የተማሪዎችን መልስ እረም (${hwSubs.length})`)}</span>
                     </button>
                   </div>
                 </div>
@@ -466,10 +566,14 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-black text-slate-900">
-                    የተማሪዎች መልሶች ማረሚያ፡ {selectedAssignmentForReview.title}
+                    {t3('Sirreeffama Deebii Barattootaa:', 'Submission Review:', 'የተማሪዎች መልሶች ማረሚያ፡')} {selectedAssignmentForReview.title}
                   </h3>
                   <p className="text-xs text-slate-600">
-                    የተማሪዎችን መልስ አይተው ነጥብ እና ገንቢ አስተያየት ይስጡ
+                    {t3(
+                      'Deebii barattootaa ilaaluun qabxii fi yaada ijaaraa kennaa',
+                      'Review student answers and provide scores with constructive feedback',
+                      'የተማሪዎችን መልስ አይተው ነጥብ እና ገንቢ አስተያየት ይስጡ'
+                    )}
                   </p>
                 </div>
                 <button
@@ -477,14 +581,20 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   onClick={() => setSelectedAssignmentForReview(null)}
                   className="px-3 py-1 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100"
                 >
-                  ዝጋ ✕
+                  {t3('Cufi ✕', 'Close ✕', 'ዝጋ ✕')}
                 </button>
               </div>
 
               {submissions.filter((s) => s.assignmentId === selectedAssignmentForReview.id).length ===
               0 ? (
                 <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
-                  <p className="text-xs text-slate-500">ለዚህ የቤት ስራ እስካሁን የገባ የተማሪ መልስ የለም።</p>
+                  <p className="text-xs text-slate-500">
+                    {t3(
+                      'Hojii manaa kanaaf hanga ammaatti deebiin barataa hin galle.',
+                      'No student submissions have been received for this assignment yet.',
+                      'ለዚህ የቤት ስራ እስካሁን የገባ የተማሪ መልስ የለም።'
+                    )}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -501,7 +611,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                               {sub.studentName}
                             </span>
                             <span className="text-[10px] text-slate-500 font-mono">
-                              ({sub.grade}ኛ ክፍል - {sub.section})
+                              ({t3(`Kutaa ${sub.grade}ffaa`, `Grade ${sub.grade}`, `${sub.grade}ኛ ክፍል`)} - {sub.section})
                             </span>
                             <span
                               className={`px-2 py-0.2 rounded-full text-[10px] font-bold ${
@@ -510,7 +620,9 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                                   : 'bg-amber-100 text-amber-800 border border-amber-300'
                               }`}
                             >
-                              {sub.status === 'graded' ? 'የታረመ' : 'እርማት የሚጠብቅ'}
+                              {sub.status === 'graded'
+                                ? t3('Kan Sirreeffame', 'Graded', 'የታረመ')
+                                : t3('Sirreeffama Eegaa Jira', 'Pending Review', 'እርማት የሚጠብቅ')}
                             </span>
                           </div>
 
@@ -528,7 +640,11 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                               className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg cursor-pointer inline-flex items-center gap-1"
                             >
                               <Award className="w-3 h-3" />
-                              <span>{sub.status === 'graded' ? 'ውጤት ቀይር' : 'እረም & ነጥብ ስጥ'}</span>
+                              <span>
+                                {sub.status === 'graded'
+                                  ? t3('Qabxii Jijjiiri', 'Edit Grade', 'ውጤት ቀይር')
+                                  : t3('Sirreessi & Qabxii Kenni', 'Grade Submission', 'እረም & ነጥብ ስጥ')}
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -540,13 +656,13 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                         {sub.status === 'graded' && (
                           <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
                             <span className="font-bold text-emerald-950">
-                              የተሰጠ ውጤት፡{' '}
+                              {t3('Qabxii Kenname:', 'Score Awarded:', 'የተሰጠ ውጤት፡')}{' '}
                               <strong className="text-emerald-800 font-mono text-sm">
                                 {sub.score} / {selectedAssignmentForReview.maxScore}
                               </strong>
                             </span>
                             <span className="text-emerald-800 italic">
-                              "{sub.teacherFeedback || 'ጥሩ ስራ'}"
+                              "{sub.teacherFeedback || t3('Hojii gaarii', 'Good job', 'ጥሩ ስራ')}"
                             </span>
                           </div>
                         )}
@@ -565,10 +681,18 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
-                የተማሪዎች ዕለታዊ መገኘት መመዝገቢያ ቅጽ (Daily Attendance)
+                {t3(
+                  'Unkaa Galmee Argama Guyyaa Barattootaa (Daily Attendance)',
+                  'Daily Student Attendance Sheet',
+                  'የተማሪዎች ዕለታዊ መገኘት መመዝገቢያ ቅጽ (Daily Attendance)'
+                )}
               </h3>
               <p className="text-xs text-slate-500">
-                በቀን፣ በክፍል እና በሴክሽን ተማሪዎች መገኘታቸውን፣ ማርፈዳቸውን ወይም መቅረታቸውን መመዝገቢያ
+                {t3(
+                  'Guyyaa, kutaa fi dareedhaan argama, barfachuu ykn hafuu barattootaa galmeessaa',
+                  'Record student presence, tardiness, or absence by date, grade, and section',
+                  'በቀን፣ በክፍል እና በሴክሽን ተማሪዎች መገኘታቸውን፣ ማርፈዳቸውን ወይም መቅረታቸውን መመዝገቢያ'
+                )}
               </p>
             </div>
 
@@ -576,7 +700,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
               {isBureauRole ? (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold shrink-0">
                   <Lock className="w-3.5 h-3.5 text-amber-600" />
-                  <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+                  <span>{t3('Ilaalcha Biiroo Barnootaa (Dubbisuu Qofa)', 'Bureau View (Read-Only)', 'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)')}</span>
                 </div>
               ) : (
                 <button
@@ -585,12 +709,12 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-700 hover:to-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
                 >
                   <QrCode className="w-4 h-4 text-amber-300" />
-                  <span>በ QR መገኘት መዝግብ (QR Scan)</span>
+                  <span>{t3('QR tiin Argama Galmeessi (QR Scan)', 'QR Attendance Scan', 'በ QR መገኘት መዝግብ (QR Scan)')}</span>
                 </button>
               )}
 
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-slate-500 font-semibold">ቀን፡</span>
+                <span className="text-slate-500 font-semibold">{t3('Guyyaa:', 'Date:', 'ቀን፡')}</span>
                 <input
                   type="date"
                   value={selectedDate}
@@ -605,16 +729,16 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
               </div>
 
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-slate-500 font-semibold">ክፍል፡</span>
+                <span className="text-slate-500 font-semibold">{t3('Kutaa:', 'Grade:', 'ክፍል፡')}</span>
                 <select
                   value={selectedGradeFilter}
                   onChange={(e) => setSelectedGradeFilter(Number(e.target.value))}
                   className="px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-white"
                 >
-                  <option value={9}>9ኛ ክፍል</option>
-                  <option value={10}>10ኛ ክፍል</option>
-                  <option value={11}>11ኛ ክፍል</option>
-                  <option value={12}>12ኛ ክፍል</option>
+                  <option value={9}>{t3('Kutaa 9ffaa', 'Grade 9', '9ኛ ክፍል')}</option>
+                  <option value={10}>{t3('Kutaa 10ffaa', 'Grade 10', '10ኛ ክፍል')}</option>
+                  <option value={11}>{t3('Kutaa 11ffaa', 'Grade 11', '11ኛ ክፍል')}</option>
+                  <option value={12}>{t3('Kutaa 12ffaa', 'Grade 12', '12ኛ ክፍል')}</option>
                 </select>
               </div>
             </div>
@@ -623,7 +747,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
           {attendanceSavedMessage && (
             <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-950 font-bold flex items-center gap-1.5 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>የተማሪው መገኘት ተመዝግቧል!</span>
+              <span>{t3('Argamni barataa galmaa’eera!', 'Student attendance saved!', 'የተማሪው መገኘት ተመዝግቧል!')}</span>
             </div>
           )}
 
@@ -631,13 +755,13 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 text-slate-600 font-bold border-y border-slate-200">
                 <tr>
-                  <th className="py-3 px-3">የተማሪ ስም</th>
-                  <th className="py-3 px-3">ክፍል</th>
-                  <th className="py-3 px-3">ወላጅ</th>
+                  <th className="py-3 px-3">{t3('Maqaa Barataa', 'Student Name', 'የተማሪ ስም')}</th>
+                  <th className="py-3 px-3">{t3('Kutaa', 'Grade', 'ክፍል')}</th>
+                  <th className="py-3 px-3">{t3('Maatii', 'Parent', 'ወላጅ')}</th>
                   <th className="py-3 px-3">
                     {isBureauRole
-                      ? 'የመገኘት ሁኔታ (ማየት ብቻ - Read-Only)'
-                      : 'የመገኘት ሁኔታ (ጠቅ አድርገው ይምረጡ)'}
+                      ? t3('Haala Argamaa (Dubbisuu Qofa)', 'Attendance Status (Read-Only)', 'የመገኘት ሁኔታ (ማየት ብቻ - Read-Only)')
+                      : t3('Haala Argamaa (Cuqaasaa filadhaa)', 'Attendance Status (Click to select)', 'የመገኘት ሁኔታ (ጠቅ አድርገው ይምረጡ)')}
                   </th>
                 </tr>
               </thead>
@@ -651,7 +775,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                     <tr key={st.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3 px-3 font-bold text-slate-900">{st.fullName}</td>
                       <td className="py-3 px-3 font-medium text-slate-600">
-                        {st.grade}ኛ ክፍል ({st.section})
+                        {t3(`Kutaa ${st.grade}ffaa`, `Grade ${st.grade}`, `${st.grade}ኛ ክፍል`)} ({st.section})
                       </td>
                       <td className="py-3 px-3 text-slate-500">
                         {st.parentName} ({st.parentPhone})
@@ -671,7 +795,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                             }`}
                           >
                             <UserCheck className="w-3 h-3" />
-                            <span>ተገኝቷል (Present)</span>
+                            <span>{t3('Argameera (Present)', 'Present', 'ተገኝቷል (Present)')}</span>
                           </button>
 
                           <button
@@ -687,7 +811,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                             }`}
                           >
                             <UserX className="w-3 h-3" />
-                            <span>ቀርቷል (Absent)</span>
+                            <span>{t3('Hafeera (Absent)', 'Absent', 'ቀርቷል (Absent)')}</span>
                           </button>
 
                           <button
@@ -703,7 +827,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                             }`}
                           >
                             <Clock className="w-3 h-3" />
-                            <span>ዘግይቷል (Late)</span>
+                            <span>{t3('Barfateera (Late)', 'Late', 'ዘግይቷል (Late)')}</span>
                           </button>
 
                           <button
@@ -718,7 +842,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                           >
-                            <span>በፈቃድ (Excused)</span>
+                            <span>{t3('Hayyamaan (Excused)', 'Excused', 'በፈቃድ (Excused)')}</span>
                           </button>
                         </div>
                       </td>
@@ -738,7 +862,9 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
             <div className="bg-gradient-to-r from-teal-800 to-amber-950 px-6 py-5 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <BookOpen className="w-5 h-5 text-amber-300" />
-                <h3 className="font-bold text-base">አዲስ የቤት ስራ (Homework Assignment) መስጫ</h3>
+                <h3 className="font-bold text-base">
+                  {t3('Hojii Manaa Haaraa (Homework) Kennuu', 'Assign New Homework', 'አዲስ የቤት ስራ (Homework Assignment) መስጫ')}
+                </h3>
               </div>
               <button
                 type="button"
@@ -753,42 +879,42 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት አይነት *
+                    {t3('Gosa Barnootaa *', 'Subject *', 'የትምህርት አይነት *')}
                   </label>
                   <select
                     value={hwSubject}
                     onChange={(e) => setHwSubject(e.target.value)}
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value="Physics (ፊዚክስ)">Physics (ፊዚክስ)</option>
-                    <option value="Mathematics (ሒሳብ)">Mathematics (ሒሳብ)</option>
-                    <option value="English (እንግሊዝኛ)">English (እንግሊዝኛ)</option>
-                    <option value="Afaan Oromoo">Afaan Oromoo</option>
-                    <option value="Chemistry (ኬሚስትሪ)">Chemistry (ኬሚስትሪ)</option>
-                    <option value="Biology (ባዮሎጂ)">Biology (ባዮሎጂ)</option>
-                    <option value="Civics (ስነ-ዜጋ)">Civics (ስነ-ዜጋ)</option>
+                    <option value="Physics (ፊዚክስ)">{getSubjectDisplay('Physics (ፊዚክስ)')}</option>
+                    <option value="Mathematics (ሒሳብ)">{getSubjectDisplay('Mathematics (ሒሳብ)')}</option>
+                    <option value="English (እንግሊዝኛ)">{getSubjectDisplay('English (እንግሊዝኛ)')}</option>
+                    <option value="Afaan Oromoo">{getSubjectDisplay('Afaan Oromoo')}</option>
+                    <option value="Chemistry (ኬሚስትሪ)">{getSubjectDisplay('Chemistry (ኬሚስትሪ)')}</option>
+                    <option value="Biology (ባዮሎጂ)">{getSubjectDisplay('Biology (ባዮሎጂ)')}</option>
+                    <option value="Civics (ስነ-ዜጋ)">{getSubjectDisplay('Civics (ስነ-ዜጋ)')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ክፍል
+                    {t3('Kutaa', 'Grade', 'ክፍል')}
                   </label>
                   <select
                     value={hwGrade}
                     onChange={(e) => setHwGrade(Number(e.target.value))}
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value={9}>9ኛ ክፍል</option>
-                    <option value={10}>10ኛ ክፍል</option>
-                    <option value={11}>11ኛ ክፍል</option>
-                    <option value={12}>12ኛ ክፍል</option>
+                    <option value={9}>{t3('Kutaa 9ffaa', 'Grade 9', '9ኛ ክፍል')}</option>
+                    <option value={10}>{t3('Kutaa 10ffaa', 'Grade 10', '10ኛ ክፍል')}</option>
+                    <option value={11}>{t3('Kutaa 11ffaa', 'Grade 11', '11ኛ ክፍል')}</option>
+                    <option value={12}>{t3('Kutaa 12ffaa', 'Grade 12', '12ኛ ክፍል')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ሴክሽን
+                    {t3('Daree', 'Section', 'ሴክሽን')}
                   </label>
                   <select
                     value={hwSection}
@@ -804,28 +930,28 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የቤት ስራው ርዕስ *
+                  {t3('Mata Duree Hojii Manaa *', 'Homework Title *', 'የቤት ስራው ርዕስ *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={hwTitle}
                   onChange={(e) => setHwTitle(e.target.value)}
-                  placeholder="ምሳሌ፡ የኒውተን እንቅስቃሴ ህጎች እና የቬክተር ስሌት..."
+                  placeholder={t3('Fakkeenyaaf: Seera Sochii Niiwutenii fi Herrega Veektarii...', 'e.g., Newton’s Laws of Motion & Vectors...', 'ምሳሌ፡ የኒውተን እንቅስቃሴ ህጎች እና የቬክተር ስሌት...')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የጥያቄዎች ወይም ስራው ዝርዝር መግለጫ *
+                  {t3('Ibsa Bal’aa Gaaffilee ykn Hojii *', 'Questions or Assignment Instructions *', 'የጥያቄዎች ወይም ስራው ዝርዝር መግለጫ *')}
                 </label>
                 <textarea
                   required
                   rows={4}
                   value={hwDescription}
                   onChange={(e) => setHwDescription(e.target.value)}
-                  placeholder="ጥያቄዎችን ወይም መመሪያዎችን እዚህ ይጻፉ..."
+                  placeholder={t3('Gaaffilee ykn qajeelfama asitti barreessaa...', 'Write questions or instructions here...', 'ጥያቄዎችን ወይም መመሪያዎችን እዚህ ይጻፉ...')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                 />
               </div>
@@ -833,7 +959,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የማስረከቢያ የመጨረሻ ቀን *
+                    {t3('Guyyaa Xumuraa Dhiyeessii *', 'Submission Due Date *', 'የማስረከቢያ የመጨረሻ ቀን *')}
                   </label>
                   <input
                     type="date"
@@ -846,7 +972,7 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ከፍተኛ ነጥብ *
+                    {t3('Qabxii Ol’aanaa *', 'Max Score *', 'ከፍተኛ ነጥብ *')}
                   </label>
                   <input
                     type="number"
@@ -866,14 +992,14 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   onClick={() => setShowAddHwModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-slate-950 text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   <Send className="w-4 h-4" />
-                  <span>የቤት ስራውን ስጥ</span>
+                  <span>{t3('Hojii Manaa Kenni', 'Assign Homework', 'የቤት ስራውን ስጥ')}</span>
                 </button>
               </div>
             </form>
@@ -888,7 +1014,9 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
             <div className="bg-gradient-to-r from-emerald-800 to-teal-950 px-6 py-5 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-300" />
-                <h3 className="font-bold text-base">የተማሪ መልስ እርማት እና ነጥብ መስጫ</h3>
+                <h3 className="font-bold text-base">
+                  {t3('Sirreeffama Deebii Barataa fi Kenninsa Qabxii', 'Grade Student Submission', 'የተማሪ መልስ እርማት እና ነጥብ መስጫ')}
+                </h3>
               </div>
               <button
                 type="button"
@@ -901,13 +1029,15 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
             <form onSubmit={handleSaveGrade} className="p-6 space-y-4">
               <div>
-                <span className="text-xs text-slate-500 font-semibold">የተማሪ ስም፡</span>
+                <span className="text-xs text-slate-500 font-semibold">
+                  {t3('Maqaa Barataa:', 'Student Name:', 'የተማሪ ስም፡')}
+                </span>
                 <p className="text-sm font-bold text-slate-900">{selectedSubForGrading.studentName}</p>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የተሰጠ ነጥብ (Score) *
+                  {t3('Qabxii Kenname (Score) *', 'Score Awarded *', 'የተሰጠ ነጥብ (Score) *')}
                 </label>
                 <input
                   type="number"
@@ -922,13 +1052,13 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የመምህሩ ገንቢ አስተያየት (Teacher Feedback)
+                  {t3('Yaada Ijaaraa Barsiisaa (Teacher Feedback)', 'Teacher Feedback', 'የመምህሩ ገንቢ አስተያየት (Teacher Feedback)')}
                 </label>
                 <textarea
                   rows={3}
                   value={gradeFeedback}
                   onChange={(e) => setGradeFeedback(e.target.value)}
-                  placeholder="ምሳሌ፡ በጣም ጥሩ ስራ ነው! ስሌቱ ትክክል ነው..."
+                  placeholder={t3('Fakkeenyaaf: Hojii baay’ee gaariidha! Herregni isaa sirriidha...', 'e.g., Great work! Calculations are accurate...', 'ምሳሌ፡ በጣም ጥሩ ስራ ነው! ስሌቱ ትክክል ነው...')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl"
                 />
               </div>
@@ -939,14 +1069,14 @@ export const HomeworkAndAttendanceManager: React.FC<HomeworkAndAttendanceManager
                   onClick={() => setSelectedSubForGrading(null)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                  <span>ውጤቱን መዝግብ</span>
+                  <span>{t3('Qabxii Galmeessi', 'Save Grade', 'ውጤቱን መዝግብ')}</span>
                 </button>
               </div>
             </form>

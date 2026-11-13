@@ -32,6 +32,7 @@ import {
   Globe
 } from 'lucide-react';
 import {
+  Language,
   School,
   DeveloperPaymentReceipt,
   DeveloperPaymentConfig,
@@ -45,14 +46,19 @@ interface SecretDeveloperPortalModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSchoolStatusChanged?: () => void;
+  currentLang?: Language;
 }
 
 export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProps> = ({
   isOpen,
   onClose,
-  onSchoolStatusChanged
+  onSchoolStatusChanged,
+  currentLang = 'om'
 }) => {
   const SECRET_PASSWORD = 'tameratale6576';
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>('');
@@ -70,7 +76,9 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
   // Selected receipt for detailed preview
   const [selectedReceipt, setSelectedReceipt] = useState<DeveloperPaymentReceipt | null>(null);
   const [rejectReason, setRejectReason] = useState<string>('');
+  const [rejectError, setRejectError] = useState<string>('');
   const [isRejectingId, setIsRejectingId] = useState<string | null>(null);
+  const [confirmRevokeSchoolId, setConfirmRevokeSchoolId] = useState<string | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string>('');
 
   // Editable config state
@@ -89,12 +97,14 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
   // Bank Accounts Management State
   const [bankAccountsList, setBankAccountsList] = useState<DeveloperCustomBankAccount[]>(config.bankAccounts || []);
-  const [newBankName, setNewBankName] = useState<string>('የኢትዮጵያ ንግድ ባንክ (CBE)');
+  const [newBankName, setNewBankName] = useState<string>('Commercial Bank of Ethiopia (CBE)');
   const [customBankNameInput, setCustomBankNameInput] = useState<string>('');
   const [newAccountNumber, setNewAccountNumber] = useState<string>('');
-  const [newAccountHolder, setNewAccountHolder] = useState<string>(config.accountHolder || 'ታምራት አሌ (Tamerat Ale)');
-  const [newBranchOrPhone, setNewBranchOrPhone] = useState<string>('ሻሸመኔ ቅርንጫፍ');
-  const [newAccountNotes, setNewAccountNotes] = useState<string>('ዋና የክፍያ መቀበያ ሂሳብ');
+  const [newAccountHolder, setNewAccountHolder] = useState<string>(config.accountHolder || 'Tamrat Ale (Tamerat Ale)');
+  const [newBranchOrPhone, setNewBranchOrPhone] = useState<string>('Shashemene Branch');
+  const [newAccountNotes, setNewAccountNotes] = useState<string>('');
+  const [bankFormError, setBankFormError] = useState<string>('');
+  const [confirmDeleteBankId, setConfirmDeleteBankId] = useState<string | null>(null);
   const [copiedBankId, setCopiedBankId] = useState<string | null>(null);
   const [bankAddSuccessToast, setBankAddSuccessToast] = useState<boolean>(false);
 
@@ -124,7 +134,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
     setEditWebsiteUrl(loadedConfig.websiteUrl || 'https://weshya-sofetyer-solshene.netlify.app/#deployment-modes');
     setEditInstructions(loadedConfig.instructionsAm || '');
     setBankAccountsList(loadedConfig.bankAccounts || []);
-    setNewAccountHolder(loadedConfig.accountHolder || 'ታምራት አሌ (Tamerat Ale)');
+    setNewAccountHolder(loadedConfig.accountHolder || 'Tamerat Ale');
   };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -134,15 +144,23 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
       setAuthError('');
       loadData();
     } else {
-      setAuthError('የተሳሳተ የይለፍ ቃል ነው! እባክዎ ትክክለኛውን የአበልፃጊ ሚስጥር ቃል ያስገቡ።');
+      setAuthError(t3(
+        'Jecha iccitii dogoggoraa! Maaloo jecha iccitii misoomsaa sirrii ta\'e galchaa.',
+        'Incorrect password! Please enter the valid developer secret key.',
+        'የተሳሳተ የይለፍ ቃል ነው! እባክዎ ትክክለኛውን የአበልፃጊ ሚስጥር ቃል ያስገቡ።'
+      ));
     }
   };
 
   const handleApproveSchool = (schoolId: string, receiptId?: string) => {
-    const success = StorageService.approveDeveloperPayment(receiptId || schoolId, 'ታምራት ዓለ (Developer)');
+    const success = StorageService.approveDeveloperPayment(receiptId || schoolId, 'Tamerat Ale (Developer)');
     if (success) {
       loadData();
-      setActionSuccessMsg('✅ የትምህርት ቤቱ ክፍያ ፀድቋል! አሁን ከትምህርት ቢሮ ጋር ሙሉ ግንኙነት ማድረግ ይችላል።');
+      setActionSuccessMsg(t3(
+        'Kaffaltiin mana barumsaa mirkanaa\'eera! Amma Biiroo Barnootaa waliin qunnamtii guutuu gochuu danda\'a.',
+        'School payment approved! Full connection with the Education Bureau is now enabled.',
+        'የትምህርት ቤቱ ክፍያ ፀድቋል! አሁን ከትምህርት ቢሮ ጋር ሙሉ ግንኙነት ማድረግ ይችላል።'
+      ));
       setTimeout(() => setActionSuccessMsg(''), 4000);
       if (onSchoolStatusChanged) onSchoolStatusChanged();
     }
@@ -150,46 +168,63 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
   const handleRejectSchool = (schoolId: string, receiptId: string) => {
     if (!rejectReason.trim()) {
-      alert('እባክዎ ደረሰኙ ውድቅ የተደረገበትን ምክንያት ያስገቡ።');
+      setRejectError(t3(
+        'Maaloo sababa nagaheen itti kufee galchaa.',
+        'Please enter a rejection reason for the receipt.',
+        'እባክዎ ደረሰኙ ውድቅ የተደረገበትን ምክንያት ያስገቡ።'
+      ));
       return;
     }
-    const success = StorageService.rejectDeveloperPayment(receiptId || schoolId, rejectReason, 'ታምራት ዓለ (Developer)');
+    setRejectError('');
+    const success = StorageService.rejectDeveloperPayment(receiptId || schoolId, rejectReason, 'Tamerat Ale (Developer)');
     if (success) {
       setIsRejectingId(null);
       setRejectReason('');
       loadData();
-      setActionSuccessMsg('❌ ደረሰኙ ውድቅ ተደርጓል፤ ትምህርት ቤቱ ደግሞ እንዲያስገባ ተመልሷል።');
+      setActionSuccessMsg(t3(
+        'Nagaheen kufaa ta\'eera; manni barumsaa irra deebi\'ee akka galchu deebifameera.',
+        'Receipt rejected; returned to the school for resubmission.',
+        'ደረሰኙ ውድቅ ተደርጓል፤ ትምህርት ቤቱ ደግሞ እንዲያስገባ ተመልሷል።'
+      ));
       setTimeout(() => setActionSuccessMsg(''), 4000);
       if (onSchoolStatusChanged) onSchoolStatusChanged();
     }
   };
 
   const handleRevokeSchool = (schoolId: string) => {
-    if (window.confirm('የትምህርት ቤቱን የቢሮ ግንኙነት ፈቃድ ማገድ (መቆለፍ) ይፈልጋሉ? ደግመው እስኪያፀድቁ ድረስ ከትምህርት ቢሮ ጋር መገናኘት አይችሉም።')) {
-      const success = StorageService.revokeDeveloperPayment(schoolId, 'ታምራት ዓለ (Developer)');
-      if (success) {
-        loadData();
-        setActionSuccessMsg('🔒 የትምህርት ቤቱ ግንኙነት ታግዷል (ተቆልፏል)።');
-        setTimeout(() => setActionSuccessMsg(''), 4000);
-        if (onSchoolStatusChanged) onSchoolStatusChanged();
-      }
+    const success = StorageService.revokeDeveloperPayment(schoolId, 'Tamerat Ale (Developer)');
+    if (success) {
+      setConfirmRevokeSchoolId(null);
+      loadData();
+      setActionSuccessMsg(t3(
+        'Qunnamtiin mana barumsaa daangeffameera (cufameera).',
+        'School Bureau connection has been suspended (locked).',
+        'የትምህርት ቤቱ ግንኙነት ታግዷል (ተቆልፏል)።'
+      ));
+      setTimeout(() => setActionSuccessMsg(''), 4000);
+      if (onSchoolStatusChanged) onSchoolStatusChanged();
     }
   };
 
   // Add a new custom or preset bank account
   const handleAddNewBankAccount = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalBankName = newBankName === 'ሌላ (Custom Bank)' ? customBankNameInput.trim() : newBankName;
+    const finalBankName = newBankName === '__custom__' ? customBankNameInput.trim() : newBankName;
     if (!finalBankName || !newAccountNumber.trim()) {
-      alert('እባክዎ የባንክ ስም እና የሂሳብ ቁጥር ያስገቡ');
+      setBankFormError(t3(
+        'Maaloo maqaa baankii fi lakkoofsa herregaa galchaa.',
+        'Please enter both the bank name and account number.',
+        'እባክዎ የባንክ ስም እና የሂሳብ ቁጥር ያስገቡ።'
+      ));
       return;
     }
+    setBankFormError('');
 
     const newAcc: DeveloperCustomBankAccount = {
       id: `bank-${Date.now()}`,
       bankName: finalBankName,
       accountNumber: newAccountNumber.trim(),
-      accountHolder: newAccountHolder.trim() || editHolder || 'ታምራት ዓለ (Tamerat Ale)',
+      accountHolder: newAccountHolder.trim() || editHolder || 'Tamerat Ale',
       branchOrPhone: newBranchOrPhone.trim() || undefined,
       notes: newAccountNotes.trim() || undefined,
       isActive: true
@@ -199,9 +234,9 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
     setBankAccountsList(updatedList);
     setNewAccountNumber('');
     setNewAccountNotes('');
-    if (newBankName === 'ሌላ (Custom Bank)') {
+    if (newBankName === '__custom__') {
       setCustomBankNameInput('');
-      setNewBankName('የኢትዮጵያ ንግድ ባንክ (CBE)');
+      setNewBankName('Commercial Bank of Ethiopia (CBE)');
     }
 
     const updatedConfig: DeveloperPaymentConfig = {
@@ -214,17 +249,16 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
     setTimeout(() => setBankAddSuccessToast(false), 3500);
   };
 
-  const handleDeleteBankAccount = (id: string, bankName: string) => {
-    if (window.confirm(`የ"${bankName}" የባንክ ሂሳብን ከመዝገብ ላይ መሰረዝ ይፈልጋሉ?`)) {
-      const updatedList = bankAccountsList.filter((b) => b.id !== id);
-      setBankAccountsList(updatedList);
-      const updatedConfig: DeveloperPaymentConfig = {
-        ...config,
-        bankAccounts: updatedList
-      };
-      StorageService.saveDeveloperConfig(updatedConfig);
-      setConfig(updatedConfig);
-    }
+  const handleDeleteBankAccount = (id: string) => {
+    const updatedList = bankAccountsList.filter((b) => b.id !== id);
+    setBankAccountsList(updatedList);
+    setConfirmDeleteBankId(null);
+    const updatedConfig: DeveloperPaymentConfig = {
+      ...config,
+      bankAccounts: updatedList
+    };
+    StorageService.saveDeveloperConfig(updatedConfig);
+    setConfig(updatedConfig);
   };
 
   const handleToggleBankAccountActive = (id: string) => {
@@ -301,17 +335,21 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
             </div>
 
             <div className="inline-block px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-xs font-bold text-amber-300 mb-2">
-              ታሜና ሥራው ኃ/የተ/የግ/ማ · ውሽዬ ሶፍትዌር ሶሉሽን
+              {t3('Tame & Seraw PLC · Wushiye Software Solution', 'Tame & Seraw PLC · Wushiye Software Solution', 'ታሜና ሥራው ኃ/የተ/የግ/ማ · ውሽዬ ሶፍትዌር ሶሉሽን')}
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">
-              የሲስተም አበልፃጊ ሚስጥራዊ በር
+              {t3('Karra Iccitii Misoomsaa Sirnaa', 'Secret Developer Portal', 'የሲስተም አበልፃጊ ሚስጥራዊ በር')}
             </h2>
             <p className="text-xs text-amber-200/90 font-semibold mb-3">
-              ዋና ቀዳሚ ፕሮግራመር፡ ታምራት አሌ | ሻሸመኔ
+              {t3('Piroogiraamara Duraa: Tamerat Ale | Shashamane', 'Lead Programmer: Tamerat Ale | Shashemene', 'ዋና ቀዳሚ ፕሮግራመር፡ ታምራት አሌ | ሻሸመኔ')}
             </p>
             <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-              ይህ ገፅ ለሲስተም አበልፃጊ (Developer) ብቻ የተፈቀደ ሚስጥራዊ መቆጣጠሪያ ነው። የትምህርት ቤቶችን የክፍያ ደረሰኝ ለማረጋገጥ፣ የባንክ ሂሳቦችን ለማስተዳደር እና ወደ ትምህርት ቢሮ የመገናኘት ፈቃድ ለመስጠት የይለፍ ቃል ያስገቡ።
+              {t3(
+                'Fuulli kun too\'annoo iccitii misoomsaa sirnaaf qofa eeyyamameedha. Nagahee kaffaltii manneen barnootaa mirkaneessuu, herrega baankii bulchuu fi eeyyama qunnamtii Biiroo kennuuf jecha iccitii galchaa.',
+                'This portal is restricted to the System Developer. Enter your secret password to verify school payment receipts, manage bank accounts, and authorize Bureau connections.',
+                'ይህ ገፅ ለሲስተም አበልፃጊ (Developer) ብቻ የተፈቀደ ሚስጥራዊ መቆጣጠሪያ ነው። የትምህርት ቤቶችን የክፍያ ደረሰኝ ለማረጋገጥ፣ የባንክ ሂሳቦችን ለማስተዳደር እና ወደ ትምህርት ቢሮ የመገናኘት ፈቃድ ለመስጠት የይለፍ ቃል ያስገቡ።'
+              )}
             </p>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -325,7 +363,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       setPasswordInput(e.target.value);
                       setAuthError('');
                     }}
-                    placeholder="የይለፍ ቃል ያስገቡ..."
+                    placeholder={t3('Jecha iccitii galchaa...', 'Enter secret password...', 'የይለፍ ቃል ያስገቡ...')}
                     autoFocus
                     className="w-full pl-11 pr-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono"
                   />
@@ -344,20 +382,20 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                   onClick={onClose}
                   className="w-1/2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold transition cursor-pointer"
                 >
-                  ሰርዝ (ውጣ)
+                  {t3('Haqi (Bahi)', 'Cancel', 'ሰርዝ (ውጣ)')}
                 </button>
                 <button
                   type="submit"
                   className="w-1/2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-sm font-bold shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Unlock className="w-4 h-4" />
-                  ግባ (ክፈት)
+                  {t3('Seeni (Bani)', 'Unlock', 'ግባ (ክፈት)')}
                 </button>
               </div>
             </form>
 
             <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-              የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የትምህርት መረጃ አያያዝ ቴክኖሎጂ
+              {t3('Teeknooloojii Qabinsa Odeeffannoo Biiroo Barnootaa Bulchiinsa Magaalaa Shashamannee', 'Shashemene City Administration Education Bureau Information Technology', 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የትምህርት መረጃ አያያዝ ቴክኖሎጂ')}
             </div>
           </div>
         ) : (
@@ -372,14 +410,14 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                      የሲስተም አበልፃጊ መቆጣጠሪያ ማዕከል
+                      {t3('Giddugala Too\'annoo Misoomsaa Sirnaa', 'System Developer Control Center', 'የሲስተም አበልፃጊ መቆጣጠሪያ ማዕከል')}
                     </h2>
                     <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md">
                       Developer Mode
                     </span>
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-400">
-                    <span className="text-amber-300 font-bold">ታሜና ሥራው ኃ/የተ/የግ/ማ</span> ስር <span className="text-amber-200 font-semibold">ውሽዬ ሶፍትዌር ሶሉሽን</span> | ዋና ፕሮግራመር፡ <strong className="text-white">ታምራት አሌ</strong> (ሻሸመኔ)
+                    <span className="text-amber-300 font-bold">{t3('Tame & Seraw PLC', 'Tame & Seraw PLC', 'ታሜና ሥራው ኃ/የተ/የግ/ማ')}</span> · <span className="text-amber-200 font-semibold">Wushiye Software Solution</span> | {t3('Piroogiraamara Duraa:', 'Lead Programmer:', 'ዋና ፕሮግራመር፡')} <strong className="text-white">Tamerat Ale</strong> ({t3('Shashamannee', 'Shashemene', 'ሻሸመኔ')})
                   </p>
                 </div>
               </div>
@@ -388,10 +426,10 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 <button
                   onClick={() => {
                     loadData();
-                    setActionSuccessMsg('ዳታው በድጋሚ ተነቧል');
+                    setActionSuccessMsg(t3('Daataan irra deebi\'amee dubbifameera', 'Data refreshed', 'ዳታው በድጋሚ ተነቧል'));
                     setTimeout(() => setActionSuccessMsg(''), 2000);
                   }}
-                  title="ዳታ አድስ"
+                  title={t3('Daataa haaromsi', 'Refresh data', 'ዳታ አድስ')}
                   className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -417,7 +455,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 p-3 sm:p-4 bg-slate-950/60 border-b border-slate-800 sm:shrink-0">
               <div className="p-2.5 sm:p-3 bg-slate-900/90 border border-slate-800 rounded-xl">
                 <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-                  <span className="text-[11px] sm:text-xs">ጠቅላላ ት/ቤቶች</span>
+                  <span className="text-[11px] sm:text-xs">{t3('Manneen Barnootaa Waliigalaa', 'Total Schools', 'ጠቅላላ ት/ቤቶች')}</span>
                   <Building2 className="w-3.5 h-3.5 text-slate-500" />
                 </div>
                 <div className="text-base sm:text-lg font-black text-white">{schools.length}</div>
@@ -425,7 +463,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
               <div className="p-2.5 sm:p-3 bg-emerald-950/20 border border-emerald-800/40 rounded-xl">
                 <div className="flex items-center justify-between text-emerald-300 text-xs mb-1">
-                  <span className="text-[11px] sm:text-xs">የተፈቀደላቸው (የተገናኙ)</span>
+                  <span className="text-[11px] sm:text-xs">{t3('Eeyyamaman (Kan Walqunnaman)', 'Approved (Connected)', 'የተፈቀደላቸው (የተገናኙ)')}</span>
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 </div>
                 <div className="text-base sm:text-lg font-black text-emerald-400">{totalApproved}</div>
@@ -433,7 +471,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
               <div className="p-2.5 sm:p-3 bg-amber-950/20 border border-amber-800/40 rounded-xl">
                 <div className="flex items-center justify-between text-amber-300 text-xs mb-1">
-                  <span className="text-[11px] sm:text-xs">ደረሰኝ የቀረበላቸው</span>
+                  <span className="text-[11px] sm:text-xs">{t3('Nagahee Dhiheessan', 'Receipts Submitted', 'ደረሰኝ የቀረበላቸው')}</span>
                   <FileText className="w-3.5 h-3.5 text-amber-400" />
                 </div>
                 <div className="text-base sm:text-lg font-black text-amber-400">{totalSubmitted}</div>
@@ -441,11 +479,11 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
               <div className="p-2.5 sm:p-3 bg-sky-950/20 border border-sky-800/40 rounded-xl">
                 <div className="flex items-center justify-between text-sky-300 text-xs mb-1">
-                  <span className="text-[11px] sm:text-xs">የተሰበሰበ ገቢ</span>
+                  <span className="text-[11px] sm:text-xs">{t3('Galii Walitti Qabame', 'Collected Revenue', 'የተሰበሰበ ገቢ')}</span>
                   <DollarSign className="w-3.5 h-3.5 text-sky-400" />
                 </div>
                 <div className="text-base sm:text-lg font-black text-sky-300">
-                  {totalRevenue.toLocaleString()} <span className="text-[11px] font-normal text-slate-400">ብር</span>
+                  {totalRevenue.toLocaleString()} <span className="text-[11px] font-normal text-slate-400">{t3('ETB', 'ETB', 'ብር')}</span>
                 </div>
               </div>
             </div>
@@ -461,7 +499,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 }`}
               >
                 <Building2 className="w-4 h-4" />
-                <span>ትምህርት ቤቶች & ፈቃድ ({schools.length})</span>
+                <span>{t3(`Manneen Barnootaa & Eeyyama (${schools.length})`, `Schools & Licenses (${schools.length})`, `ትምህርት ቤቶች & ፈቃድ (${schools.length})`)}</span>
               </button>
 
               <button
@@ -473,10 +511,10 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 }`}
               >
                 <FileText className="w-4 h-4" />
-                <span>የክፍያ ደረሰኞች</span>
+                <span>{t3('Nagaheewwan Kaffaltii', 'Payment Receipts', 'የክፍያ ደረሰኞች')}</span>
                 {totalSubmitted > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
-                    {totalSubmitted} አዲስ
+                    {totalSubmitted} {t3('Haaraa', 'New', 'አዲስ')}
                   </span>
                 )}
               </button>
@@ -490,9 +528,9 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 }`}
               >
                 <CreditCard className="w-4 h-4" />
-                <span>የባንክ አኮውንቶች ማስገቢያ & ቅንብር</span>
+                <span>{t3('Galmee Herrega Baankii & Qindaa\'ina', 'Bank Accounts & Settings', 'የባንክ አኮውንቶች ማስገቢያ & ቅንብር')}</span>
                 <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
-                  {bankAccountsList.filter((b) => b.isActive).length} ባንኮች
+                  {bankAccountsList.filter((b) => b.isActive).length} {t3('Baankiiwwan', 'Banks', 'ባንኮች')}
                 </span>
               </button>
             </div>
@@ -511,13 +549,13 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="ትምህርት ቤት ወይም ኮድ ፈልግ..."
+                        placeholder={t3('Mana barumsaa ykn koodii barbaadi...', 'Search school or code...', 'ትምህርት ቤት ወይም ኮድ ፈልግ...')}
                         className="w-full pl-9 pr-3 py-1.5 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
                       />
                     </div>
 
                     <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
-                      <span className="text-xs text-slate-400 shrink-0">ሁኔታ፡</span>
+                      <span className="text-xs text-slate-400 shrink-0">{t3('Haala:', 'Status:', 'ሁኔታ፡')}</span>
                       {(['all', 'receipt_submitted', 'pending_payment', 'approved', 'rejected'] as const).map(st => (
                         <button
                           key={st}
@@ -528,11 +566,11 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                               : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                           }`}
                         >
-                          {st === 'all' && 'ሁሉም'}
-                          {st === 'receipt_submitted' && 'ደረሰኝ የቀረበ'}
-                          {st === 'pending_payment' && 'ያልከፈሉ'}
-                          {st === 'approved' && 'የተገናኙ'}
-                          {st === 'rejected' && 'ውድቅ'}
+                          {st === 'all' && t3('Hunda', 'All', 'ሁሉም')}
+                          {st === 'receipt_submitted' && t3('Nagaheen Dhiyaate', 'Submitted', 'ደረሰኝ የቀረበ')}
+                          {st === 'pending_payment' && t3('Kan Hin Kaffalle', 'Unpaid', 'ያልከፈሉ')}
+                          {st === 'approved' && t3('Kan Walqunnaman', 'Connected', 'የተገናኙ')}
+                          {st === 'rejected' && t3('Kufaa', 'Rejected', 'ውድቅ')}
                         </button>
                       ))}
                     </div>
@@ -543,10 +581,10 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                     <table className="w-full text-left text-xs min-w-[620px]">
                       <thead className="bg-slate-800/70 text-slate-400 border-b border-slate-800 uppercase font-semibold">
                         <tr>
-                          <th className="py-3 px-3">ትምህርት ቤት</th>
-                          <th className="py-3 px-2">ክፍለ ከተማ / ደረጃ</th>
-                          <th className="py-3 px-2 text-center">የትምህርት ቢሮ ግንኙነት ሁኔታ</th>
-                          <th className="py-3 px-3 text-right">እርምጃዎች</th>
+                          <th className="py-3 px-3">{t3('Mana Barumsaa', 'School', 'ትምህርት ቤት')}</th>
+                          <th className="py-3 px-2">{t3('Kutaa Magaalaa / Sadarkaa', 'Subcity / Level', 'ክፍለ ከተማ / ደረጃ')}</th>
+                          <th className="py-3 px-2 text-center">{t3('Haala Qunnamtii Biiroo', 'Bureau Connection Status', 'የትምህርት ቢሮ ግንኙነት ሁኔታ')}</th>
+                          <th className="py-3 px-3 text-right">{t3('Tarkaanfii', 'Actions', 'እርምጃዎች')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800 text-slate-300">
@@ -559,18 +597,18 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                               <td className="py-3 px-3">
                                 <div className="font-bold text-white">{sch.name}</div>
                                 <div className="text-[11px] text-slate-500 font-mono">
-                                  ኮድ፡ {sch.code} · ተማሪ፡ {sch.totalStudents || 0}
+                                  {t3('Koodii:', 'Code:', 'ኮድ፡')} {sch.code} · {t3('Barataa:', 'Students:', 'ተማሪ፡')} {sch.totalStudents || 0}
                                 </div>
                               </td>
 
                               <td className="py-3 px-2">
-                                <div className="text-slate-300">{sch.subcity || 'ሻሸመኔ'}</div>
+                                <div className="text-slate-300">{sch.subcity || t3('Shashamannee', 'Shashemene', 'ሻሸመኔ')}</div>
                                 <div className="text-[11px] text-slate-500">
-                                  {sch.level === 'primary' && 'አንደኛ ደረጃ (1-8)'}
-                                  {sch.level === 'middle' && 'መካከለኛ ደረጃ (7-8)'}
-                                  {sch.level === 'secondary' && 'ሁለተኛ ደረጃ (9-10)'}
-                                  {sch.level === 'preparatory' && 'መሰናዶ (11-12)'}
-                                  {sch.level === 'complete' && 'አጠቃላይ (1-12)'}
+                                  {sch.level === 'primary' && t3('Sadarkaa 1ffaa (1-8)', 'Primary (1-8)', 'አንደኛ ደረጃ (1-8)')}
+                                  {sch.level === 'middle' && t3('Sadarkaa Giddugaleessaa (7-8)', 'Middle (7-8)', 'መካከለኛ ደረጃ (7-8)')}
+                                  {sch.level === 'secondary' && t3('Sadarkaa 2ffaa (9-10)', 'Secondary (9-10)', 'ሁለተኛ ደረጃ (9-10)')}
+                                  {sch.level === 'preparatory' && t3('Qophaa\'ina (11-12)', 'Preparatory (11-12)', 'መሰናዶ (11-12)')}
+                                  {sch.level === 'complete' && t3('Waliigalaa (1-12)', 'Complete (1-12)', 'አጠቃላይ (1-12)')}
                                 </div>
                               </td>
 
@@ -578,28 +616,28 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                 {status === 'approved' && (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-500/40">
                                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                                    የተገናኘ (ክፍት)
+                                    {t3('Walqunnameera (Banaa)', 'Connected (Open)', 'የተገናኘ (ክፍት)')}
                                   </span>
                                 )}
 
                                 {status === 'receipt_submitted' && (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-400 border border-amber-500/40 animate-pulse">
                                     <FileText className="w-3.5 h-3.5 text-amber-400" />
-                                    ደረሰኝ ቀርቧል
+                                    {t3('Nagaheen Dhiyaateera', 'Receipt Submitted', 'ደረሰኝ ቀርቧል')}
                                   </span>
                                 )}
 
                                 {status === 'pending_payment' && (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
                                     <Lock className="w-3.5 h-3.5 text-rose-400" />
-                                    የተቆለፈ (ያልከፈለ)
+                                    {t3('Cufameera (Hin Kaffalle)', 'Locked (Unpaid)', 'የተቆለፈ (ያልከፈለ)')}
                                   </span>
                                 )}
 
                                 {status === 'rejected' && (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-950/80 text-rose-400 border border-rose-500/40">
                                     <XCircle className="w-3.5 h-3.5 text-rose-400" />
-                                    ውድቅ ተደርጓል
+                                    {t3('Kufaa Ta\'eera', 'Rejected', 'ውድቅ ተደርጓል')}
                                   </span>
                                 )}
                               </td>
@@ -611,10 +649,10 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                     <button
                                       onClick={() => setSelectedReceipt(receipt)}
                                       className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-semibold flex items-center gap-1 border border-slate-700 transition cursor-pointer"
-                                      title="ደረሰኝ ተመልከት"
+                                      title={t3('Nagahee ilaali', 'View receipt', 'ደረሰኝ ተመልከት')}
                                     >
                                       <Eye className="w-3.5 h-3.5" />
-                                      ደረሰኝ
+                                      {t3('Nagahee', 'Receipt', 'ደረሰኝ')}
                                     </button>
                                   )}
 
@@ -623,35 +661,56 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                     <button
                                       onClick={() => handleApproveSchool(sch.id, receipt?.id)}
                                       className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
-                                      title="ክፍያውን አፅድቅ እና ከቢሮ ጋር አገናኝ"
+                                      title={t3('Kaffaltii mirkaneessiitii Biiroo waliin walqunnamsiisi', 'Approve payment & connect to Bureau', 'ክፍያውን አፅድቅ እና ከቢሮ ጋር አገናኝ')}
                                     >
                                       <Check className="w-3.5 h-3.5" />
-                                      አፅድቅ
+                                      {t3('Mirkaneessi', 'Approve', 'አፅድቅ')}
                                     </button>
                                   )}
 
                                   {/* Reject Button (if submitted) */}
                                   {status === 'receipt_submitted' && receipt && (
                                     <button
-                                      onClick={() => setIsRejectingId(sch.id)}
+                                      onClick={() => {
+                                        setIsRejectingId(sch.id);
+                                        setRejectError('');
+                                      }}
                                       className="px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
-                                      title="ደረሰኙን ውድቅ አድርግ"
+                                      title={t3('Nagahee kufaa godhi', 'Reject receipt', 'ደረሰኙን ውድቅ አድርግ')}
                                     >
                                       <X className="w-3.5 h-3.5" />
-                                      ውድቅ
+                                      {t3('Kuffisi', 'Reject', 'ውድቅ')}
                                     </button>
                                   )}
 
                                   {/* Lock / Revoke if currently approved */}
                                   {status === 'approved' && (
-                                    <button
-                                      onClick={() => handleRevokeSchool(sch.id)}
-                                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-slate-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
-                                      title="የቢሮ ግንኙነትን እገድ (ቆልፍ)"
-                                    >
-                                      <Lock className="w-3.5 h-3.5" />
-                                      እገድ
-                                    </button>
+                                    confirmRevokeSchoolId === sch.id ? (
+                                      <div className="flex items-center gap-1 bg-rose-950/70 border border-rose-800 rounded-lg px-2 py-1">
+                                        <span className="text-[10px] text-rose-200 font-semibold">{t3('Cufuu?', 'Suspend?', 'ይታገድ?')}</span>
+                                        <button
+                                          onClick={() => handleRevokeSchool(sch.id)}
+                                          className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold cursor-pointer"
+                                        >
+                                          {t3('Eeyyee', 'Yes', 'አዎ')}
+                                        </button>
+                                        <button
+                                          onClick={() => setConfirmRevokeSchoolId(null)}
+                                          className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] cursor-pointer"
+                                        >
+                                          {t3('Lakki', 'No', 'አይ')}
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => setConfirmRevokeSchoolId(sch.id)}
+                                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-slate-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                                        title={t3('Qunnamtii Biiroo daangessi (cufi)', 'Suspend Bureau connection (lock)', 'የቢሮ ግንኙነትን እገድ (ቆልፍ)')}
+                                      >
+                                        <Lock className="w-3.5 h-3.5" />
+                                        {t3('Daangessi', 'Suspend', 'እገድ')}
+                                      </button>
+                                    )
                                   )}
                                 </div>
 
@@ -659,30 +718,37 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                 {isRejectingId === sch.id && receipt && (
                                   <div className="mt-2 p-2 bg-rose-950/40 border border-rose-800/60 rounded-lg text-left">
                                     <p className="text-[11px] text-rose-300 font-semibold mb-1">
-                                      የውድቅ ምክንያት አስገባ፡
+                                      {t3('Sababa kufaa ta\'uu galchi:', 'Enter rejection reason:', 'የውድቅ ምክንያት አስገባ፡')}
                                     </p>
                                     <input
                                       type="text"
                                       value={rejectReason}
-                                      onChange={(e) => setRejectReason(e.target.value)}
-                                      placeholder="ለምሳሌ፡ የግብይት ቁጥር አልተገኘም / ያልተሟላ ደረሰኝ"
-                                      className="w-full px-2 py-1 bg-slate-900 border border-rose-700 rounded text-xs text-white placeholder-slate-500 mb-2 focus:outline-none"
+                                      onChange={(e) => {
+                                        setRejectReason(e.target.value);
+                                        setRejectError('');
+                                      }}
+                                      placeholder={t3('Fkn: Lakkoofsi jijjiirraa hin argamne / Nagaheen guutuu miti', 'e.g., Transaction ref not found / Incomplete slip', 'ለምሳሌ፡ የግብይት ቁጥር አልተገኘም / ያልተሟላ ደረሰኝ')}
+                                      className="w-full px-2 py-1 bg-slate-900 border border-rose-700 rounded text-xs text-white placeholder-slate-500 mb-1.5 focus:outline-none"
                                     />
+                                    {rejectError && (
+                                      <p className="text-[11px] text-rose-300 mb-1.5">{rejectError}</p>
+                                    )}
                                     <div className="flex justify-end gap-1.5">
                                       <button
                                         onClick={() => {
                                           setIsRejectingId(null);
                                           setRejectReason('');
+                                          setRejectError('');
                                         }}
                                         className="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 cursor-pointer"
                                       >
-                                        ሰርዝ
+                                        {t3('Haqi', 'Cancel', 'ሰርዝ')}
                                       </button>
                                       <button
                                         onClick={() => handleRejectSchool(sch.id, receipt.id)}
                                         className="px-2 py-0.5 rounded text-[11px] bg-rose-600 hover:bg-rose-500 text-white font-bold cursor-pointer"
                                       >
-                                        አረጋግጥና ውድቅ አድርግ
+                                        {t3('Mirkaneessiitii Kuffisi', 'Confirm Reject', 'አረጋግጥና ውድቅ አድርግ')}
                                       </button>
                                     </div>
                                   </div>
@@ -695,7 +761,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                         {filteredSchools.length === 0 && (
                           <tr>
                             <td colSpan={4} className="py-8 text-center text-slate-500">
-                              ምንም የተገኘ ትምህርት ቤት የለም።
+                              {t3('Manni barumsaa argame hin jiru.', 'No matching schools found.', 'ምንም የተገኘ ትምህርት ቤት የለም።')}
                             </td>
                           </tr>
                         )}
@@ -719,32 +785,32 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                             <div>
                               <div className="font-bold text-white text-sm">{sch.name}</div>
                               <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                                ኮድ፡ <span className="text-amber-400">{sch.code}</span> · {sch.subcity || 'ሻሸመኔ'}
+                                {t3('Koodii:', 'Code:', 'ኮድ፡')} <span className="text-amber-400">{sch.code}</span> · {sch.subcity || t3('Shashamannee', 'Shashemene', 'ሻሸመኔ')}
                               </div>
                             </div>
 
                             {status === 'approved' && (
                               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-500/40">
                                 <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                                የተገናኘ
+                                {t3('Walqunnameera', 'Connected', 'የተገናኘ')}
                               </span>
                             )}
                             {status === 'receipt_submitted' && (
                               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-400 border border-amber-500/40 animate-pulse">
                                 <FileText className="w-3 h-3 text-amber-400" />
-                                ደረሰኝ ቀርቧል
+                                {t3('Nagaheen Dhiyaate', 'Submitted', 'ደረሰኝ ቀርቧል')}
                               </span>
                             )}
                             {status === 'pending_payment' && (
                               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
                                 <Lock className="w-3 h-3 text-rose-400" />
-                                ያልከፈለ
+                                {t3('Hin Kaffalle', 'Unpaid', 'ያልከፈለ')}
                               </span>
                             )}
                             {status === 'rejected' && (
                               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/80 text-rose-400 border border-rose-500/40">
                                 <XCircle className="w-3 h-3 text-rose-400" />
-                                ውድቅ
+                                {t3('Kufaa', 'Rejected', 'ውድቅ')}
                               </span>
                             )}
                           </div>
@@ -752,14 +818,14 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                           {/* Level and student count */}
                           <div className="flex items-center justify-between text-xs text-slate-400 bg-slate-900/60 px-2.5 py-1.5 rounded-lg border border-slate-800/80">
                             <span>
-                              {sch.level === 'primary' && 'አንደኛ ደረጃ (1-8)'}
-                              {sch.level === 'middle' && 'መካከለኛ ደረጃ (7-8)'}
-                              {sch.level === 'secondary' && 'ሁለተኛ ደረጃ (9-10)'}
-                              {sch.level === 'preparatory' && 'መሰናዶ (11-12)'}
-                              {sch.level === 'complete' && 'አጠቃላይ (1-12)'}
+                              {sch.level === 'primary' && t3('Sadarkaa 1ffaa (1-8)', 'Primary (1-8)', 'አንደኛ ደረጃ (1-8)')}
+                              {sch.level === 'middle' && t3('Sadarkaa Giddugaleessaa (7-8)', 'Middle (7-8)', 'መካከለኛ ደረጃ (7-8)')}
+                              {sch.level === 'secondary' && t3('Sadarkaa 2ffaa (9-10)', 'Secondary (9-10)', 'ሁለተኛ ደረጃ (9-10)')}
+                              {sch.level === 'preparatory' && t3('Qophaa\'ina (11-12)', 'Preparatory (11-12)', 'መሰናዶ (11-12)')}
+                              {sch.level === 'complete' && t3('Waliigalaa (1-12)', 'Complete (1-12)', 'አጠቃላይ (1-12)')}
                             </span>
                             <span className="font-semibold text-slate-300">
-                              {sch.totalStudents || 0} ተማሪዎች
+                              {sch.totalStudents || 0} {t3('Barattoota', 'Students', 'ተማሪዎች')}
                             </span>
                           </div>
 
@@ -771,7 +837,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                 className="flex-1 py-2 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-sky-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition touch-manipulation cursor-pointer"
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                ደረሰኝ እይ
+                                {t3('Nagahee Ilaali', 'View Receipt', 'ደረሰኝ እይ')}
                               </button>
                             )}
 
@@ -781,28 +847,51 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                 className="flex-1 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition touch-manipulation cursor-pointer"
                               >
                                 <Check className="w-3.5 h-3.5" />
-                                አፅድቅና ፍቀድ
+                                {t3('Mirkaneessi & Eeyyami', 'Approve & Allow', 'አፅድቅና ፍቀድ')}
                               </button>
                             )}
 
                             {status === 'receipt_submitted' && receipt && (
                               <button
-                                onClick={() => setIsRejectingId(sch.id)}
+                                onClick={() => {
+                                  setIsRejectingId(sch.id);
+                                  setRejectError('');
+                                }}
                                 className="py-2 px-3 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 text-xs font-semibold flex items-center justify-center gap-1 transition touch-manipulation cursor-pointer"
                               >
                                 <X className="w-3.5 h-3.5" />
-                                ውድቅ
+                                {t3('Kuffisi', 'Reject', 'ውድቅ')}
                               </button>
                             )}
 
                             {status === 'approved' && (
-                              <button
-                                onClick={() => handleRevokeSchool(sch.id)}
-                                className="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-slate-300 hover:text-rose-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition touch-manipulation cursor-pointer"
-                              >
-                                <Lock className="w-3.5 h-3.5" />
-                                የቢሮ ግንኙነትን እገድ
-                              </button>
+                              confirmRevokeSchoolId === sch.id ? (
+                                <div className="flex-1 flex items-center justify-between gap-2 bg-rose-950/70 border border-rose-800 rounded-lg px-3 py-1.5">
+                                  <span className="text-[11px] text-rose-200 font-semibold">{t3('Qunnamtii Biiroo cufuu?', 'Suspend connection?', 'ግንኙነቱ ይታገድ?')}</span>
+                                  <div className="flex gap-1.5">
+                                    <button
+                                      onClick={() => handleRevokeSchool(sch.id)}
+                                      className="px-2.5 py-1 rounded bg-rose-600 text-white text-xs font-bold cursor-pointer"
+                                    >
+                                      {t3('Eeyyee', 'Yes', 'አዎ')}
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmRevokeSchoolId(null)}
+                                      className="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs cursor-pointer"
+                                    >
+                                      {t3('Lakki', 'No', 'አይ')}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setConfirmRevokeSchoolId(sch.id)}
+                                  className="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-slate-300 hover:text-rose-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition touch-manipulation cursor-pointer"
+                                >
+                                  <Lock className="w-3.5 h-3.5" />
+                                  {t3('Qunnamtii Biiroo Daangessi', 'Suspend Connection', 'የቢሮ ግንኙነትን እገድ')}
+                                </button>
+                              )
                             )}
                           </div>
 
@@ -810,30 +899,37 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                           {isRejectingId === sch.id && receipt && (
                             <div className="p-2.5 bg-rose-950/50 border border-rose-800/80 rounded-lg text-left space-y-2">
                               <p className="text-[11px] text-rose-300 font-semibold">
-                                የውድቅ ምክንያት አስገባ፡
+                                {t3('Sababa kufaa ta\'uu galchi:', 'Enter rejection reason:', 'የውድቅ ምክንያት አስገባ፡')}
                               </p>
                               <input
                                 type="text"
                                 value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                                placeholder="ለምሳሌ፡ የግብይት ቁጥር አልተገኘም..."
+                                onChange={(e) => {
+                                  setRejectReason(e.target.value);
+                                  setRejectError('');
+                                }}
+                                placeholder={t3('Fkn: Lakkoofsi jijjiirraa hin argamne...', 'e.g., Transaction ref not found...', 'ለምሳሌ፡ የግብይት ቁጥር አልተገኘም...')}
                                 className="w-full px-2.5 py-1.5 bg-slate-900 border border-rose-700 rounded text-xs text-white placeholder-slate-500 focus:outline-none"
                               />
+                              {rejectError && (
+                                <p className="text-[11px] text-rose-300">{rejectError}</p>
+                              )}
                               <div className="flex justify-end gap-2">
                                 <button
                                   onClick={() => {
                                     setIsRejectingId(null);
                                     setRejectReason('');
+                                    setRejectError('');
                                   }}
                                   className="px-3 py-1 rounded text-xs bg-slate-800 text-slate-300 cursor-pointer"
                                 >
-                                  ሰርዝ
+                                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                                 </button>
                                 <button
                                   onClick={() => handleRejectSchool(sch.id, receipt.id)}
                                   className="px-3 py-1 rounded text-xs bg-rose-600 hover:bg-rose-500 text-white font-bold cursor-pointer"
                                 >
-                                  አረጋግጥና ውድቅ
+                                  {t3('Mirkaneessi & Kuffisi', 'Confirm Reject', 'አረጋግጥና ውድቅ')}
                                 </button>
                               </div>
                             </div>
@@ -844,7 +940,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
                     {filteredSchools.length === 0 && (
                       <div className="py-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
-                        ምንም የተገኘ ትምህርት ቤት የለም።
+                        {t3('Manni barumsaa argame hin jiru.', 'No matching schools found.', 'ምንም የተገኘ ትምህርት ቤት የለም።')}
                       </div>
                     )}
                   </div>
@@ -853,8 +949,12 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                   <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs text-amber-200/90 flex items-start gap-2.5">
                     <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-amber-300">የአበልፃጊ ጥበቃ ደንብ፡ </span>
-                      ትምህርት ቤቱ ደረሰኝ እስካላስገባ እና በአበልፃጊው (ታምራት ዓለ) እስካልፀደቀ ድረስ ወደ ሻሸመኔ ከተማ ትምህርት ቢሮ ምንም አይነት ሪፖርት መላክ፣ የተማሪ ውጤት ማስተላለፍ ወይም ኦፊሴላዊ መረጃ መለዋወጥ አይችልም።
+                      <span className="font-bold text-amber-300">{t3('Seera Eegumsaa Misoomsaa: ', 'Developer Protection Rule: ', 'የአበልፃጊ ጥበቃ ደንብ፡ ')}</span>
+                      {t3(
+                        'Manni barumsaa tokko hanga nagahee kaffaltii hin galchinee fi misoomsaan (Tamerat Ale) hin mirkaneessinetti gabaasa kamiyyuu gara Biiroo Barnootaa Magaalaa Shashamanneetti erguu, qabxii barattootaa dabarsuu ykn odeeffannoo ofiseelaawaa jijjiiruu hin danda\'u.',
+                        'Until a school submits a payment receipt and receives developer approval (Tamerat Ale), it cannot send reports, transfer student results, or exchange official records with Shashemene City Education Bureau.',
+                        'ትምህርት ቤቱ ደረሰኝ እስካላስገባ እና በአበልፃጊው (ታምራት ዓለ) እስካልፀደቀ ድረስ ወደ ሻሸመኔ ከተማ ትምህርት ቢሮ ምንም አይነት ሪፖርት መላክ፣ የተማሪ ውጤት ማስተላለፍ ወይም ኦፊሴላዊ መረጃ መለዋወጥ አይችልም።'
+                      )}
                     </div>
                   </div>
                 </div>
@@ -865,8 +965,8 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-white">የባንክ ደረሰኞች መዝገብ</h3>
-                      <p className="text-xs text-slate-400">የትምህርት ቤቶች የገቢ ማረጋገጫዎች ዝርዝር</p>
+                      <h3 className="text-sm font-bold text-white">{t3('Galmee Nagaheewwan Baankii', 'Bank Receipts Registry', 'የባንክ ደረሰኞች መዝገብ')}</h3>
+                      <p className="text-xs text-slate-400">{t3('Tarree mirkaneessa galii manneen barnootaa', 'School fee payment verification records', 'የትምህርት ቤቶች የገቢ ማረጋገጫዎች ዝርዝር')}</p>
                     </div>
                   </div>
 
@@ -886,7 +986,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                   {rec.schoolName || sch?.name}
                                 </h4>
                                 <div className="text-[11px] text-slate-400">
-                                  የተከፈለበት ባንክ፡ <span className="text-amber-300 font-bold">{rec.bankName}</span>
+                                  {t3('Baankii Kaffaltii:', 'Paid Bank:', 'የተከፈለበት ባንክ፡')} <span className="text-amber-300 font-bold">{rec.bankName}</span>
                                 </div>
                               </div>
 
@@ -899,25 +999,29 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                     : 'bg-amber-950 text-amber-400 border border-amber-700 animate-pulse'
                                 }`}
                               >
-                                {rec.status === 'approved' ? 'የፀደቀ' : rec.status === 'rejected' ? 'ውድቅ' : 'ያልተረጋገጠ'}
+                                {rec.status === 'approved'
+                                  ? t3('Mirkanaa\'eera', 'Approved', 'የፀደቀ')
+                                  : rec.status === 'rejected'
+                                  ? t3('Kufaa', 'Rejected', 'ውድቅ')
+                                  : t3('Kan Hin Mirkanaa\'in', 'Pending', 'ያልተረጋገጠ')}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 text-xs bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 mb-3 font-mono">
                               <div>
-                                <span className="text-slate-500 block text-[10px]">የግብይት ቁጥር (Ref)</span>
+                                <span className="text-slate-500 block text-[10px]">{t3('Lakkoofsa Jijjiirraa (Ref)', 'Transaction Ref', 'የግብይት ቁጥር (Ref)')}</span>
                                 <span className="text-slate-200 font-semibold">{rec.transactionRef}</span>
                               </div>
                               <div>
-                                <span className="text-slate-500 block text-[10px]">መጠን (Amount)</span>
-                                <span className="text-emerald-400 font-bold">{rec.amount.toLocaleString()} ብር</span>
+                                <span className="text-slate-500 block text-[10px]">{t3('Hanga (Amount)', 'Amount', 'መጠን (Amount)')}</span>
+                                <span className="text-emerald-400 font-bold">{rec.amount.toLocaleString()} {t3('ETB', 'ETB', 'ብር')}</span>
                               </div>
                               <div>
-                                <span className="text-slate-500 block text-[10px]">ከፋይ (Depositor)</span>
+                                <span className="text-slate-500 block text-[10px]">{t3('Kaffalaa (Depositor)', 'Depositor', 'ከፋይ (Depositor)')}</span>
                                 <span className="text-slate-300">{rec.payerName}</span>
                               </div>
                               <div>
-                                <span className="text-slate-500 block text-[10px]">ቀን</span>
+                                <span className="text-slate-500 block text-[10px]">{t3('Guyyaa', 'Date', 'ቀን')}</span>
                                 <span className="text-slate-400">{rec.submittedAt?.split('T')[0] || rec.submittedAt}</span>
                               </div>
                             </div>
@@ -929,7 +1033,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                               className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-sky-300 flex items-center gap-1.5 transition"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              ደረሰኙን እይ
+                              {t3('Nagahee Ilaali', 'View Receipt', 'ደረሰኙን እይ')}
                             </button>
 
                             {rec.status !== 'approved' && (
@@ -938,7 +1042,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                 className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 shadow-sm transition"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                አፅድቅና ፍቀድ
+                                {t3('Mirkaneessi & Eeyyami', 'Approve & Allow', 'አፅድቅና ፍቀድ')}
                               </button>
                             )}
                           </div>
@@ -948,7 +1052,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
                     {receipts.length === 0 && (
                       <div className="col-span-2 py-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
-                        እስካሁን የቀረበ ደረሰኝ የለም።
+                        {t3('Hanga ammaatti nagaheen dhiyaate hin jiru.', 'No payment receipts submitted yet.', 'እስካሁን የቀረበ ደረሰኝ የለም።')}
                       </div>
                     )}
                   </div>
@@ -966,20 +1070,24 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       </div>
                       <div>
                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                          <span>የአበልፃጊው ይፋዊ የባንክ አኮውንት ማስገቢያ እና ማስተዳደሪያ</span>
+                          <span>{t3('Galmee fi Bulchiinsa Herrega Baankii Misoomsaa', 'Developer Official Bank Accounts Entry & Management', 'የአበልፃጊው ይፋዊ የባንክ አኮውንት ማስገቢያ እና ማስተዳደሪያ')}</span>
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
-                            {bankAccountsList.filter((b) => b.isActive).length} ንቁ ባንኮች
+                            {bankAccountsList.filter((b) => b.isActive).length} {t3('Baankiiwwan Si\'aawoo', 'Active Banks', 'ንቁ ባንኮች')}
                           </span>
                         </h3>
                         <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                          ትምህርት ቤቶች ሲመዘገቡ በክፍያ ገፃቸው ላይ የሚታዩላቸውን ማንኛውንም የባንክ ሂሳቦች እዚህ ያስገቡ፣ ያሻሽሉ፣ ወይም አዲስ ይጨምሩ።
+                          {t3(
+                            'Herrega baankii kamiyyuu kan manneen barnootaa yeroo galmaa\'an fuula kaffaltii isaanii irratti mul\'atan asitti galchaa, fooyyessaa ykn haaraa dabalaa.',
+                            'Add, update, or enable any bank accounts that will appear on schools\' payment portals during registration.',
+                            'ትምህርት ቤቶች ሲመዘገቡ በክፍያ ገፃቸው ላይ የሚታዩላቸውን ማንኛውንም የባንክ ሂሳቦች እዚህ ያስገቡ፣ ያሻሽሉ፣ ወይም አዲስ ይጨምሩ።'
+                          )}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-right">
-                        <span className="text-[10px] text-slate-400 block font-sans">የፈቃድ ክፍያ ታሪፍ</span>
+                        <span className="text-[10px] text-slate-400 block font-sans">{t3('Tariffii Eeyyamaa', 'License Fee Rate', 'የፈቃድ ክፍያ ታሪፍ')}</span>
                         <span className="text-xs font-black text-emerald-400 font-mono">
                           {editFee.toLocaleString()} {config.currency}
                         </span>
@@ -987,7 +1095,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                     </div>
                   </div>
 
-                  {/* 1. BANK ACCOUNT ENTRY FORM (አዲስ የባንክ ሂሳብ ማስገቢያ ቦታ) */}
+                  {/* 1. BANK ACCOUNT ENTRY FORM */}
                   <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                       <div className="flex items-center gap-2">
@@ -996,10 +1104,14 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                         </div>
                         <div>
                           <h4 className="text-xs sm:text-sm font-black text-white">
-                            አዲስ የባንክ ሂሳብ ማስገቢያ ቦታ (Add Bank Account)
+                            {t3('Iddoo Galmee Herrega Baankii Haaraa', 'Add New Bank Account', 'አዲስ የባንክ ሂሳብ ማስገቢያ ቦታ (Add Bank Account)')}
                           </h4>
                           <span className="text-[11px] text-slate-400">
-                            የባንክ ስም፣ የሂሳብ ቁጥር እና የባለቤት ስም በማስገባት ለት/ቤቶች ይፋ ያድርጉ
+                            {t3(
+                              'Maqaa baankii, lakkoofsa herregaa fi maqaa abbaa herregaa galchuun manneen barnootaaf ifa godhaa',
+                              'Enter bank name, account number, and holder name to publish for schools',
+                              'የባንክ ስም፣ የሂሳብ ቁጥር እና የባለቤት ስም በማስገባት ለት/ቤቶች ይፋ ያድርጉ'
+                            )}
                           </span>
                         </div>
                       </div>
@@ -1007,66 +1119,74 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       {bankAddSuccessToast && (
                         <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 animate-in fade-in">
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>አዲሱ የባንክ ሂሳብ ተመዝግቧል!</span>
+                          <span>{t3('Herregni baankii haaraan galmaa\'eera!', 'New bank account registered!', 'አዲሱ የባንክ ሂሳብ ተመዝግቧል!')}</span>
                         </span>
                       )}
                     </div>
 
                     <form onSubmit={handleAddNewBankAccount} className="space-y-4">
+                      {bankFormError && (
+                        <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-700 text-xs text-rose-300 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 shrink-0" />
+                          <span>{bankFormError}</span>
+                        </div>
+                      )}
+
                       {/* Fast Bank Presets Chips */}
                       <div>
                         <label className="block text-xs font-bold text-slate-300 mb-2">
-                          1. ባንክ ይምረጡ (ወይም ፈጣን ምርጫን ይጫኑ)፡
+                          {t3('1. Baankii filadhaa (ykn filannoo saffisaa cuqaasaa):', '1. Select a Bank (or click a quick preset):', '1. ባንክ ይምረጡ (ወይም ፈጣን ምርጫን ይጫኑ)፡')}
                         </label>
                         <div className="flex flex-wrap gap-1.5">
                           {[
-                            'የኢትዮጵያ ንግድ ባንክ (CBE)',
-                            'ቴሌብር (Telebirr)',
-                            'አዋሽ ባንክ (Awash Bank)',
-                            'ዳሸን ባንክ (Dashen Bank)',
-                            'አቢሲንያ ባንክ (Bank of Abyssinia)',
-                            'ኦሮሚያ ህብረት ስራ ባንክ (Coop Bank)',
-                            'ወጋገን ባንክ (Wegagen Bank)',
-                            'ህብረት ባንክ (Hibret Bank)',
-                            'ዘመን ባንክ (Zemen Bank)',
-                            'ሲንቄ ባንክ (Siinqee Bank)',
-                            'ንብ ባንክ (Nib Bank)',
-                            'ብርሃን ባንክ (Berhan Bank)',
-                            'አንበሳ ባንክ (Lion Bank)',
-                            'ሌላ (Custom Bank)'
-                          ].map((bName) => (
+                            { value: 'Commercial Bank of Ethiopia (CBE)', label: t3('Baankii Daldalaa Itoophiyaa (CBE)', 'Commercial Bank of Ethiopia (CBE)', 'የኢትዮጵያ ንግድ ባንክ (CBE)') },
+                            { value: 'Telebirr', label: t3('Telebirr', 'Telebirr', 'ቴሌብር (Telebirr)') },
+                            { value: 'Awash Bank', label: t3('Baankii Awaash (Awash Bank)', 'Awash Bank', 'አዋሽ ባንክ (Awash Bank)') },
+                            { value: 'Dashen Bank', label: t3('Baankii Daashin (Dashen Bank)', 'Dashen Bank', 'ዳሸን ባንክ (Dashen Bank)') },
+                            { value: 'Bank of Abyssinia', label: t3('Baankii Abisiiniyaa (Bank of Abyssinia)', 'Bank of Abyssinia', 'አቢሲንያ ባንክ (Bank of Abyssinia)') },
+                            { value: 'Coop Bank of Oromia', label: t3('Baankii Hojii Gamtaa Oromiyaa (Coop)', 'Cooperative Bank of Oromia (Coop)', 'ኦሮሚያ ህብረት ስራ ባንክ (Coop Bank)') },
+                            { value: 'Wegagen Bank', label: t3('Baankii Wagaagan (Wegagen Bank)', 'Wegagen Bank', 'ወጋገን ባንክ (Wegagen Bank)') },
+                            { value: 'Hibret Bank', label: t3('Baankii Hibret (Hibret Bank)', 'Hibret Bank', 'ህብረት ባንክ (Hibret Bank)') },
+                            { value: 'Zemen Bank', label: t3('Baankii Zemen (Zemen Bank)', 'Zemen Bank', 'ዘመን ባንክ (Zemen Bank)') },
+                            { value: 'Siinqee Bank', label: t3('Baankii Siinqee (Siinqee Bank)', 'Siinqee Bank', 'ሲንቄ ባንክ (Siinqee Bank)') },
+                            { value: 'Nib Bank', label: t3('Baankii Nibb (Nib Bank)', 'Nib Bank', 'ንብ ባንክ (Nib Bank)') },
+                            { value: 'Berhan Bank', label: t3('Baankii Birhaan (Berhan Bank)', 'Berhan Bank', 'ብርሃን ባንክ (Berhan Bank)') },
+                            { value: 'Lion Bank', label: t3('Baankii Anbassaa (Lion Bank)', 'Lion International Bank', 'አንበሳ ባንክ (Lion Bank)') },
+                            { value: '__custom__', label: t3('Kan Biraa (Custom Bank)', 'Other (Custom Bank)', 'ሌላ (Custom Bank)') }
+                          ].map((bItem) => (
                             <button
-                              key={bName}
+                              key={bItem.value}
                               type="button"
                               onClick={() => {
-                                setNewBankName(bName);
-                                if (bName !== 'ሌላ (Custom Bank)') {
+                                setNewBankName(bItem.value);
+                                setBankFormError('');
+                                if (bItem.value !== '__custom__') {
                                   setCustomBankNameInput('');
                                 }
                               }}
                               className={`px-2.5 py-1 text-xs rounded-lg transition font-medium cursor-pointer ${
-                                newBankName === bName
+                                newBankName === bItem.value
                                   ? 'bg-amber-500 text-slate-950 font-black shadow-sm ring-2 ring-amber-400'
                                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/80'
                               }`}
                             >
-                              {bName}
+                              {bItem.label}
                             </button>
                           ))}
                         </div>
                       </div>
 
-                      {/* Custom Bank Name input if "ሌላ" is selected */}
-                      {newBankName === 'ሌላ (Custom Bank)' && (
+                      {/* Custom Bank Name input if Custom is selected */}
+                      {newBankName === '__custom__' && (
                         <div>
                           <label className="block text-xs font-semibold text-amber-300 mb-1">
-                            የባንኩን ትክክለኛ ስም ይፃፉ፡
+                            {t3('Maqaa sirrii baankichaa barreessaa:', 'Enter exact bank name:', 'የባንኩን ትክክለኛ ስም ይፃፉ፡')}
                           </label>
                           <input
                             type="text"
                             value={customBankNameInput}
                             onChange={(e) => setCustomBankNameInput(e.target.value)}
-                            placeholder="ለምሳሌ፡ ጋዳ ባንክ (Gadaa Bank) / ፀደይ ባንክ (Tsedey Bank)"
+                            placeholder={t3('Fkn: Baankii Gadaa (Gadaa Bank) / Baankii Tsaday', 'e.g., Gadaa Bank / Tsedey Bank', 'ለምሳሌ፡ ጋዳ ባንክ (Gadaa Bank) / ፀደይ ባንክ (Tsedey Bank)')}
                             className="w-full px-3 py-2 bg-slate-800/90 border border-amber-500/50 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
                             required
                           />
@@ -1077,13 +1197,13 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="sm:col-span-1">
                           <label className="block text-xs font-semibold text-slate-300 mb-1">
-                            የባንክ ሂሳብ ቁጥር (Account Number) *
+                            {t3('Lakkoofsa Herrega Baankii (Account Number) *', 'Bank Account Number *', 'የባንክ ሂሳብ ቁጥር (Account Number) *')}
                           </label>
                           <input
                             type="text"
                             value={newAccountNumber}
                             onChange={(e) => setNewAccountNumber(e.target.value)}
-                            placeholder="ለምሳሌ፡ 1000293847561"
+                            placeholder={t3('Fkn: 1000293847561', 'e.g., 1000293847561', 'ለምሳሌ፡ 1000293847561')}
                             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono font-bold"
                             required
                           />
@@ -1091,26 +1211,26 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
                         <div>
                           <label className="block text-xs font-semibold text-slate-300 mb-1">
-                            የሂሳቡ ባለቤት ስም (Account Holder)
+                            {t3('Maqaa Abbaa Herregaa (Account Holder)', 'Account Holder Name', 'የሂሳቡ ባለቤት ስም (Account Holder)')}
                           </label>
                           <input
                             type="text"
                             value={newAccountHolder}
                             onChange={(e) => setNewAccountHolder(e.target.value)}
-                            placeholder="ታምራት ዓለ (Tamerat Ale)"
+                            placeholder="Tamerat Ale"
                             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
                           />
                         </div>
 
                         <div>
                           <label className="block text-xs font-semibold text-slate-300 mb-1">
-                            ቅርንጫፍ ወይም ስልክ (Branch/Phone)
+                            {t3('Damee ykn Bilbila (Branch/Phone)', 'Branch or Phone', 'ቅርንጫፍ ወይም ስልክ (Branch/Phone)')}
                           </label>
                           <input
                             type="text"
                             value={newBranchOrPhone}
                             onChange={(e) => setNewBranchOrPhone(e.target.value)}
-                            placeholder="ሻሸመኔ ቅርንጫፍ / +251 9..."
+                            placeholder={t3('Damee Shashamannee / +251 9...', 'Shashemene Branch / +251 9...', 'ሻሸመኔ ቅርንጫፍ / +251 9...')}
                             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                           />
                         </div>
@@ -1123,7 +1243,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                             type="text"
                             value={newAccountNotes}
                             onChange={(e) => setNewAccountNotes(e.target.value)}
-                            placeholder="ተጨማሪ ማስታወሻ (ለምሳሌ፡ ለሞባይል ባንኪንግ ወይም ለቅርንጫፍ ተቀማጭ)..."
+                            placeholder={t3('Yaadannoo dabalataa (Fkn: Baankii moobaayilaa ykn dameedhaan galchuuf)...', 'Additional notes (e.g., for mobile banking or branch deposit)...', 'ተጨማሪ ማስታወሻ (ለምሳሌ፡ ለሞባይል ባንኪንግ ወይም ለቅርንጫፍ ተቀማጭ)...')}
                             className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
                           />
                         </div>
@@ -1133,21 +1253,21 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                           className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl shadow-md transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
                         >
                           <Plus className="w-4 h-4 stroke-[3]" />
-                          <span>አዲሱን የባንክ ሂሳብ መዝግብ</span>
+                          <span>{t3('Herrega Baankii Haaraa Galmeessi', 'Register New Bank Account', 'አዲሱን የባንክ ሂሳብ መዝግብ')}</span>
                         </button>
                       </div>
                     </form>
                   </div>
 
-                  {/* 2. REGISTERED BANK ACCOUNTS LIST (የተመዘገቡ የባንክ ሂሳቦች ዝርዝር) */}
+                  {/* 2. REGISTERED BANK ACCOUNTS LIST */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-amber-400" />
-                        <span>በትምህርት ቤቶች ክፍያ ገጽ ላይ የሚታዩ የባንክ ሂሳቦች ({bankAccountsList.length})</span>
+                        <span>{t3(`Herrega Baankii Fuula Kaffaltii Manneen Barnootaa Irratti Mul'atan (${bankAccountsList.length})`, `Bank Accounts Visible on School Payment Portals (${bankAccountsList.length})`, `በትምህርት ቤቶች ክፍያ ገጽ ላይ የሚታዩ የባንክ ሂሳቦች (${bankAccountsList.length})`)}</span>
                       </h4>
                       <span className="text-[11px] text-slate-400">
-                        {bankAccountsList.filter((b) => b.isActive).length} ንቁ መቀበያዎች
+                        {bankAccountsList.filter((b) => b.isActive).length} {t3('Fudhattoota Si\'aawoo', 'Active Accounts', 'ንቁ መቀበያዎች')}
                       </span>
                     </div>
 
@@ -1173,7 +1293,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                     {acc.bankName}
                                   </h5>
                                   <span className="text-[10px] text-slate-400">
-                                    ባለቤት፡ <strong className="text-slate-200">{acc.accountHolder}</strong>
+                                    {t3('Abbaa Herregaa:', 'Holder:', 'ባለቤት፡')} <strong className="text-slate-200">{acc.accountHolder}</strong>
                                   </span>
                                 </div>
                               </div>
@@ -1185,14 +1305,14 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                     : 'bg-slate-800 text-slate-400 border border-slate-700'
                                 }`}
                               >
-                                {acc.isActive ? 'ንቁ (Active)' : 'የተዘጋ'}
+                                {acc.isActive ? t3('Si\'aawaa (Active)', 'Active', 'ንቁ (Active)') : t3('Cufaa', 'Disabled', 'የተዘጋ')}
                               </span>
                             </div>
 
                             {/* Account Number Box */}
                             <div className="mt-2.5 p-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
                               <div>
-                                <span className="text-[10px] text-slate-500 block">የሂሳብ ቁጥር</span>
+                                <span className="text-[10px] text-slate-500 block">{t3('Lakkoofsa Herregaa', 'Account Number', 'የሂሳብ ቁጥር')}</span>
                                 <span className="text-sm font-black font-mono text-amber-300">
                                   {acc.accountNumber}
                                 </span>
@@ -1206,12 +1326,12 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                                 {copiedBankId === acc.id ? (
                                   <>
                                     <Check className="w-3 h-3 text-emerald-400" />
-                                    <span className="text-emerald-400">ተቀድቷል!</span>
+                                    <span className="text-emerald-400">{t3('Garagalfameera!', 'Copied!', 'ተቀድቷል!')}</span>
                                   </>
                                 ) : (
                                   <>
                                     <Copy className="w-3 h-3" />
-                                    <span>ቅዳ</span>
+                                    <span>{t3('Garagalchi', 'Copy', 'ቅዳ')}</span>
                                   </>
                                 )}
                               </button>
@@ -1220,8 +1340,8 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                             {/* Subtitle / Notes */}
                             {(acc.branchOrPhone || acc.notes) && (
                               <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                                {acc.branchOrPhone && <span>📍 {acc.branchOrPhone}</span>}
-                                {acc.notes && <span className="text-amber-200/80">ℹ️ {acc.notes}</span>}
+                                {acc.branchOrPhone && <span>{acc.branchOrPhone}</span>}
+                                {acc.notes && <span className="text-amber-200/80">{acc.notes}</span>}
                               </div>
                             )}
                           </div>
@@ -1238,24 +1358,44 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                               }`}
                             >
                               <Power className="w-3 h-3" />
-                              <span>{acc.isActive ? 'አጥፋ (Disable)' : 'አብራ (Enable)'}</span>
+                              <span>{acc.isActive ? t3('Dhaamsi (Disable)', 'Disable', 'አጥፋ (Disable)') : t3('Bani (Enable)', 'Enable', 'አብራ (Enable)')}</span>
                             </button>
 
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteBankAccount(acc.id, acc.bankName)}
-                              className="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              <span>ሰርዝ</span>
-                            </button>
+                            {confirmDeleteBankId === acc.id ? (
+                              <div className="flex items-center gap-1.5 bg-rose-950/70 border border-rose-800 rounded-lg px-2 py-0.5">
+                                <span className="text-[10px] text-rose-200">{t3('Haquu?', 'Delete?', 'ይሰረዝ?')}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteBankAccount(acc.id)}
+                                  className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold cursor-pointer"
+                                >
+                                  {t3('Eeyyee', 'Yes', 'አዎ')}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteBankId(null)}
+                                  className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] cursor-pointer"
+                                >
+                                  {t3('Lakki', 'No', 'አይ')}
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteBankId(acc.id)}
+                                className="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>{t3('Haqi', 'Delete', 'ሰርዝ')}</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
 
                       {bankAccountsList.length === 0 && (
                         <div className="col-span-2 py-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
-                          ምንም የተመዘገበ የባንክ ሂሳብ የለም። እባክዎ ከላይ ባለው ቅጽ አዲስ የባንክ ሂሳብ ያስገቡ።
+                          {t3('Herregni baankii galmaa\'e hin jiru. Maaloo gubbaatti herrega haaraa galchaa.', 'No bank accounts registered yet. Please add one above.', 'ምንም የተመዘገበ የባንክ ሂሳብ የለም። እባክዎ ከላይ ባለው ቅጽ አዲስ የባንክ ሂሳብ ያስገቡ።')}
                         </div>
                       )}
                     </div>
@@ -1265,7 +1405,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                   <form onSubmit={handleSaveConfig} className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-4">
                     <h4 className="text-xs sm:text-sm font-black text-white flex items-center gap-2 border-b border-slate-800 pb-2">
                       <CreditCard className="w-4 h-4 text-emerald-400" />
-                      <span>አጠቃላይ የታሪፍ እና የአበልፃጊ መረጃ ቅንብሮች</span>
+                      <span>{t3('Qindaa\'ina Waliigalaa Tariffii fi Odeeffannoo Misoomsaa', 'General Fee & Developer Contact Settings', 'አጠቃላይ የታሪፍ እና የአበልፃጊ መረጃ ቅንብሮች')}</span>
                     </h4>
 
                     {/* Corporate Pedigree & Engineering Team Card */}
@@ -1273,35 +1413,35 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                         <div>
                           <span className="text-[10px] text-amber-400 uppercase font-black">
-                            የድርጅት መዋቅር (Company Structure)
+                            {t3('Caasaa Dhaabbataa (Company Structure)', 'Company Structure', 'የድርጅት መዋቅር (Company Structure)')}
                           </span>
                           <h5 className="font-bold text-white text-xs sm:text-sm">
-                            ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)
+                            {t3('Tame & Seraw PLC', 'Tame & Seraw PLC', 'ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)')}
                           </h5>
                           <p className="text-[11px] text-amber-200">
-                            እህት ድርጅት፡ ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)
+                            {t3('Dhaabbata Obbolaa: Wushiye Software Solution', 'Sister Company: Wushiye Software Solution', 'እህት ድርጅት፡ ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)')}
                           </p>
                         </div>
                         <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
-                          ሻሸመኔ፣ ኢትዮጵያ
+                          {t3('Shashamannee, Itoophiyaa', 'Shashemene, Ethiopia', 'ሻሸመኔ፣ ኢትዮጵያ')}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-300">
                         <div className="p-2 bg-slate-900 rounded-lg">
-                          <span className="text-[9px] text-slate-400 block">ዋና ቀዳሚ ፕሮግራመር፡</span>
-                          <strong className="text-white">ታምራት አሌ</strong>
+                          <span className="text-[9px] text-slate-400 block">{t3('Piroogiraamara Duraa:', 'Lead Programmer:', 'ዋና ቀዳሚ ፕሮግራመር፡')}</span>
+                          <strong className="text-white">Tamerat Ale</strong>
                         </div>
                         <div className="p-2 bg-slate-900 rounded-lg">
-                          <span className="text-[9px] text-slate-400 block">ባክኢንድ ኢንጅነር፡</span>
-                          <strong className="text-white">ታምራት አሌ</strong>
+                          <span className="text-[9px] text-slate-400 block">{t3('Injiinara Baak-Endii:', 'Backend Engineer:', 'ባክኢንድ ኢንጅነር፡')}</span>
+                          <strong className="text-white">Tamerat Ale</strong>
                         </div>
                         <div className="p-2 bg-slate-900 rounded-lg">
-                          <span className="text-[9px] text-slate-400 block">ፍሮንትኢንድ ኢንጅነር፡</span>
-                          <strong className="text-white">ታምራት አሌ</strong>
+                          <span className="text-[9px] text-slate-400 block">{t3('Injiinara Firoont-Endii:', 'Frontend Engineer:', 'ፍሮንትኢንድ ኢንጅነር፡')}</span>
+                          <strong className="text-white">Tamerat Ale</strong>
                         </div>
                         <div className="p-2 bg-slate-900 rounded-lg">
-                          <span className="text-[9px] text-slate-400 block">ዲዛይነር (UI/UX)፡</span>
-                          <strong className="text-white">ታምራት አሌ</strong>
+                          <span className="text-[9px] text-slate-400 block">{t3('Dizaayinara (UI/UX):', 'UI/UX Designer:', 'ዲዛይነር (UI/UX)፡')}</span>
+                          <strong className="text-white">Tamerat Ale</strong>
                         </div>
                       </div>
                     </div>
@@ -1309,7 +1449,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1">
-                          የአመታዊ ፈቃድ ክፍያ መጠን (በብር) *
+                          {t3('Hanga Kaffaltii Eeyyama Waggaa (ETB) *', 'Annual License Fee Amount (ETB) *', 'የአመታዊ ፈቃድ ክፍያ መጠን (በብር) *')}
                         </label>
                         <input
                           type="number"
@@ -1322,7 +1462,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1">
-                          ነባሪ የሂሳብ ባለቤት ስም (Default Account Holder)
+                          {t3('Maqaa Abbaa Herregaa Durtii (Default Holder)', 'Default Account Holder', 'ነባሪ የሂሳብ ባለቤት ስም (Default Account Holder)')}
                         </label>
                         <input
                           type="text"
@@ -1335,7 +1475,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
                           <Phone className="w-3 h-3 text-amber-400" />
-                          <span>ዋና ስልክ ቁጥር (Primary Phone / ቴሌብር)</span>
+                          <span>{t3('Lakkoofsa Bilbila Duraa (Primary / Telebirr)', 'Primary Phone / Telebirr', 'ዋና ስልክ ቁጥር (Primary Phone / ቴሌብር)')}</span>
                         </label>
                         <input
                           type="text"
@@ -1348,7 +1488,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
                           <Phone className="w-3 h-3 text-sky-400" />
-                          <span>ሁለተኛ ስልክ ቁጥር (Secondary Phone / ድጋፍ)</span>
+                          <span>{t3('Lakkoofsa Bilbila Lammaffaa (Deeggarsa)', 'Secondary Phone / Support', 'ሁለተኛ ስልክ ቁጥር (Secondary Phone / ድጋፍ)')}</span>
                         </label>
                         <input
                           type="text"
@@ -1361,7 +1501,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
                           <Mail className="w-3 h-3 text-amber-400" />
-                          <span>የአበልፃጊ ኢሜይል (Developer Email)</span>
+                          <span>{t3('Imeelii Misoomsaa (Developer Email)', 'Developer Email', 'የአበልፃጊ ኢሜይል (Developer Email)')}</span>
                         </label>
                         <input
                           type="email"
@@ -1375,7 +1515,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                         <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
                           <span className="flex items-center gap-1">
                             <Globe className="w-3.5 h-3.5 text-amber-400" />
-                            <span>ይፋዊ ዌብ ገፅ / የዝርጋታ ሞዶች (Official Website / Deployment Modes)</span>
+                            <span>{t3('Weebsaayitii Ofiseelaawaa / Haalawwan Diriirsaa', 'Official Website / Deployment Modes', 'ይፋዊ ዌብ ገፅ / የዝርጋታ ሞዶች (Official Website / Deployment Modes)')}</span>
                           </span>
                           {editWebsiteUrl && (
                             <a
@@ -1384,7 +1524,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                               rel="noopener noreferrer"
                               className="text-[11px] text-amber-300 hover:underline inline-flex items-center gap-1"
                             >
-                              <span>ዌብ ገፅ ክፈት</span>
+                              <span>{t3('Weebsaayitii Bani', 'Open Website', 'ዌብ ገፅ ክፈት')}</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
@@ -1401,13 +1541,13 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-300 mb-1">
-                        ለትምህርት ቤቶች የሚታይ የክፍያ መመሪያ ፅሁፍ (Instructions to Schools)
+                        {t3('Barreeffama Qajeelfama Kaffaltii Manneen Barnootaatiif Mul\'atu', 'Payment Instructions Displayed to Schools', 'ለትምህርት ቤቶች የሚታይ የክፍያ መመሪያ ፅሁፍ (Instructions to Schools)')}
                       </label>
                       <textarea
                         rows={2}
                         value={editInstructions}
                         onChange={(e) => setEditInstructions(e.target.value)}
-                        placeholder="ክፍያውን በንግድ ባንክ ወይም በቴሌብር ከፈጸሙ በኋላ..."
+                        placeholder={t3('Kaffaltii Baankii Daldalaa ykn Telebirriin erga raawwattanii booda...', 'After paying via CBE or Telebirr...', 'ክፍያውን በንግድ ባንክ ወይም በቴሌብር ከፈጸሙ በኋላ...')}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-amber-500 leading-relaxed"
                       />
                     </div>
@@ -1416,11 +1556,11 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                       {configSavedToast ? (
                         <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 animate-in fade-in">
                           <CheckCircle2 className="w-4 h-4" />
-                          <span>ቅንብሩ በተሳካ ሁኔታ ተቀምጧል!</span>
+                          <span>{t3('Qindaa\'inni milkaa\'inaan olkaa\'ameera!', 'Settings saved successfully!', 'ቅንብሩ በተሳካ ሁኔታ ተቀምጧል!')}</span>
                         </span>
                       ) : (
                         <span className="text-[11px] text-slate-500">
-                          የተቀመጡ ለውጦች ወዲያውኑ ለት/ቤቶች ይተገበራሉ።
+                          {t3('Jijjiiramni olkaa\'ame battalumatti manneen barnootaa irratti hojiirra oola.', 'Saved changes apply immediately to all schools.', 'የተቀመጡ ለውጦች ወዲያውኑ ለት/ቤቶች ይተገበራሉ።')}
                         </span>
                       )}
 
@@ -1429,7 +1569,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                         className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
                       >
                         <Check className="w-4 h-4 stroke-[3]" />
-                        <span>ቅንብሩን መዝግብ (Save Settings)</span>
+                        <span>{t3('Qindaa\'ina Olkaa\'i', 'Save Settings', 'ቅንብሩን መዝግብ (Save Settings)')}</span>
                       </button>
                     </div>
                   </form>
@@ -1441,7 +1581,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
             <div className="px-4 py-3 sm:px-5 sm:py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 sm:shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>ሲስተም ጥበቃ፡ ንቁ (Active Protection)</span>
+                <span>{t3('Eegumsa Sirnaa: Si\'aawaa (Active Protection)', 'System Protection: Active', 'ሲስተም ጥበቃ፡ ንቁ (Active Protection)')}</span>
               </div>
               <button
                 onClick={() => {
@@ -1450,7 +1590,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                 }}
                 className="hover:text-rose-400 transition"
               >
-                ይቆልፉና ይውጡ (Lock & Exit)
+                {t3('Cufii Bahi (Lock & Exit)', 'Lock & Exit', 'ይቆልፉና ይውጡ (Lock & Exit)')}
               </button>
             </div>
           </>
@@ -1465,7 +1605,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
             <div className="px-5 py-3.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-amber-400" />
-                <h4 className="font-bold text-white text-sm">የባንክ ደረሰኝ ምርመራ</h4>
+                <h4 className="font-bold text-white text-sm">{t3('Qorannoo Nagahee Baankii', 'Bank Receipt Inspection', 'የባንክ ደረሰኝ ምርመራ')}</h4>
               </div>
               <button
                 onClick={() => setSelectedReceipt(null)}
@@ -1479,7 +1619,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
               {/* Slip Visual / Document */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-center">
                 <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2">
-                  የተላከው የባንክ ደረሰኝ ቅጅ (Deposit Slip)
+                  {t3('Garagalcha Nagahee Baankii Ergame (Deposit Slip)', 'Submitted Bank Deposit Slip', 'የተላከው የባንክ ደረሰኝ ቅጅ (Deposit Slip)')}
                 </div>
                 {selectedReceipt.receiptImageUrl ? (
                   <img
@@ -1489,7 +1629,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                   />
                 ) : (
                   <div className="py-10 text-slate-500 text-xs font-mono">
-                    የደረሰኝ ምስል አልተያያዘም
+                    {t3('Suuraan nagahee hin qabsiifamne', 'No receipt image attached', 'የደረሰኝ ምስል አልተያያዘም')}
                   </div>
                 )}
               </div>
@@ -1497,32 +1637,32 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
               {/* Receipt Metadata */}
               <div className="grid grid-cols-2 gap-3 text-xs bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/60 font-mono">
                 <div>
-                  <span className="text-slate-400 block text-[10px]">ትምህርት ቤት</span>
+                  <span className="text-slate-400 block text-[10px]">{t3('Mana Barumsaa', 'School', 'ትምህርት ቤት')}</span>
                   <span className="text-white font-bold">{selectedReceipt.schoolName}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">ባንክ</span>
+                  <span className="text-slate-400 block text-[10px]">{t3('Baankii', 'Bank', 'ባንክ')}</span>
                   <span className="text-amber-300 font-bold">{selectedReceipt.bankName}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">የግብይት ቁጥር (FT / Ref)</span>
+                  <span className="text-slate-400 block text-[10px]">{t3('Lakkoofsa Jijjiirraa (FT / Ref)', 'Transaction Ref (FT)', 'የግብይት ቁጥር (FT / Ref)')}</span>
                   <span className="text-emerald-400 font-bold">{selectedReceipt.transactionRef}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">የተከፈለ ገንዘብ</span>
-                  <span className="text-emerald-300 font-bold">{selectedReceipt.amount.toLocaleString()} ብር</span>
+                  <span className="text-slate-400 block text-[10px]">{t3('Maallaqa Kaffalame', 'Amount Paid', 'የተከፈለ ገንዘብ')}</span>
+                  <span className="text-emerald-300 font-bold">{selectedReceipt.amount.toLocaleString()} {t3('ETB', 'ETB', 'ብር')}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">ከፋይ ግለሰብ</span>
+                  <span className="text-slate-400 block text-[10px]">{t3('Nama Kaffale', 'Payer', 'ከፋይ ግለሰብ')}</span>
                   <span className="text-slate-200">{selectedReceipt.payerName}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">የተከፈለበት ቀን</span>
+                  <span className="text-slate-400 block text-[10px]">{t3('Guyyaa Kaffaltii', 'Payment Date', 'የተከፈለበት ቀን')}</span>
                   <span className="text-slate-400">{selectedReceipt.submittedAt?.split('T')[0] || selectedReceipt.submittedAt}</span>
                 </div>
                 {selectedReceipt.notes && (
                   <div className="col-span-2 pt-1 border-t border-slate-700/60 text-slate-300 font-sans">
-                    <span className="text-slate-400 block text-[10px]">ተጨማሪ ማስታወሻ፡</span>
+                    <span className="text-slate-400 block text-[10px]">{t3('Yaadannoo Dabalataa:', 'Additional Notes:', 'ተጨማሪ ማስታወሻ፡')}</span>
                     {selectedReceipt.notes}
                   </div>
                 )}
@@ -1534,7 +1674,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                   onClick={() => setSelectedReceipt(null)}
                   className="w-1/2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
                 >
-                  ዝጋ
+                  {t3('Cufi', 'Close', 'ዝጋ')}
                 </button>
                 <button
                   onClick={() => {
@@ -1544,7 +1684,7 @@ export const SecretDeveloperPortalModal: React.FC<SecretDeveloperPortalModalProp
                   className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  ይህን ደረሰኝ አፅድቅ
+                  {t3('Nagahee Kana Mirkaneessi', 'Approve Receipt', 'ይህን ደረሰኝ አፅድቅ')}
                 </button>
               </div>
             </div>

@@ -92,10 +92,18 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                የዳሽቦርድ ፈጣን መቆጣጠሪያ በተኖች (Dashboard Top Actions)
+                {currentLang === 'om'
+                  ? 'Qabduuwwan To\'annoo Saffisaa Daashboordii (Top Actions)'
+                  : currentLang === 'en'
+                  ? 'Dashboard Top Quick-Action Controls'
+                  : 'የዳሽቦርድ ፈጣን መቆጣጠሪያ በተኖች (Dashboard Top Actions)'}
               </h3>
               <p className="text-[11px] text-slate-500">
-                የከተማው ትምህርት ቢሮ ቁልፍ የስራ ክፍሎችና ሪፖርቶች መከታተያ በተኖች
+                {currentLang === 'om'
+                  ? 'Kutaalee hojii ijoo Biiroo Barnootaa Magaalaa fi qabduuwwan gabaasa hordofuu'
+                  : currentLang === 'en'
+                  ? 'Education bureau departments, key metrics, and reporting shortcuts'
+                  : 'የከተማው ትምህርት ቢሮ ቁልፍ የስራ ክፍሎችና ሪፖርቶች መከታተያ በተኖች'}
               </p>
             </div>
           </div>
@@ -105,10 +113,18 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
               type="button"
               onClick={onToggleFullscreen}
               className="self-start md:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-              title="ዳሽቦርዱን ሙሉ እስክሪን አድርግ"
+              title={
+                currentLang === 'om'
+                  ? 'Daashboordii Iskiriinii Guutuu Taasisi'
+                  : currentLang === 'en'
+                  ? 'Fullscreen Dashboard'
+                  : 'ዳሽቦርዱን ሙሉ እስክሪን አድርግ'
+              }
             >
               <Maximize2 className="w-3.5 h-3.5 text-emerald-800" />
-              <span>ሙሉ እስክሪን</span>
+              <span>
+                {currentLang === 'om' ? 'Iskiriinii Guutuu' : currentLang === 'en' ? 'Fullscreen' : 'ሙሉ እስክሪን'}
+              </span>
             </button>
           )}
         </div>
@@ -125,9 +141,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-800 transition-colors">
-                ት/ቤቶች ({schools.length})
+                {currentLang === 'om' ? 'M/Barnootaa' : currentLang === 'en' ? 'Schools' : 'ት/ቤቶች'} ({schools.length})
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ይፋዊ ካታሎግ</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Kaataloogii Seera-qabeessa' : currentLang === 'en' ? 'Official Catalog' : 'ይፋዊ ካታሎግ'}
+              </p>
             </div>
           </button>
 
@@ -141,9 +159,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-teal-800 transition-colors">
-                ሪፖርቶች ({reports.length})
+                {currentLang === 'om' ? 'Gabaasota' : currentLang === 'en' ? 'Reports' : 'ሪፖርቶች'} ({reports.length})
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ሴሚስተር ውጤት</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Qabxii Semisteeraa' : currentLang === 'en' ? 'Semester Marks' : 'ሴሚስተር ውጤት'}
+              </p>
             </div>
           </button>
 
@@ -157,9 +177,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
-                ፈተናዎች ({exams.length})
+                {currentLang === 'om' ? 'Qormaata' : currentLang === 'en' ? 'Exams' : 'ፈተናዎች'} ({exams.length})
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ኦንላይን ብቃት</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Gahumsa Toora Irraa' : currentLang === 'en' ? 'Online Competency' : 'ኦንላይን ብቃት'}
+              </p>
             </div>
           </button>
 
@@ -173,9 +195,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-sky-800 transition-colors">
-                ማስረጃ & ግምገማ
+                {currentLang === 'om' ? 'Ragaa & Madaallii' : currentLang === 'en' ? 'Credentials & Audit' : 'ማስረጃ & ግምገማ'}
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ኦዲት & 60 ማርክ</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Ooditii & Qabxii 60' : currentLang === 'en' ? 'Audit & 60 Marks' : 'ኦዲት & 60 ማርክ'}
+              </p>
             </div>
           </button>
 
@@ -189,9 +213,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-violet-800 transition-colors">
-                ስልጠና
+                {currentLang === 'om' ? 'Leenjii' : currentLang === 'en' ? 'Training' : 'ስልጠና'}
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ሞጁሎች & ሰነድ</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Moojuloota & Sanada' : currentLang === 'en' ? 'Modules & Docs' : 'ሞጁሎች & ሰነድ'}
+              </p>
             </div>
           </button>
 
@@ -205,9 +231,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-slate-800 transition-colors">
-                ሰራተኞች ({staff.length})
+                {currentLang === 'om' ? 'Hojjettoota' : currentLang === 'en' ? 'Staff' : 'ሰራተኞች'} ({staff.length})
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ኮዶችና ድርሻ</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Koodii fi Gahee' : currentLang === 'en' ? 'Codes & Roles' : 'ኮዶችና ድርሻ'}
+              </p>
             </div>
           </button>
 
@@ -221,9 +249,11 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-800 transition-colors">
-                ስታንዳርድ
+                {currentLang === 'om' ? 'Ulaagaalee' : currentLang === 'en' ? 'Standards' : 'ስታንዳርድ'}
               </p>
-              <p className="text-[10px] text-slate-500 truncate">ደረጃ 1-4 መስፈርት</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentLang === 'om' ? 'Ulaagaa Sad. 1-4' : currentLang === 'en' ? 'Level 1-4 Criteria' : 'ደረጃ 1-4 መስፈርት'}
+              </p>
             </div>
           </button>
         </div>
@@ -238,31 +268,41 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700/50 border border-emerald-500/30 text-emerald-200 text-xs font-semibold mb-3">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>የሻሸመኔ ከተማ አስተዳደር ይፋዊ ስርዓት (Official Portal)</span>
+            <span>
+              {currentLang === 'om'
+                ? 'Sirna Seera-qabeessa Bulchiinsa Magaalaa Shaashamannee (Official Portal)'
+                : currentLang === 'en'
+                ? 'Shashemene City Administration Official Portal'
+                : 'የሻሸመኔ ከተማ አስተዳደር ይፋዊ ስርዓት (Official Portal)'}
+            </span>
           </div>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">
             {t.bureau_full_name}
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-            በሻሸመኔ ከተማ የሚገኙ የመንግስት እና የግል ትምህርት ቤቶችን፣ የመምህራን የትምህርት ማስረጃዎች፣ ኦንላይን ፈተናዎችን፣ የተማሪዎች ውጤት ሪፖርቶችን እና የትምህርት ጥራት መስፈርቶችን ማስተዳደሪያ ማዕከል።
+            {currentLang === 'om'
+              ? 'Wiirtuu manneen barnootaa mootummaa fi dhuunfaa Magaalaa Shaashamannee, ragaa barnootaa barsiisotaa, qormaata intarneetii, gabaasa bu\'aa barattootaa fi ulaagaalee qulqullina barnootaa ittiin bulfamuu dha.'
+              : currentLang === 'en'
+              ? 'Central management platform for public and private schools in Shashemene City, teacher credential verification, online competency exams, student score reports, and education quality standards.'
+              : 'በሻሸመኔ ከተማ የሚገኙ የመንግስት እና የግል ትምህርት ቤቶችን፣ የመምህራን የትምህርት ማስረጃዎች፣ ኦንላይን ፈተናዎችን፣ የተማሪዎች ውጤት ሪፖርቶችን እና የትምህርት ጥራት መስፈርቶችን ማስተዳደሪያ ማዕከል።'}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2.5">
             <button
               onClick={() => onNavigateTab('schools')}
-              className="px-4 py-2 bg-white text-emerald-950 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-colors shadow-xs"
+              className="px-4 py-2 bg-white text-emerald-950 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-colors shadow-xs cursor-pointer"
             >
-              {t.tab_schools} ተመልከት
+              {currentLang === 'om' ? `${t.tab_schools} Ilaali` : currentLang === 'en' ? `View ${t.tab_schools}` : `${t.tab_schools} ተመልከት`}
             </button>
             <button
               onClick={() => onNavigateTab('exams')}
-              className="px-4 py-2 bg-emerald-700/60 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl border border-emerald-500/40 transition-colors"
+              className="px-4 py-2 bg-emerald-700/60 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl border border-emerald-500/40 transition-colors cursor-pointer"
             >
               {t.tab_exams}
             </button>
             <button
               onClick={() => onNavigateTab('reports')}
-              className="px-4 py-2 bg-teal-800/80 hover:bg-teal-700 text-emerald-100 font-semibold text-xs rounded-xl border border-teal-600/40 transition-colors"
+              className="px-4 py-2 bg-teal-800/80 hover:bg-teal-700 text-emerald-100 font-semibold text-xs rounded-xl border border-teal-600/40 transition-colors cursor-pointer"
             >
               {t.tab_reports}
             </button>
@@ -287,11 +327,15 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {schools.length}
             </span>
-            <span className="text-xs text-slate-400 ml-1.5 font-medium">ተቋማት</span>
+            <span className="text-xs text-slate-400 ml-1.5 font-medium">
+              {currentLang === 'om' ? 'Dhaabbilee' : currentLang === 'en' ? 'Institutions' : 'ተቋማት'}
+            </span>
           </div>
           <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5 border-t border-slate-100 pt-2.5">
             <span className="text-emerald-700 font-bold">{level3And4Schools}</span>
-            <span>ደረጃ 3 እና 4 የደረሱ</span>
+            <span>
+              {currentLang === 'om' ? 'Sadarkaa 3 fi 4 kan gahan' : currentLang === 'en' ? 'Level 3 & 4 Accredited' : 'ደረጃ 3 እና 4 የደረሱ'}
+            </span>
           </div>
         </div>
 
@@ -310,12 +354,20 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {totalStudents.toLocaleString()}
             </span>
-            <span className="text-xs text-slate-400 ml-1.5 font-medium">ተማሪዎች</span>
+            <span className="text-xs text-slate-400 ml-1.5 font-medium">
+              {currentLang === 'om' ? 'Barattoota' : currentLang === 'en' ? 'Students' : 'ተማሪዎች'}
+            </span>
           </div>
           <div className="mt-3 text-xs text-slate-500 flex items-center gap-2 border-t border-slate-100 pt-2.5">
-            <span>ወንድ: <strong>{maleStudents.toLocaleString()}</strong></span>
+            <span>
+              {currentLang === 'om' ? 'Dhiira:' : currentLang === 'en' ? 'Male:' : 'ወንድ:'}{' '}
+              <strong>{maleStudents.toLocaleString()}</strong>
+            </span>
             <span>·</span>
-            <span>ሴት: <strong>{femaleStudents.toLocaleString()}</strong></span>
+            <span>
+              {currentLang === 'om' ? 'Dubara:' : currentLang === 'en' ? 'Female:' : 'ሴት:'}{' '}
+              <strong>{femaleStudents.toLocaleString()}</strong>
+            </span>
           </div>
         </div>
 
@@ -334,11 +386,19 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {totalTeachers}
             </span>
-            <span className="text-xs text-slate-400 ml-1.5 font-medium">መምህራን</span>
+            <span className="text-xs text-slate-400 ml-1.5 font-medium">
+              {currentLang === 'om' ? 'Barsiisota' : currentLang === 'en' ? 'Teachers' : 'መምህራን'}
+            </span>
           </div>
           <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5 border-t border-slate-100 pt-2.5">
             <span className="text-emerald-700 font-bold">{verifiedTeachersCount}</span>
-            <span>ማስረጃቸው የተረጋገጠ ({Math.round((verifiedTeachersCount / Math.max(credentials.length, 1)) * 100)}%)</span>
+            <span>
+              {currentLang === 'om'
+                ? `Ragaan kan mirkanaa'e (${Math.round((verifiedTeachersCount / Math.max(credentials.length, 1)) * 100)}%)`
+                : currentLang === 'en'
+                ? `Credentials verified (${Math.round((verifiedTeachersCount / Math.max(credentials.length, 1)) * 100)}%)`
+                : `ማስረጃቸው የተረጋገጠ (${Math.round((verifiedTeachersCount / Math.max(credentials.length, 1)) * 100)}%)`}
+            </span>
           </div>
         </div>
 
@@ -357,11 +417,19 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
             <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {exams.length}
             </span>
-            <span className="text-xs text-slate-400 ml-1.5 font-medium">ኦንላይን ፈተናዎች</span>
+            <span className="text-xs text-slate-400 ml-1.5 font-medium">
+              {currentLang === 'om' ? 'Qormaata Toora Irraa' : currentLang === 'en' ? 'Online Exams' : 'ኦንላይን ፈተናዎች'}
+            </span>
           </div>
           <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5 border-t border-slate-100 pt-2.5">
             <span className="text-amber-700 font-bold">{pendingReportsCount}</span>
-            <span>ያልተገመገሙ የውጤት ሪፖርቶች</span>
+            <span>
+              {currentLang === 'om'
+                ? 'Gabaasota bu\'aa hin gamaaggamamne'
+                : currentLang === 'en'
+                ? 'Unreviewed score reports'
+                : 'ያልተገመገሙ የውጤት ሪፖርቶች'}
+            </span>
           </div>
         </div>
       </div>
@@ -373,14 +441,22 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
-                የትምህርት ቢሮ ቅድሚያ የሚሰጣቸው ተግባራት (Priority Bureau Actions)
+                {currentLang === 'om'
+                  ? 'Hojiiwwan Dursa Biiroo Barnootaa (Priority Bureau Actions)'
+                  : currentLang === 'en'
+                  ? 'Priority Bureau Actions'
+                  : 'የትምህርት ቢሮ ቅድሚያ የሚሰጣቸው ተግባራት (Priority Bureau Actions)'}
               </h3>
               <p className="text-xs text-slate-500">
-                የመምህራን ማስረጃ ማረጋገጫዎች፣ የተማሪዎች ውጤት መቀበያ እና የሰራተኛ ኮዶች
+                {currentLang === 'om'
+                  ? 'Mirkaneessa ragaa barsiisotaa, gabaasa bu\'aa barattootaa fi koodiiwwan hojjettootaa'
+                  : currentLang === 'en'
+                  ? 'Teacher credential audits, student semester returns & staff credentials'
+                  : 'የመምህራን ማስረጃ ማረጋገጫዎች፣ የተማሪዎች ውጤት መቀበያ እና የሰራተኛ ኮዶች'}
               </p>
             </div>
             <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg">
-              ወቅታዊ
+              {currentLang === 'om' ? 'Yeroo Ammaa' : currentLang === 'en' ? 'Active' : 'ወቅታዊ'}
             </span>
           </div>
 
@@ -393,18 +469,26 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">
-                    {pendingTeachersCount} የመምህራን ዲፕሎማ/ዲግሪ ማስረጃዎች ማረጋገጫ በመጠባበቅ ላይ ናቸው
+                    {currentLang === 'om'
+                      ? `Ragaan diploomaa/digirii barsiisotaa ${pendingTeachersCount} mirkaneessa eeggataa jira`
+                      : currentLang === 'en'
+                      ? `${pendingTeachersCount} teacher degree/diploma submissions pending verification`
+                      : `${pendingTeachersCount} የመምህራን ዲፕሎማ/ዲግሪ ማስረጃዎች ማረጋገጫ በመጠባበቅ ላይ ናቸው`}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    ሀረማያ እና ሀዋሳ ዩኒቨርሲቲ ጨምሮ አዳዲስ የተመዘገቡ መምህራን
+                    {currentLang === 'om'
+                      ? 'Yunivarsiitii Haramayaa fi Hawaasaa dabalatee barsiisota haaraa'
+                      : currentLang === 'en'
+                      ? 'Newly registered teachers including Haramaya & Hawassa graduates'
+                      : 'ሀረማያ እና ሀዋሳ ዩኒቨርሲቲ ጨምሮ አዳዲስ የተመዘገቡ መምህራን'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => onNavigateTab('credentials')}
-                className="px-3 py-1.5 text-xs font-bold text-sky-800 bg-white border border-sky-200 rounded-lg hover:bg-sky-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-sky-800 bg-white border border-sky-200 rounded-lg hover:bg-sky-50 transition-colors cursor-pointer"
               >
-                አረጋግጥ
+                {currentLang === 'om' ? 'Mirkaneessi' : currentLang === 'en' ? 'Verify' : 'አረጋግጥ'}
               </button>
             </div>
 
@@ -416,18 +500,26 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">
-                    {reports.length} የትምህርት ቤቶች የተማሪዎች ሴሚስተር ውጤት ሪፖርቶች ደርሰዋል
+                    {currentLang === 'om'
+                      ? `Gabaasni qabxii semisteeraa manneen barnootaa ${reports.length} dhiyaateera`
+                      : currentLang === 'en'
+                      ? `${reports.length} school semester score reports submitted`
+                      : `${reports.length} የትምህርት ቤቶች የተማሪዎች ሴሚስተር ውጤት ሪፖርቶች ደርሰዋል`}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    የማለፍ ምጣኔ፣ የተማሪዎች ብዛትና ከፍተኛ ውጤቶች ትንተና
+                    {currentLang === 'om'
+                      ? 'Reeshiyoo darbiinsaa, baay\'ina barattootaa fi qaaccessa qabxii olaanaa'
+                      : currentLang === 'en'
+                      ? 'Passing rates, student counts & top academic performer analytics'
+                      : 'የማለፍ ምጣኔ፣ የተማሪዎች ብዛትና ከፍተኛ ውጤቶች ትንተና'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => onNavigateTab('reports')}
-                className="px-3 py-1.5 text-xs font-bold text-emerald-800 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-emerald-800 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer"
               >
-                ገምግም
+                {currentLang === 'om' ? 'Gamaaggami' : currentLang === 'en' ? 'Review' : 'ገምግም'}
               </button>
             </div>
 
@@ -439,18 +531,26 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">
-                    የትምህርት ቢሮ ሰራተኞች እና የመግቢያ ኮዶች (Staff Access Codes)
+                    {currentLang === 'om'
+                      ? 'Hojjettoota Biiroo fi Koodiiwwan Seensaa (Staff Access Codes)'
+                      : currentLang === 'en'
+                      ? 'Bureau Staff & Access Codes'
+                      : 'የትምህርት ቢሮ ሰራተኞች እና የመግቢያ ኮዶች (Staff Access Codes)'}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    አስተዳዳሪው ለባለሙያዎች የስራ ድርሻቸውን በመመደብ የመግቢያ ኮድ ይሰጣል
+                    {currentLang === 'om'
+                      ? 'Bulchaan ogeessotaaf gahee hojii ramaduun koodii seensaa kenna'
+                      : currentLang === 'en'
+                      ? 'Administrator assigns roles and distributes login credentials'
+                      : 'አስተዳዳሪው ለባለሙያዎች የስራ ድርሻቸውን በመመደብ የመግቢያ ኮድ ይሰጣል'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => onNavigateTab('staff')}
-                className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-white border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-white border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
               >
-                ኮድ ስጥ
+                {currentLang === 'om' ? 'Koodii Kenni' : currentLang === 'en' ? 'Issue Code' : 'ኮድ ስጥ'}
               </button>
             </div>
 
@@ -462,18 +562,26 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">
-                    እንደሚያስተማሩት የትምህርት አይነት የስልጠና ፁሁፎች መላኪያ
+                    {currentLang === 'om'
+                      ? 'Barreeffamoota leenjii akka gosa barnootaatti erguu'
+                      : currentLang === 'en'
+                      ? 'Targeted Teacher Training Materials Hub'
+                      : 'እንደሚያስተማሩት የትምህርት አይነት የስልጠና ፁሁፎች መላኪያ'}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    ሂሳብ፣ አፋን ኦሮሞ፣ እንግሊዝኛ፣ ሳይንስ እና ስነ-ማስተማር (Pedagogy)
+                    {currentLang === 'om'
+                      ? 'Herrega, Afaan Oromoo, Ingiliffa, Saayinsii fi Pedaagoojii'
+                      : currentLang === 'en'
+                      ? 'Mathematics, Afaan Oromoo, English, General Science & Pedagogy'
+                      : 'ሂሳብ፣ አፋን ኦሮሞ፣ እንግሊዝኛ፣ ሳይንስ እና ስነ-ማስተማር (Pedagogy)'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => onNavigateTab('training')}
-                className="px-3 py-1.5 text-xs font-bold text-purple-800 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-purple-800 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors cursor-pointer"
               >
-                ስልጠና ላክ
+                {currentLang === 'om' ? 'Leenjii Ergi' : currentLang === 'en' ? 'Send Training' : 'ስልጠና ላክ'}
               </button>
             </div>
           </div>
@@ -483,27 +591,39 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-900 mb-1">
-              የሻሸመኔ ክፍለ-ከተሞች የት/ቤት ስርጭት
+              {currentLang === 'om'
+                ? 'Raabsa Manneen Barnootaa Kutaa Magaalaa Shaashamannee'
+                : currentLang === 'en'
+                ? 'Shashemene Sub-city Schools Distribution'
+                : 'የሻሸመኔ ክፍለ-ከተሞች የት/ቤት ስርጭት'}
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              በየክፍለ ከተማው የተመዘገቡ ትምህርት ቤቶች እና የተማሪ ቁጥር
+              {currentLang === 'om'
+                ? 'Manneen barnootaa fi baay\'ina barattootaa kutaa magaalaatiin galmaa\'an'
+                : currentLang === 'en'
+                ? 'Registered schools and student enrollment by sub-city'
+                : 'በየክፍለ ከተማው የተመዘገቡ ትምህርት ቤቶች እና የተማሪ ቁጥር'}
             </p>
 
             <div className="space-y-3">
               {[
-                { name: 'አቦስቶ (Abosto)', count: 2, students: 3790 },
-                { name: 'ቡልቻና (Bulchana)', count: 1, students: 1820 },
-                { name: 'ቁዬራ (Kuyera)', count: 1, students: 1980 },
-                { name: 'አዋሾ (Awasho)', count: 2, students: 2060 },
-                { name: 'አለሉ (Alelu)', count: 1, students: 980 },
-                { name: 'ዲዳ ቦቄ (Dida Boke)', count: 1, students: 820 }
+                { nameOm: 'Abosto', nameAm: 'አቦስቶ (Abosto)', count: 2, students: 3790 },
+                { nameOm: 'Bulchaanaa', nameAm: 'ቡልቻና (Bulchana)', count: 1, students: 1820 },
+                { nameOm: 'Kuyyeraa', nameAm: 'ቁዬራ (Kuyera)', count: 1, students: 1980 },
+                { nameOm: 'Awaashoo', nameAm: 'አዋሾ (Awasho)', count: 2, students: 2060 },
+                { nameOm: 'Aleeluu', nameAm: 'አለሉ (Alelu)', count: 1, students: 980 },
+                { nameOm: 'Diida Boqee', nameAm: 'ዲዳ ቦቄ (Dida Boke)', count: 1, students: 820 }
               ].map((sub) => (
-                <div key={sub.name} className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">{sub.name}</span>
+                <div key={sub.nameAm} className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700">
+                    {currentLang === 'om' || currentLang === 'en' ? sub.nameOm : sub.nameAm}
+                  </span>
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-500">{sub.students.toLocaleString()} ተማሪ</span>
+                    <span className="text-slate-500">
+                      {sub.students.toLocaleString()} {currentLang === 'om' ? 'Barataa' : currentLang === 'en' ? 'Students' : 'ተማሪ'}
+                    </span>
                     <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px]">
-                      {sub.count} ት/ቤት
+                      {sub.count} {currentLang === 'om' ? 'M/B' : currentLang === 'en' ? 'Sch' : 'ት/ቤት'}
                     </span>
                   </div>
                 </div>
@@ -513,7 +633,9 @@ export const BureauDashboard: React.FC<BureauDashboardProps> = ({
 
           <div className="pt-4 border-t border-slate-100 mt-4">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500">የትምህርት ቢሮ ምዘና ደረጃ:</span>
+              <span className="text-slate-500">
+                {currentLang === 'om' ? 'Sadarkaa Madaallii Biiroo:' : currentLang === 'en' ? 'Bureau Evaluation Standard:' : 'የትምህርት ቢሮ ምዘና ደረጃ:'}
+              </span>
               <span className="text-emerald-700 font-bold">MoE Standard Level 1-4</span>
             </div>
           </div>

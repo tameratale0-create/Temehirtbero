@@ -49,6 +49,7 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
   const [targetAudience, setTargetAudience] = useState<SchoolAnnouncement['targetAudience']>('all');
   const [priority, setPriority] = useState<SchoolAnnouncement['priority']>('normal');
   const [category, setCategory] = useState<SchoolAnnouncement['category']>('administrative');
+  const [confirmDeleteAnnId, setConfirmDeleteAnnId] = useState<string | null>(null);
 
   // Strict Read-Only Rule for Bureau: "ትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውም መረጃወች ማየት ብቻ ማሻሻል ማስተካከል አይቻልም"
   const isBureauRole =
@@ -80,7 +81,13 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
       title: title.trim(),
       content: content.trim(),
       authorRole,
-      authorName: currentUser?.name || 'የትምህርት ቤት አስተዳደር',
+      authorName:
+        currentUser?.name ||
+        (currentLang === 'om'
+          ? 'Bulchiinsa Mana Barnootaa'
+          : currentLang === 'en'
+          ? 'School Administration'
+          : 'የትምህርት ቤት አስተዳደር'),
       targetAudience,
       priority,
       category,
@@ -95,10 +102,9 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
   };
 
   const handleDeleteAnnouncement = (id: string) => {
-    if (confirm('ይህን ማስታወቂያ መሰረዝ ይፈልጋሉ?')) {
-      StorageService.deleteAnnouncement(id);
-      setAnnouncements(StorageService.getAnnouncements(schoolId));
-    }
+    StorageService.deleteAnnouncement(id);
+    setAnnouncements(StorageService.getAnnouncements(schoolId));
+    setConfirmDeleteAnnId(null);
   };
 
   const localizedAnnouncements = useMemo(
@@ -127,37 +133,57 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
     switch (role) {
       case 'owner_board':
         return {
-          label: 'የቦርድ አመራር / ባለቤት',
+          label:
+            currentLang === 'om'
+              ? 'Hoggansa Boordii / Abbaa M/B'
+              : currentLang === 'en'
+              ? 'Board Leadership / Owner'
+              : 'የቦርድ አመራር / ባለቤት',
           style: 'bg-purple-100 text-purple-900 border-purple-300',
           icon: <Building2 className="w-3 h-3 text-purple-700" />
         };
       case 'director':
         return {
-          label: 'ዋና ዳይሬክተር / ርዕሰ መምህር',
+          label:
+            currentLang === 'om'
+              ? 'Daarektara Olaanaa / Durabu\'aa'
+              : currentLang === 'en'
+              ? 'School Principal / Director'
+              : 'ዋና ዳይሬክተር / ርዕሰ መምህር',
           style: 'bg-teal-100 text-teal-900 border-teal-300',
           icon: <ShieldCheck className="w-3 h-3 text-teal-700" />
         };
       case 'teacher':
         return {
-          label: 'መምህር',
+          label: currentLang === 'om' ? 'Barsiisaa' : currentLang === 'en' ? 'Teacher' : 'መምህር',
           style: 'bg-amber-100 text-amber-900 border-amber-300',
           icon: <GraduationCap className="w-3 h-3 text-amber-700" />
         };
       case 'accountant':
         return {
-          label: 'ሒሳብ ሹም / ፋይናንስ',
+          label:
+            currentLang === 'om'
+              ? 'Hojjetaa Herregaa / Faayinaansii'
+              : currentLang === 'en'
+              ? 'Accountant / Finance'
+              : 'ሒሳብ ሹም / ፋይናንስ',
           style: 'bg-emerald-100 text-emerald-900 border-emerald-300',
           icon: <Users className="w-3 h-3 text-emerald-700" />
         };
       case 'bureau':
         return {
-          label: 'የሻሸመኔ ትምህርት ቢሮ',
+          label:
+            currentLang === 'om'
+              ? 'Biiroo Barnootaa Shaashamannee'
+              : currentLang === 'en'
+              ? 'Shashemene Education Bureau'
+              : 'የሻሸመኔ ትምህርት ቢሮ',
           style: 'bg-blue-100 text-blue-900 border-blue-300',
           icon: <Building2 className="w-3 h-3 text-blue-700" />
         };
       default:
         return {
-          label: 'አስተዳደር',
+          label: currentLang === 'om' ? 'Bulchiinsa' : currentLang === 'en' ? 'Administration' : 'አስተዳደር',
           style: 'bg-slate-100 text-slate-800 border-slate-300',
           icon: <Bell className="w-3 h-3 text-slate-600" />
         };
@@ -167,15 +193,15 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
   const getAudienceLabel = (aud: SchoolAnnouncement['targetAudience']) => {
     switch (aud) {
       case 'all':
-        return 'ለሁሉም (All)';
+        return currentLang === 'om' ? 'Hundaaf (All)' : currentLang === 'en' ? 'All' : 'ለሁሉም (All)';
       case 'teachers':
-        return 'ለመምህራን ብቻ';
+        return currentLang === 'om' ? 'Barsiisota Qofaaf' : currentLang === 'en' ? 'Teachers Only' : 'ለመምህራን ብቻ';
       case 'students':
-        return 'ለተማሪዎች ብቻ';
+        return currentLang === 'om' ? 'Barattoota Qofaaf' : currentLang === 'en' ? 'Students Only' : 'ለተማሪዎች ብቻ';
       case 'parents':
-        return 'ለወላጆች ብቻ';
+        return currentLang === 'om' ? 'Maatii Qofaaf' : currentLang === 'en' ? 'Parents Only' : 'ለወላጆች ብቻ';
       case 'staff':
-        return 'ለሰራተኞች ብቻ';
+        return currentLang === 'om' ? 'Hojjettoota Qofaaf' : currentLang === 'en' ? 'Staff Only' : 'ለሰራተኞች ብቻ';
     }
   };
 
@@ -187,14 +213,27 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-800/80 border border-teal-400/40 rounded-full text-xs font-semibold text-teal-200">
               <Megaphone className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              <span>የትምህርት ቤት ማስታወቂያ እና መመሪያ ማዕከል</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Giddugala Beeksisa fi Qajeelfama Mana Barumsaa'
+                  : currentLang === 'en'
+                  ? 'School Announcements & Directives Hub'
+                  : 'የትምህርት ቤት ማስታወቂያ እና መመሪያ ማዕከል'}
+              </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              ይፋዊ የማስታወቂያ ሰሌዳ (School Notice Board)
+              {currentLang === 'om'
+                ? 'Gabatee Beeksisa Seera-Qabeessa (School Notice Board)'
+                : currentLang === 'en'
+                ? 'Official School Notice Board'
+                : 'ይፋዊ የማስታወቂያ ሰሌዳ (School Notice Board)'}
             </h2>
             <p className="text-xs sm:text-sm text-teal-100/90 leading-relaxed">
-              ከቦርድ አባላት፣ ከዳይሬክተር፣ ከመምህራን፣ ከሒሳብ ክፍል እና ከትምህርት ቢሮ ለት/ቤቱ ማህበረሰብ የተላለፉ
-              ወቅታዊ ማስታወቂያዎች
+              {currentLang === 'om'
+                ? 'Beeksisaalee yeroo ammaa miseensota boordii, daarektara, barsiisota, kutaa faayinaansii fi Biiroo Barnootaa irraa hawaasa mana barumsaatiif darban'
+                : currentLang === 'en'
+                ? 'Timely announcements delivered to the school community from the Board, Principal, Teachers, Finance, and the Education Bureau.'
+                : 'ከቦርድ አባላት፣ ከዳይሬክተር፣ ከመምህራን፣ ከሒሳብ ክፍል እና ከትምህርት ቢሮ ለት/ቤቱ ማህበረሰብ የተላለፉ ወቅታዊ ማስታወቂያዎች'}
             </p>
           </div>
 
@@ -205,14 +244,26 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>አዲስ ማስታወቂያ ለጥፍ</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Beeksisa Haaraa Maxxansi'
+                  : currentLang === 'en'
+                  ? 'Post New Announcement'
+                  : 'አዲስ ማስታወቂያ ለጥፍ'}
+              </span>
             </button>
           )}
 
           {isBureauRole && (
             <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold shrink-0">
               <Lock className="w-4 h-4 text-amber-300" />
-              <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Ilaalcha Biiroo Barnootaa (Ilaaluu Qofa - Read-Only)'
+                  : currentLang === 'en'
+                  ? 'Bureau View (Read-Only)'
+                  : 'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)'}
+              </span>
             </div>
           )}
         </div>
@@ -226,40 +277,72 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ርዕስ፣ ይዘት ወይም አዘጋጅ ፈልግ..."
+            placeholder={
+              currentLang === 'om'
+                ? 'Mata-duree, qabiyyee ykn qopheessaa barbaadi...'
+                : currentLang === 'en'
+                ? 'Search title, content, or author...'
+                : 'ርዕስ፣ ይዘት ወይም አዘጋጅ ፈልግ...'
+            }
             className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
           />
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto">
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-slate-500 font-medium">የዒላማ ክፍል፡</span>
+            <span className="text-slate-500 font-medium">
+              {currentLang === 'om' ? 'Qaama Ilaallatu:' : currentLang === 'en' ? 'Audience:' : 'የዒላማ ክፍል፡'}
+            </span>
             <select
               value={selectedAudience}
               onChange={(e) => setSelectedAudience(e.target.value)}
               className="px-2.5 py-1.5 border border-slate-200 rounded-xl bg-white font-semibold text-slate-700"
             >
-              <option value="all">ሁሉም ማስታወቂያዎች</option>
-              <option value="teachers">ለመምህራን</option>
-              <option value="students">ለተማሪዎች</option>
-              <option value="parents">ለወላጆች</option>
-              <option value="staff">ለድጋፍ ሰጪ ሰራተኞች</option>
+              <option value="all">
+                {currentLang === 'om' ? 'Beeksisaalee Hunda' : currentLang === 'en' ? 'All Announcements' : 'ሁሉም ማስታወቂያዎች'}
+              </option>
+              <option value="teachers">
+                {currentLang === 'om' ? 'Barsiisotaaf' : currentLang === 'en' ? 'For Teachers' : 'ለመምህራን'}
+              </option>
+              <option value="students">
+                {currentLang === 'om' ? 'Barattootaaf' : currentLang === 'en' ? 'For Students' : 'ለተማሪዎች'}
+              </option>
+              <option value="parents">
+                {currentLang === 'om' ? 'Maatiif' : currentLang === 'en' ? 'For Parents' : 'ለወላጆች'}
+              </option>
+              <option value="staff">
+                {currentLang === 'om' ? 'Hojjettoota Deeggarsaaf' : currentLang === 'en' ? 'For Support Staff' : 'ለድጋፍ ሰጪ ሰራተኞች'}
+              </option>
             </select>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-slate-500 font-medium">ምድብ፡</span>
+            <span className="text-slate-500 font-medium">
+              {currentLang === 'om' ? 'Ramaddii:' : currentLang === 'en' ? 'Category:' : 'ምድብ፡'}
+            </span>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="px-2.5 py-1.5 border border-slate-200 rounded-xl bg-white font-semibold text-slate-700"
             >
-              <option value="all">ሁሉም ምድቦች</option>
-              <option value="administrative">አስተዳደራዊ</option>
-              <option value="academic">አካዳሚክ / የትምህርት</option>
-              <option value="finance">የወር ክፍያ / ፋይናንስ</option>
-              <option value="pta">የወላጅ መምህራን (PTA)</option>
-              <option value="exam">ፈተናዎች</option>
+              <option value="all">
+                {currentLang === 'om' ? 'Ramaddiiwwan Hunda' : currentLang === 'en' ? 'All Categories' : 'ሁሉም ምድቦች'}
+              </option>
+              <option value="administrative">
+                {currentLang === 'om' ? 'Bulchiinsaa' : currentLang === 'en' ? 'Administrative' : 'አስተዳደራዊ'}
+              </option>
+              <option value="academic">
+                {currentLang === 'om' ? 'Akaadaamii / Barnootaa' : currentLang === 'en' ? 'Academic' : 'አካዳሚክ / የትምህርት'}
+              </option>
+              <option value="finance">
+                {currentLang === 'om' ? 'Kaffaltii Ji\'aa / Faayinaansii' : currentLang === 'en' ? 'Tuition / Finance' : 'የወር ክፍያ / ፋይናንስ'}
+              </option>
+              <option value="pta">
+                {currentLang === 'om' ? 'Koree Maatii-Barsiisaa (PTA)' : currentLang === 'en' ? 'PTA' : 'የወላጅ መምህራን (PTA)'}
+              </option>
+              <option value="exam">
+                {currentLang === 'om' ? 'Qormaatawwan' : currentLang === 'en' ? 'Exams' : 'ፈተናዎች'}
+              </option>
             </select>
           </div>
         </div>
@@ -269,8 +352,16 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
       {filteredAnnouncements.length === 0 ? (
         <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
           <Bell className="w-12 h-12 text-slate-300 mx-auto" />
-          <p className="text-sm font-bold text-slate-700">ምንም ማስታወቂያ አልተገኘም</p>
-          <p className="text-xs text-slate-500">በተመረጠው መስፈርት የተለጠፈ ማስታወቂያ የለም።</p>
+          <p className="text-sm font-bold text-slate-700">
+            {currentLang === 'om' ? 'Beeksisni homaa hin argamne' : currentLang === 'en' ? 'No announcements found' : 'ምንም ማስታወቂያ አልተገኘም'}
+          </p>
+          <p className="text-xs text-slate-500">
+            {currentLang === 'om'
+              ? 'Ulaagaa filatameen beeksisni maxxanfame hin jiru.'
+              : currentLang === 'en'
+              ? 'There are no announcements matching the selected filters.'
+              : 'በተመረጠው መስፈርት የተለጠፈ ማስታወቂያ የለም።'}
+          </p>
         </div>
       ) : (
         <div className="space-y-3.5">
@@ -297,19 +388,20 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                     </span>
 
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                      የሚመለከተው፡ {getAudienceLabel(ann.targetAudience)}
+                      {currentLang === 'om' ? 'Kan Ilaallatu:' : currentLang === 'en' ? 'Target:' : 'የሚመለከተው፡'}{' '}
+                      {getAudienceLabel(ann.targetAudience)}
                     </span>
 
                     {ann.priority === 'urgent' && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1 animate-pulse">
                         <AlertTriangle className="w-3 h-3" />
-                        <span>አስቸኳይ (Urgent)</span>
+                        <span>{currentLang === 'om' ? 'Ariifachiisaa (Urgent)' : currentLang === 'en' ? 'Urgent' : 'አስቸኳይ (Urgent)'}</span>
                       </span>
                     )}
 
                     {ann.priority === 'important' && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">
-                        አስፈላጊ (Important)
+                        {currentLang === 'om' ? 'Barbaachisaa (Important)' : currentLang === 'en' ? 'Important' : 'አስፈላጊ (Important)'}
                       </span>
                     )}
                   </div>
@@ -323,14 +415,33 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                     {!isBureauRole &&
                       (currentUser?.role === 'school_owner' ||
                         currentUser?.role === 'school_director') && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteAnnouncement(ann.id)}
-                        className="text-slate-400 hover:text-rose-600 transition-colors p-1"
-                        title="ማስታወቂያውን ሰርዝ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      confirmDeleteAnnId === ann.id ? (
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAnnouncement(ann.id)}
+                            className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold rounded-md transition-colors cursor-pointer"
+                          >
+                            {currentLang === 'om' ? 'Mirkaneessi' : currentLang === 'en' ? 'Confirm' : 'አረጋግጥ'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteAnnId(null)}
+                            className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-md transition-colors cursor-pointer"
+                          >
+                            {currentLang === 'om' ? 'Dhiisi' : currentLang === 'en' ? 'Cancel' : 'ተወው'}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteAnnId(ann.id)}
+                          className="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
+                          title={currentLang === 'om' ? 'Beeksisa haqi' : currentLang === 'en' ? 'Delete announcement' : 'ማስታወቂያውን ሰርዝ'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -346,7 +457,8 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
 
                 <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-500">
                   <span className="font-medium text-slate-600">
-                    አዘጋጅ፡ <strong>{ann.authorName}</strong>
+                    {currentLang === 'om' ? 'Qopheessaa:' : currentLang === 'en' ? 'Author:' : 'አዘጋጅ፡'}{' '}
+                    <strong>{ann.authorName}</strong>
                   </span>
                   <span className="font-medium text-teal-800">{ann.schoolName}</span>
                 </div>
@@ -363,7 +475,9 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
             <div className="bg-gradient-to-r from-teal-800 to-emerald-950 px-6 py-4 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Megaphone className="w-5 h-5 text-amber-300" />
-                <h3 className="font-bold text-sm sm:text-base">አዲስ ማስታወቂያ መለጠፊያ</h3>
+                <h3 className="font-bold text-sm sm:text-base">
+                  {currentLang === 'om' ? 'Bakka Beeksisa Haaraa Itti Maxxansan' : currentLang === 'en' ? 'Post New Announcement' : 'አዲስ ማስታወቂያ መለጠፊያ'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -377,14 +491,20 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
             <form onSubmit={handleCreateAnnouncement} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የማስታወቂያው ርዕስ *
+                  {currentLang === 'om' ? 'Mata-duree Beeksisa *' : currentLang === 'en' ? 'Announcement Title *' : 'የማስታወቂያው ርዕስ *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="ምሳሌ፡ የ1ኛ ወሰነ-ትምህርት አጋማሽ ፈተና..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fakkeenyaaf: Qormaata Walakkaa Seemisteera 1ffaa...'
+                      : currentLang === 'en'
+                      ? 'e.g. 1st Semester Mid-Exam Schedule...'
+                      : 'ምሳሌ፡ የ1ኛ ወሰነ-ትምህርት አጋማሽ ፈተና...'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -392,7 +512,7 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የሚመለከተው (Target)
+                    {currentLang === 'om' ? 'Kan Ilaallatu (Target)' : currentLang === 'en' ? 'Target Audience' : 'የሚመለከተው (Target)'}
                   </label>
                   <select
                     value={targetAudience}
@@ -401,17 +521,17 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                     }
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value="all">ለሁሉም (All)</option>
-                    <option value="teachers">ለመምህራን ብቻ</option>
-                    <option value="students">ለተማሪዎች ብቻ</option>
-                    <option value="parents">ለወላጆች ብቻ</option>
-                    <option value="staff">ለድጋፍ ሰራተኞች</option>
+                    <option value="all">{currentLang === 'om' ? 'Hundaaf (All)' : currentLang === 'en' ? 'All' : 'ለሁሉም (All)'}</option>
+                    <option value="teachers">{currentLang === 'om' ? 'Barsiisota Qofaaf' : currentLang === 'en' ? 'Teachers Only' : 'ለመምህራን ብቻ'}</option>
+                    <option value="students">{currentLang === 'om' ? 'Barattoota Qofaaf' : currentLang === 'en' ? 'Students Only' : 'ለተማሪዎች ብቻ'}</option>
+                    <option value="parents">{currentLang === 'om' ? 'Maatii Qofaaf' : currentLang === 'en' ? 'Parents Only' : 'ለወላጆች ብቻ'}</option>
+                    <option value="staff">{currentLang === 'om' ? 'Hojjettoota Deeggarsaaf' : currentLang === 'en' ? 'Support Staff' : 'ለድጋፍ ሰራተኞች'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ደረጃ / ቅድሚያ (Priority)
+                    {currentLang === 'om' ? 'Sadarkaa / Dursa (Priority)' : currentLang === 'en' ? 'Priority' : 'ደረጃ / ቅድሚያ (Priority)'}
                   </label>
                   <select
                     value={priority}
@@ -420,15 +540,15 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                     }
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value="normal">መደበኛ (Normal)</option>
-                    <option value="important">አስፈላጊ (Important)</option>
-                    <option value="urgent">አስቸኳይ (Urgent)</option>
+                    <option value="normal">{currentLang === 'om' ? 'Idilee (Normal)' : currentLang === 'en' ? 'Normal' : 'መደበኛ (Normal)'}</option>
+                    <option value="important">{currentLang === 'om' ? 'Barbaachisaa (Important)' : currentLang === 'en' ? 'Important' : 'አስፈላጊ (Important)'}</option>
+                    <option value="urgent">{currentLang === 'om' ? 'Ariifachiisaa (Urgent)' : currentLang === 'en' ? 'Urgent' : 'አስቸኳይ (Urgent)'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ምድብ (Category)
+                    {currentLang === 'om' ? 'Ramaddii (Category)' : currentLang === 'en' ? 'Category' : 'ምድብ (Category)'}
                   </label>
                   <select
                     value={category}
@@ -437,24 +557,30 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                     }
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value="administrative">አስተዳደራዊ</option>
-                    <option value="academic">የትምህርት / ፈተና</option>
-                    <option value="finance">ክፍያና ፋይናንስ</option>
-                    <option value="pta">የወላጅ ጉባኤ (PTA)</option>
+                    <option value="administrative">{currentLang === 'om' ? 'Bulchiinsaa' : currentLang === 'en' ? 'Administrative' : 'አስተዳደራዊ'}</option>
+                    <option value="academic">{currentLang === 'om' ? 'Barnoota / Qormaata' : currentLang === 'en' ? 'Academic / Exam' : 'የትምህርት / ፈተና'}</option>
+                    <option value="finance">{currentLang === 'om' ? 'Kaffaltii fi Faayinaansii' : currentLang === 'en' ? 'Finance & Tuition' : 'ክፍያና ፋይናንስ'}</option>
+                    <option value="pta">{currentLang === 'om' ? 'Yaa\'ii Maatii (PTA)' : currentLang === 'en' ? 'PTA Meeting' : 'የወላጅ ጉባኤ (PTA)'}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የማስታወቂያው ዝርዝር ይዘት *
+                  {currentLang === 'om' ? 'Qabiyyee Bal\'aa Beeksisa *' : currentLang === 'en' ? 'Detailed Content *' : 'የማስታወቂያው ዝርዝር ይዘት *'}
                 </label>
                 <textarea
                   required
                   rows={4}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="የማስታወቂያውን መልእክት እዚህ በዝርዝር ይጻፉ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Ergaa beeksisa kanaa asitti bal\'inaan barreessaa...'
+                      : currentLang === 'en'
+                      ? 'Write the detailed announcement message here...'
+                      : 'የማስታወቂያውን መልእክት እዚህ በዝርዝር ይጻፉ...'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -465,14 +591,14 @@ export const SchoolNoticeBoard: React.FC<SchoolNoticeBoardProps> = ({
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>ማስታወቂያውን ለጥፍ</span>
+                  <span>{currentLang === 'om' ? 'Beeksisa Maxxansi' : currentLang === 'en' ? 'Post Announcement' : 'ማስታወቂያውን ለጥፍ'}</span>
                 </button>
               </div>
             </form>

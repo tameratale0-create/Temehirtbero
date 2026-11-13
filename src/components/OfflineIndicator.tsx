@@ -8,9 +8,13 @@ interface OfflineIndicatorProps {
   currentLang?: Language;
 }
 
-export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ currentLang = 'am' }) => {
+export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ currentLang = 'om' }) => {
   const { isOnline, isSyncing, pendingCount, triggerSync } = useOfflineSync();
   const [showHubModal, setShowHubModal] = useState(false);
+
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
 
   // If online and nothing is pending and not syncing, don't obstruct the screen
   if (isOnline && pendingCount === 0 && !isSyncing) return null;
@@ -35,10 +39,22 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ currentLang 
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
           <span>
             {isSyncing
-              ? 'መረጃዎች ከመካከለኛው ሰርቨር ጋር በመመሳሰል ላይ ናቸው...'
+              ? t3(
+                  'Odeeffannoon sarvara giddugaleessaa wajjin walsimaa jira...',
+                  'Syncing data with central server...',
+                  'መረጃዎች ከመካከለኛው ሰርቨር ጋር በመመሳሰል ላይ ናቸው...'
+                )
               : !isOnline
-              ? 'ኦፍላይን ሁነታ ላይ ነዎት — መረጃዎች በስልክዎ/ፒሲዎ ይቀመጣሉ'
-              : `${pendingCount} ያልተመሳሰሉ መረጃዎች (Pending Sync)`}
+              ? t3(
+                  'Haala Oflaayinii irra jirtu — odeeffannoon meeshaa keessan irratti kuufama',
+                  'Offline mode — data will be saved locally',
+                  'ኦፍላይን ሁነታ ላይ ነዎት — መረጃዎች በስልክዎ/ፒሲዎ ይቀመጣሉ'
+                )
+              : t3(
+                  `Odeeffannoo walsimsiisa eegu ${pendingCount} (Pending Sync)`,
+                  `${pendingCount} records pending sync`,
+                  `${pendingCount} ያልተመሳሰሉ መረጃዎች (Pending Sync)`
+                )}
           </span>
 
           <div className="flex items-center gap-1.5">
@@ -48,7 +64,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ currentLang 
                 onClick={() => triggerSync()}
                 className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[11px] font-black cursor-pointer shadow-xs"
               >
-                አሁን አመሳስል
+                {t3('Amma Walsimsiisi', 'Sync Now', 'አሁን አመሳስል')}
               </button>
             )}
 
@@ -57,7 +73,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ currentLang 
               onClick={() => setShowHubModal(true)}
               className="text-[11px] text-amber-300 hover:text-amber-200 underline font-bold cursor-pointer"
             >
-              ማዕከል ክፈት
+              {t3('Wiirtuu Bani', 'Open Hub', 'ማዕከል ክፈት')}
             </button>
           </div>
         </div>

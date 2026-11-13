@@ -2,18 +2,14 @@ import React, { useState } from 'react';
 import {
   Sparkles,
   Crown,
-  School as SchoolIcon,
   Award,
   GraduationCap,
   Users,
   DollarSign,
-  ClipboardList,
   ShieldCheck,
   BookOpen,
   ArrowRight,
   FileText,
-  Calendar,
-  CheckCircle2,
   Send,
   Plus,
   CreditCard,
@@ -104,21 +100,48 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
   const getRoleConfig = () => {
     if (isLibrarian) {
       return {
-        roleTitle: currentLang === 'en' ? 'Head Librarian' : 'የቤተ-መጻሕፍት ኃላፊ',
-        salutation: currentLang === 'en' ? 'Welcome, Head Librarian' : 'እንኳን ደህና መጡ፣ የቤተ-መጻሕፍት ኃላፊ',
-        roleBadge: '📚 ቤተ-መጻሕፍት (Librarian)',
+        roleTitle:
+          currentLang === 'om'
+            ? 'Itti-Gaafatamaa Mana Kitaabaa'
+            : currentLang === 'en'
+            ? 'Head Librarian'
+            : 'የቤተ-መጻሕፍት ኃላፊ',
+        salutation:
+          currentLang === 'om'
+            ? 'Baga nagaan dhuftan, Itti-Gaafatamaa Mana Kitaabaa'
+            : currentLang === 'en'
+            ? 'Welcome, Head Librarian'
+            : 'እንኳን ደህና መጡ፣ የቤተ-መጻሕፍት ኃላፊ',
+        roleBadge:
+          currentLang === 'om'
+            ? '📚 Mana Kitaabaa (Librarian)'
+            : currentLang === 'en'
+            ? '📚 Librarian'
+            : '📚 ቤተ-መጻሕፍት (Librarian)',
         badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30',
         cardBg: 'from-slate-900 via-indigo-950 to-slate-900',
         borderGlow: 'border-indigo-500/40',
         summaryText:
-          currentLang === 'en'
+          currentLang === 'om'
+            ? 'Kuusaa kitaaba barnootaa, galmee liqaa barattootaa fi guyyaa deebisii kutaa hojii qophaa\'aa keessan keessatti to\'adhaa.'
+            : currentLang === 'en'
             ? 'Manage textbook inventory, student borrowing records, and return deadlines with complete isolation.'
             : 'የትምህርት መጻሕፍትን ማውጫ፣ የተማሪዎችን የብድር መዝገብ እና የመመለሻ ቀናትን በተከለለ የስራ ገጽዎ ያስተዳድሩ።',
         actions: [
           {
             id: 'lib-catalog',
-            label: currentLang === 'en' ? 'Library Desk' : 'የቤተ-መጻሕፍት ጽ/ቤት',
-            desc: currentLang === 'en' ? 'View books catalog & lend' : 'የመጻሕፍት ዝርዝርና የተማሪ ብድር',
+            label:
+              currentLang === 'om'
+                ? 'Kutaa Mana Kitaabaa'
+                : currentLang === 'en'
+                ? 'Library Desk'
+                : 'የቤተ-መጻሕፍት ጽ/ቤት',
+            desc:
+              currentLang === 'om'
+                ? 'Tarree kitaabotaa fi liqaa barattootaa'
+                : currentLang === 'en'
+                ? 'View books catalog & lend'
+                : 'የመጻሕፍት ዝርዝርና የተማሪ ብድር',
             icon: <BookOpen className="w-4 h-4 text-indigo-300" />,
             bgGradient: 'from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900',
             borderColor: 'border-indigo-400/40',
@@ -130,8 +153,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
           },
           {
             id: 'lib-notices',
-            label: currentLang === 'en' ? 'Announcements' : 'የት/ቤት ማስታወቂያዎች',
-            desc: currentLang === 'en' ? 'Read official school updates' : 'አዳዲስ ይፋዊ መልዕክቶችን ይከታተሉ',
+            label:
+              currentLang === 'om'
+                ? 'Beeksisoota M/B'
+                : currentLang === 'en'
+                ? 'Announcements'
+                : 'የት/ቤት ማስታወቂያዎች',
+            desc:
+              currentLang === 'om'
+                ? 'Ergaawwan seera-qabeessa hordofaa'
+                : currentLang === 'en'
+                ? 'Read official school updates'
+                : 'አዳዲስ ይፋዊ መልዕክቶችን ይከታተሉ',
             icon: <Award className="w-4 h-4 text-amber-300" />,
             bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
             borderColor: 'border-amber-400/40',
@@ -143,8 +176,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
           },
           {
             id: 'lib-profile',
-            label: currentLang === 'en' ? 'My Credentials' : 'የግል መገለጫዬ & ማስረጃዎች',
-            desc: currentLang === 'en' ? 'View verified Fayda & documents' : 'የተረጋገጠ ፋይዳና የተመረቁበት ምስክር',
+            label:
+              currentLang === 'om'
+                ? 'Ragaalee Dhuunfaa Koo'
+                : currentLang === 'en'
+                ? 'My Credentials'
+                : 'የግል መገለጫዬ & ማስረጃዎች',
+            desc:
+              currentLang === 'om'
+                ? 'Faydaa mirkanaa\'ee fi waraqaa eebbaa'
+                : currentLang === 'en'
+                ? 'View verified Fayda & documents'
+                : 'የተረጋገጠ ፋይዳና የተመረቁበት ምስክር',
             icon: <ShieldCheck className="w-4 h-4 text-emerald-300" />,
             bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
             borderColor: 'border-emerald-400/40',
@@ -161,26 +204,53 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
     switch (currentUser.role) {
       case 'school_owner':
         return {
-          roleTitle: currentLang === 'en' ? 'School Owner & Board Chair' : 'የት/ቤት ባለቤትና የቦርድ ሰብሳቢ',
-          salutation: currentLang === 'en' ? 'Welcome, School Owner & Board Chair' : 'እንኳን ደህና መጡ፣ ክቡር የቦርድ ሰብሳቢ / ባለቤት',
-          roleBadge: '👑 ባለቤት (Board Chair)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Abbaa Qabeenyaa fi Walitti-Qabaa Boordii'
+              : currentLang === 'en'
+              ? 'School Owner & Board Chair'
+              : 'የት/ቤት ባለቤትና የቦርድ ሰብሳቢ',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Kabajamoo Abbaa Qabeenyaa / Walitti-Qabaa Boordii'
+              : currentLang === 'en'
+              ? 'Welcome, School Owner & Board Chair'
+              : 'እንኳን ደህና መጡ፣ ክቡር የቦርድ ሰብሳቢ / ባለቤት',
+          roleBadge:
+            currentLang === 'om'
+              ? '👑 Abbaa Qabeenyaa (Board Chair)'
+              : currentLang === 'en'
+              ? '👑 Owner (Board Chair)'
+              : '👑 ባለቤት (Board Chair)',
           badgeColor: 'bg-amber-400 text-slate-950 border-amber-300',
           cardBg: 'from-slate-900 via-amber-950 to-slate-900',
           borderGlow: 'border-amber-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Hoggansa olaanaa mana barnootaa, muudamaa fi koodii daarektaraa, madaallii faayinaansii waggaa fi murteewwan boordii to\'adhaa.'
+              : currentLang === 'en'
               ? 'Executive governance desk: Oversee principal appointments, strategic school performance, and official notices.'
               : 'የትምህርት ቤቱን የበላይ አመራር፣ የዋና ዳይሬክተር ሹመትና ኮድ፣ ዓመታዊ የፋይናንስ ሚዛን እና የቦርድ ውሳኔዎችን ያስተዳድሩ።',
           actions: [
             {
               id: 'owner-board',
-              label: currentLang === 'en' ? 'Board Governance' : 'የቦርድ አመራርና ቁጥጥር',
-              desc: currentLang === 'en' ? 'Director appointments & metrics' : 'ዳይሬክተር ሹመት፣ ኮድና የት/ቤት ሚዛን',
+              label:
+                currentLang === 'om'
+                  ? 'Hoggansa fi To\'annoo Boordii'
+                  : currentLang === 'en'
+                  ? 'Board Governance'
+                  : 'የቦርድ አመራርና ቁጥጥር',
+              desc:
+                currentLang === 'om'
+                  ? 'Muudama daarektaraa, koodii fi madaallii m/b'
+                  : currentLang === 'en'
+                  ? 'Director appointments & metrics'
+                  : 'ዳይሬክተር ሹመት፣ ኮድና የት/ቤት ሚዛን',
               icon: <Crown className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
               textColor: 'text-white',
-              badge: 'ዋና ስራ',
+              badge: currentLang === 'om' ? 'Hojii Guddaa' : currentLang === 'en' ? 'Main' : 'ዋና ስራ',
               onClick: () => {
                 onNavigateTab('school_portal');
                 if (onNavigateSchoolSubTab) onNavigateSchoolSubTab('owner_board');
@@ -188,8 +258,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'owner-finance',
-              label: currentLang === 'en' ? 'Financial Overview' : 'አጠቃላይ የፋይናንስ ሚዛን',
-              desc: currentLang === 'en' ? 'Revenues, expenses & balance' : 'የተሰበሰበ ክፍያና የወጣ ወጪ',
+              label:
+                currentLang === 'om'
+                  ? 'Madaallii Faayinaansii Waliigalaa'
+                  : currentLang === 'en'
+                  ? 'Financial Overview'
+                  : 'አጠቃላይ የፋይናንስ ሚዛን',
+              desc:
+                currentLang === 'om'
+                  ? 'Kaffaltii walitti-qabame fi baasii bahe'
+                  : currentLang === 'en'
+                  ? 'Revenues, expenses & balance'
+                  : 'የተሰበሰበ ክፍያና የወጣ ወጪ',
               icon: <DollarSign className="w-4 h-4 text-green-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
@@ -201,8 +281,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'owner-codes',
-              label: currentLang === 'en' ? 'User Access Codes' : 'የመግቢያ ኮዶች ማዕከል',
-              desc: currentLang === 'en' ? 'Manage staff access codes' : 'ለዳይሬክተርና ሰራተኞች ኮድ ማውጣት',
+              label:
+                currentLang === 'om'
+                  ? 'Wiirtuu Koodiiwwan Seensaa'
+                  : currentLang === 'en'
+                  ? 'User Access Codes'
+                  : 'የመግቢያ ኮዶች ማዕከል',
+              desc:
+                currentLang === 'om'
+                  ? 'Daarektara fi hojjettootaaf koodii baasuu'
+                  : currentLang === 'en'
+                  ? 'Manage staff access codes'
+                  : 'ለዳይሬክተርና ሰራተኞች ኮድ ማውጣት',
               icon: <KeyRound className="w-4 h-4 text-teal-300" />,
               bgGradient: 'from-teal-700 to-cyan-900 hover:from-teal-800 hover:to-cyan-950',
               borderColor: 'border-teal-400/40',
@@ -214,8 +304,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'owner-notice',
-              label: currentLang === 'en' ? 'Post Board Notice' : 'የቦርድ ማስታወቂያ ለጥፍ',
-              desc: currentLang === 'en' ? 'Announce to community' : 'ለማህበረሰቡና ወላጆች መመሪያ አስተላልፍ',
+              label:
+                currentLang === 'om'
+                  ? 'Beeksisa Boordii Maxxansi'
+                  : currentLang === 'en'
+                  ? 'Post Board Notice'
+                  : 'የቦርድ ማስታወቂያ ለጥፍ',
+              desc:
+                currentLang === 'om'
+                  ? 'Hawaasa fi maatiif qajeelfama dabarsaa'
+                  : currentLang === 'en'
+                  ? 'Announce to community'
+                  : 'ለማህበረሰቡና ወላጆች መመሪያ አስተላልፍ',
               icon: <Award className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -231,26 +331,53 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
       case 'school_director':
       case 'school_admin':
         return {
-          roleTitle: currentLang === 'en' ? 'Principal / School Director' : 'ዋና ዳይሬክተር / ርዕሰ መምህር',
-          salutation: currentLang === 'en' ? 'Welcome, Principal' : 'እንኳን ደህና መጡ፣ ክቡር ዋና ዳይሬክተር',
-          roleBadge: '🏫 ዋና ዳይሬክተር (Principal)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Daarektara Olaanaa / Hogganaa M/B'
+              : currentLang === 'en'
+              ? 'Principal / School Director'
+              : 'ዋና ዳይሬክተር / ርዕሰ መምህር',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Kabajamoo Daarektara Olaanaa'
+              : currentLang === 'en'
+              ? 'Welcome, Principal'
+              : 'እንኳን ደህና መጡ፣ ክቡር ዋና ዳይሬክተር',
+          roleBadge:
+            currentLang === 'om'
+              ? '🏫 Daarektara Olaanaa (Principal)'
+              : currentLang === 'en'
+              ? '🏫 Principal'
+              : '🏫 ዋና ዳይሬክተር (Principal)',
           badgeColor: 'bg-teal-400 text-slate-950 border-teal-300',
           cardBg: 'from-slate-900 via-teal-950 to-slate-900',
           borderGlow: 'border-teal-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Hojiiwwan barnootaa fi bulchiinsaa mana barnootaa olaantummaan to\'adhaa, gabaasa qabxii barattootaa Biiroo Barnootaaf ergaa.'
+              : currentLang === 'en'
               ? 'Complete operational oversight: Supervise academic rosters, staff credentials, send bureau semester reports, and manage daily school routines.'
               : 'የትምህርት ቤቱን አጠቃላይ አካዳሚክ እና አስተዳደራዊ ስራዎች በበላይነት ይቆጣጠሩ፣ የተማሪዎች ውጤት ሪፖርት ለትምህርት ቢሮ ይላኩ።',
           actions: [
             {
               id: 'dir-roster',
-              label: currentLang === 'en' ? 'Student Roster & Cards' : 'የተማሪዎች ውጤትና ካርድ',
-              desc: currentLang === 'en' ? 'View all grades & rankings' : 'የተማሪዎች ውጤት፣ ደረጃና ካርድ ማተም',
+              label:
+                currentLang === 'om'
+                  ? 'Qabxii Barattootaa fi Kaardii'
+                  : currentLang === 'en'
+                  ? 'Student Roster & Cards'
+                  : 'የተማሪዎች ውጤትና ካርድ',
+              desc:
+                currentLang === 'om'
+                  ? 'Qabxii, sadarkaa fi kaardii maxxansuu'
+                  : currentLang === 'en'
+                  ? 'View all grades & rankings'
+                  : 'የተማሪዎች ውጤት፣ ደረጃና ካርድ ማተም',
               icon: <GraduationCap className="w-4 h-4 text-emerald-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
               textColor: 'text-white',
-              badge: 'ፈጣን ስራ',
+              badge: currentLang === 'om' ? 'Hojii Saffisaa' : currentLang === 'en' ? 'Quick' : 'ፈጣን ስራ',
               onClick: () => {
                 onNavigateTab('school_portal');
                 if (onNavigateSchoolSubTab) onNavigateSchoolSubTab('roster');
@@ -258,8 +385,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'dir-report',
-              label: currentLang === 'en' ? 'Submit Report to Bureau' : 'ሪፖርት ለትምህርት ቢሮ ላክ',
-              desc: currentLang === 'en' ? 'Send semester exam results' : 'የሴሚስተር ፈተና ማጠቃለያ ለሻሸመኔ ቢሮ',
+              label:
+                currentLang === 'om'
+                  ? 'Gabaasa Biiroo Barnootaatti Ergi'
+                  : currentLang === 'en'
+                  ? 'Submit Report to Bureau'
+                  : 'ሪፖርት ለትምህርት ቢሮ ላክ',
+              desc:
+                currentLang === 'om'
+                  ? 'Cuunfaa qormaata semisteeraa Biiroo Shaashamanneetti'
+                  : currentLang === 'en'
+                  ? 'Send semester exam results'
+                  : 'የሴሚስተር ፈተና ማጠቃለያ ለሻሸመኔ ቢሮ',
               icon: <Send className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -271,8 +408,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'dir-stakeholders',
-              label: currentLang === 'en' ? 'Staff Directory & Fayda' : 'ባለድርሻ አካላት & ፋይዳ',
-              desc: currentLang === 'en' ? 'Teachers, library & credentials' : 'የመምህራን ፋይዳ መታወቂያና ማስረጃዎች',
+              label:
+                currentLang === 'om'
+                  ? 'Qooda-Fudhattoota & Faydaa'
+                  : currentLang === 'en'
+                  ? 'Staff Directory & Fayda'
+                  : 'ባለድርሻ አካላት & ፋይዳ',
+              desc:
+                currentLang === 'om'
+                  ? 'Waraqaa eenyummaa Faydaa fi ragaalee barsiisotaa'
+                  : currentLang === 'en'
+                  ? 'Teachers, library & credentials'
+                  : 'የመምህራን ፋይዳ መታወቂያና ማስረጃዎች',
               icon: <Users className="w-4 h-4 text-cyan-300" />,
               bgGradient: 'from-cyan-700 to-blue-900 hover:from-cyan-800 hover:to-blue-950',
               borderColor: 'border-cyan-400/40',
@@ -284,8 +431,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'dir-notice',
-              label: currentLang === 'en' ? 'Post Announcement' : 'አዲስ ማስታወቂያ ለጥፍ',
-              desc: currentLang === 'en' ? 'School news & alerts' : 'ለመላው ት/ቤት ማህበረሰብ መልዕክት',
+              label:
+                currentLang === 'om'
+                  ? 'Beeksisa Haaraa Maxxansi'
+                  : currentLang === 'en'
+                  ? 'Post Announcement'
+                  : 'አዲስ ማስታወቂያ ለጥፍ',
+              desc:
+                currentLang === 'om'
+                  ? 'Hawaasa mana barnootaa maraaf ergaa dabarsaa'
+                  : currentLang === 'en'
+                  ? 'School news & alerts'
+                  : 'ለመላው ት/ቤት ማህበረሰብ መልዕክት',
               icon: <Award className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -300,26 +457,53 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
 
       case 'teacher':
         return {
-          roleTitle: currentLang === 'en' ? 'Subject Teacher' : 'የክፍል / የትምህርት ዓይነት መምህር',
-          salutation: currentLang === 'en' ? 'Welcome, Esteemed Teacher' : 'እንኳን ደህና መጡ፣ የተከበሩ መምህር',
-          roleBadge: '👨‍🏫 መምህር (Teacher)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Barsiisaa Kutaa / Gosa Barnootaa'
+              : currentLang === 'en'
+              ? 'Subject Teacher'
+              : 'የክፍል / የትምህርት ዓይነት መምህር',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Kabajamoo Barsiisaa'
+              : currentLang === 'en'
+              ? 'Welcome, Esteemed Teacher'
+              : 'እንኳን ደህና መጡ፣ የተከበሩ መምህር',
+          roleBadge:
+            currentLang === 'om'
+              ? '👨‍🏫 Barsiisaa (Teacher)'
+              : currentLang === 'en'
+              ? '👨‍🏫 Teacher'
+              : '👨‍🏫 መምህር (Teacher)',
           badgeColor: 'bg-emerald-400 text-slate-950 border-emerald-300',
           cardBg: 'from-slate-900 via-emerald-950 to-slate-900',
           borderGlow: 'border-emerald-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Kutaa hojii barsiisummaa keessan: Kutaa keessaniif hojii manaa kennaa, deebii barattootaa sirreessaa, hirmaannaa guyyaa galmeessaa fi qormaata ogummaa leenji\'aa.'
+              : currentLang === 'en'
               ? 'Your isolated teaching desk: Create homework for your classes, grade submissions, take daily student attendance, and prepare for competency exams.'
               : 'የተከለለ የመምህርነት የስራ ገጽዎ፡ ለክፍልዎ የቤት ስራ ይስጡ፣ የተማሪዎችዎን መልስ ያርሙ፣ ዕለታዊ መገኘት ይመዝግቡ እና የሙያ ፈተና ይለማመዱ።',
           actions: [
             {
               id: 'tch-hw',
-              label: currentLang === 'en' ? 'Homework & Attendance' : 'የቤት ስራ እና ዕለታዊ መገኘት',
-              desc: currentLang === 'en' ? 'Give tasks & review submissions' : 'የቤት ስራ መስጠትና የተማሪ መልስ ማረም',
+              label:
+                currentLang === 'om'
+                  ? 'Hojii Manaa fi Hirmaannaa Guyyaa'
+                  : currentLang === 'en'
+                  ? 'Homework & Attendance'
+                  : 'የቤት ስራ እና ዕለታዊ መገኘት',
+              desc:
+                currentLang === 'om'
+                  ? 'Hojii manaa kennuu fi deebii barataa sirreessuu'
+                  : currentLang === 'en'
+                  ? 'Give tasks & review submissions'
+                  : 'የቤት ስራ መስጠትና የተማሪ መልስ ማረም',
               icon: <BookOpen className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
               textColor: 'text-white',
-              badge: 'የዕለት ስራ',
+              badge: currentLang === 'om' ? 'Hojii Guyyaa' : currentLang === 'en' ? 'Daily' : 'የዕለት ስራ',
               onClick: () => {
                 onNavigateTab('school_portal');
                 if (onNavigateSchoolSubTab) onNavigateSchoolSubTab('homework_attendance');
@@ -327,8 +511,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'tch-roster',
-              label: currentLang === 'en' ? 'Student Scores Roster' : 'የተማሪዎች ውጤት መዝገብ',
-              desc: currentLang === 'en' ? 'Input mid/final marks' : 'የፈተና ነጥቦችንና የካርድ ውጤት መሙላት',
+              label:
+                currentLang === 'om'
+                  ? 'Galmee Qabxii Barattootaa'
+                  : currentLang === 'en'
+                  ? 'Student Scores Roster'
+                  : 'የተማሪዎች ውጤት መዝገብ',
+              desc:
+                currentLang === 'om'
+                  ? 'Qabxii qormaataa fi bu\'aa kaardii guutuu'
+                  : currentLang === 'en'
+                  ? 'Input mid/final marks'
+                  : 'የፈተና ነጥቦችንና የካርድ ውጤት መሙላት',
               icon: <GraduationCap className="w-4 h-4 text-teal-300" />,
               bgGradient: 'from-teal-700 to-cyan-900 hover:from-teal-800 hover:to-cyan-950',
               borderColor: 'border-teal-400/40',
@@ -340,8 +534,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'tch-exam',
-              label: currentLang === 'en' ? 'Teacher Competency Exam' : 'የመምህራን ብቃት ፈተናዎች',
-              desc: currentLang === 'en' ? 'Take online bureau exams' : 'በትምህርት ቢሮ የተዘጋጁ የሙያ ፈተናዎች',
+              label:
+                currentLang === 'om'
+                  ? 'Qormaata Gahumsa Barsiisotaa'
+                  : currentLang === 'en'
+                  ? 'Teacher Competency Exam'
+                  : 'የመምህራን ብቃት ፈተናዎች',
+              desc:
+                currentLang === 'om'
+                  ? 'Qormaatilee ogummaa Biiroo Barnootaan qophaa\'an'
+                  : currentLang === 'en'
+                  ? 'Take online bureau exams'
+                  : 'በትምህርት ቢሮ የተዘጋጁ የሙያ ፈተናዎች',
               icon: <Award className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -352,8 +556,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'tch-training',
-              label: currentLang === 'en' ? 'Teacher Training Hub' : 'የማስተማሪያ ስልጠና ሞጁሎች',
-              desc: currentLang === 'en' ? 'Curriculum guides & materials' : 'የስርዓተ-ትምህርት መጽሐፍትና መመሪያዎች',
+              label:
+                currentLang === 'om'
+                  ? 'Wiirtuu Leenjii Barsiisummaa'
+                  : currentLang === 'en'
+                  ? 'Teacher Training Hub'
+                  : 'የማስተማሪያ ስልጠና ሞጁሎች',
+              desc:
+                currentLang === 'om'
+                  ? 'Kitaabota sirna-barnootaa fi qajeelfamoota'
+                  : currentLang === 'en'
+                  ? 'Curriculum guides & materials'
+                  : 'የስርዓተ-ትምህርት መጽሐፍትና መመሪያዎች',
               icon: <BookOpen className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -367,34 +581,71 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
 
       case 'student':
         return {
-          roleTitle: currentLang === 'en' ? 'Active Student' : 'ተማሪ',
-          salutation: currentLang === 'en' ? 'Welcome, Dear Student' : 'እንኳን ደህና መጣህ/ሽ፣ ውድ ተማሪ',
-          roleBadge: '🎓 ተማሪ (Student)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Barataa / Barattuu'
+              : currentLang === 'en'
+              ? 'Active Student'
+              : 'ተማሪ',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhufte, Barataa Jaallatamaa'
+              : currentLang === 'en'
+              ? 'Welcome, Dear Student'
+              : 'እንኳን ደህና መጣህ/ሽ፣ ውድ ተማሪ',
+          roleBadge:
+            currentLang === 'om'
+              ? '🎓 Barataa (Student)'
+              : currentLang === 'en'
+              ? '🎓 Student'
+              : '🎓 ተማሪ (Student)',
           badgeColor: 'bg-violet-400 text-slate-950 border-violet-300',
           cardBg: 'from-slate-900 via-violet-950 to-slate-900',
           borderGlow: 'border-violet-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Wiirtuu barataa keessan: Kaardii qabxii keessan, sadarkaa, hojii manaa, hirmaannaa guyyaa fi waraqaa eenyummaa dijitaalaa yeroodhuma san hordofaa.'
+              : currentLang === 'en'
               ? 'Your personal student dashboard: View your official report card, track subject ranks, complete homework assignments, and download your student ID.'
               : 'የግል የተማሪ ማዕከልዎ፡ ይፋዊ የውጤት ካርድዎን፣ የደረጃ ምደባዎን፣ የቤት ስራዎን፣ ዕለታዊ መገኘትዎን እና ዲጂታል የተማሪ መታወቂያዎን በቅጽበት ይከታተሉ።',
           actions: [
             {
               id: 'stu-card',
-              label: currentLang === 'en' ? 'My Academic Report Card' : 'ይፋዊ የውጤት ካርዴ',
-              desc: currentLang === 'en' ? 'Review all subject scores' : 'የፈተና ነጥቦች፣ አማካይና የክፍል ደረጃ',
+              label:
+                currentLang === 'om'
+                  ? 'Kaardii Qabxii Koo'
+                  : currentLang === 'en'
+                  ? 'My Academic Report Card'
+                  : 'ይፋዊ የውጤት ካርዴ',
+              desc:
+                currentLang === 'om'
+                  ? 'Qabxii qormaataa, giddu-galeessaa fi sadarkaa'
+                  : currentLang === 'en'
+                  ? 'Review all subject scores'
+                  : 'የፈተና ነጥቦች፣ አማካይና የክፍል ደረጃ',
               icon: <GraduationCap className="w-4 h-4 text-violet-300" />,
               bgGradient: 'from-violet-700 to-purple-900 hover:from-violet-800 hover:to-purple-950',
               borderColor: 'border-violet-400/40',
               textColor: 'text-white',
-              badge: 'ዋና ገጽ',
+              badge: currentLang === 'om' ? 'Fuula Guddaa' : currentLang === 'en' ? 'Main' : 'ዋና ገጽ',
               onClick: () => {
                 onNavigateTab('student_portal');
               }
             },
             {
               id: 'stu-hw',
-              label: currentLang === 'en' ? 'Assigned Homework' : 'የተሰጡ የቤት ስራዎች',
-              desc: currentLang === 'en' ? 'Submit answers to teachers' : 'መልስ ማስገቢያና ነጥብ መከታተያ',
+              label:
+                currentLang === 'om'
+                  ? 'Hojiiwwan Manaa Kennaman'
+                  : currentLang === 'en'
+                  ? 'Assigned Homework'
+                  : 'የተሰጡ የቤት ስራዎች',
+              desc:
+                currentLang === 'om'
+                  ? 'Deebii kennuu fi qabxii hordofuu'
+                  : currentLang === 'en'
+                  ? 'Submit answers to teachers'
+                  : 'መልስ ማስገቢያና ነጥብ መከታተያ',
               icon: <BookOpen className="w-4 h-4 text-emerald-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
@@ -405,8 +656,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'stu-id',
-              label: currentLang === 'en' ? 'Student ID Card' : 'የተማሪ መታወቂያ ካርድ',
-              desc: currentLang === 'en' ? 'Print or view digital card' : 'የሻሸመኔ ት/ቤት ዲጂታል መታወቂያ',
+              label:
+                currentLang === 'om'
+                  ? 'Waraqaa Eenyummaa Barataa'
+                  : currentLang === 'en'
+                  ? 'Student ID Card'
+                  : 'የተማሪ መታወቂያ ካርድ',
+              desc:
+                currentLang === 'om'
+                  ? 'Waraqaa eenyummaa dijitaalaa M/B Shaashamannee'
+                  : currentLang === 'en'
+                  ? 'Print or view digital card'
+                  : 'የሻሸመኔ ት/ቤት ዲጂታል መታወቂያ',
               icon: <CreditCard className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -417,8 +678,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'stu-fees',
-              label: currentLang === 'en' ? 'Fee Payment History' : 'የወር ክፍያ ደረሰኞች',
-              desc: currentLang === 'en' ? 'Electronic payment receipts' : 'የቴሌብር/ባንክ የተከፈሉ ደረሰኞች',
+              label:
+                currentLang === 'om'
+                  ? 'Seenaa Kaffaltii Ji\'aa'
+                  : currentLang === 'en'
+                  ? 'Fee Payment History'
+                  : 'የወር ክፍያ ደረሰኞች',
+              desc:
+                currentLang === 'om'
+                  ? 'Nagaheewwan kaffaltii Telebirr/Baankii'
+                  : currentLang === 'en'
+                  ? 'Electronic payment receipts'
+                  : 'የቴሌብር/ባንክ የተከፈሉ ደረሰኞች',
               icon: <DollarSign className="w-4 h-4 text-cyan-300" />,
               bgGradient: 'from-teal-700 to-cyan-900 hover:from-teal-800 hover:to-cyan-950',
               borderColor: 'border-teal-400/40',
@@ -432,34 +703,71 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
 
       case 'parent':
         return {
-          roleTitle: currentLang === 'en' ? 'Parent / Guardian' : 'የተማሪ ወላጅ / አሳዳጊ',
-          salutation: currentLang === 'en' ? 'Welcome, Respected Parent' : 'እንኳን ደህና መጡ፣ የተከበሩ ወላጅ',
-          roleBadge: '👨‍👩‍👧 ወላጅ (Parent)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Maatii / Guddiftuu Barataa'
+              : currentLang === 'en'
+              ? 'Parent / Guardian'
+              : 'የተማሪ ወላጅ / አሳዳጊ',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Kabajamoo Maatii'
+              : currentLang === 'en'
+              ? 'Welcome, Respected Parent'
+              : 'እንኳን ደህና መጡ፣ የተከበሩ ወላጅ',
+          roleBadge:
+            currentLang === 'om'
+              ? '👨‍👩‍👧 Maatii (Parent)'
+              : currentLang === 'en'
+              ? '👨‍👩‍👧 Parent'
+              : '👨‍👩‍👧 ወላጅ (Parent)',
           badgeColor: 'bg-rose-400 text-slate-950 border-rose-300',
           cardBg: 'from-slate-900 via-rose-950 to-slate-900',
           borderGlow: 'border-rose-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Wiirtuu hordoffii maatii: Qabxii barnootaa ijoollee keessanii, hirmaannaa kutaa, nagahee kaffaltii fi beeksisoota mana barnootaa kallattiin mana ta\'aatii hordofaa.'
+              : currentLang === 'en'
               ? 'Parental tracking portal: Monitor your child academic progress, daily classroom attendance, tuition payments, and school announcements directly from home.'
               : 'የወላጅ መከታተያ ማዕከል፡ የልጅዎን የትምህርት ውጤት፣ ዕለታዊ የክፍል መገኘት፣ የወር ክፍያ ደረሰኞችና የት/ቤት ማስታወቂያዎችን በቀጥታ ይከታተሉ።',
           actions: [
             {
               id: 'par-report',
-              label: currentLang === 'en' ? 'Child Academic Report' : 'የልጅዎ የውጤት ካርድ',
-              desc: currentLang === 'en' ? 'Scores, ranks & conduct' : 'አጠቃላይ ነጥብ፣ የደረጃ ምደባና ስነ-ምግባር',
+              label:
+                currentLang === 'om'
+                  ? 'Kaardii Qabxii Ijoollee Keessanii'
+                  : currentLang === 'en'
+                  ? 'Child Academic Report'
+                  : 'የልጅዎ የውጤት ካርድ',
+              desc:
+                currentLang === 'om'
+                  ? 'Qabxii waliigalaa, sadarkaa fi naamusa'
+                  : currentLang === 'en'
+                  ? 'Scores, ranks & conduct'
+                  : 'አጠቃላይ ነጥብ፣ የደረጃ ምደባና ስነ-ምግባር',
               icon: <GraduationCap className="w-4 h-4 text-rose-300" />,
               bgGradient: 'from-rose-700 to-pink-900 hover:from-rose-800 hover:to-pink-950',
               borderColor: 'border-rose-400/40',
               textColor: 'text-white',
-              badge: 'ዋና ክትትል',
+              badge: currentLang === 'om' ? 'Hordoffii Guddaa' : currentLang === 'en' ? 'Core' : 'ዋና ክትትል',
               onClick: () => {
                 onNavigateTab('student_portal');
               }
             },
             {
               id: 'par-attendance',
-              label: currentLang === 'en' ? 'Attendance Tracking' : 'ዕለታዊ መገኘት ክትትል',
-              desc: currentLang === 'en' ? 'Check daily classroom presence' : 'በክፍል ውስጥ የመገኘት/የማርፈድ ሁኔታ',
+              label:
+                currentLang === 'om'
+                  ? 'Hordoffii Hirmaannaa Guyyaa'
+                  : currentLang === 'en'
+                  ? 'Attendance Tracking'
+                  : 'ዕለታዊ መገኘት ክትትል',
+              desc:
+                currentLang === 'om'
+                  ? 'Haala kutaa keessatti argamuu ykn barfachuu'
+                  : currentLang === 'en'
+                  ? 'Check daily classroom presence'
+                  : 'በክፍል ውስጥ የመገኘት/የማርፈድ ሁኔታ',
               icon: <Clock className="w-4 h-4 text-emerald-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
@@ -470,8 +778,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'par-pay',
-              label: currentLang === 'en' ? 'Tuition Payment Receipts' : 'የትምህርት ክፍያ መዝገብ',
-              desc: currentLang === 'en' ? 'View collected fee receipts' : 'የተከፈሉ ወርሃዊ ክፍያዎችና ደረሰኞች',
+              label:
+                currentLang === 'om'
+                  ? 'Galmee Kaffaltii Barnootaa'
+                  : currentLang === 'en'
+                  ? 'Tuition Payment Receipts'
+                  : 'የትምህርት ክፍያ መዝገብ',
+              desc:
+                currentLang === 'om'
+                  ? 'Kaffaltiiwwan ji\'aa kaffalaman fi nagaheewwan'
+                  : currentLang === 'en'
+                  ? 'View collected fee receipts'
+                  : 'የተከፈሉ ወርሃዊ ክፍያዎችና ደረሰኞች',
               icon: <DollarSign className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -482,8 +800,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'par-notices',
-              label: currentLang === 'en' ? 'School Announcements' : 'የት/ቤት ማስታወቂያዎች',
-              desc: currentLang === 'en' ? 'PTA meetings & notices' : 'የወላጆች ስብሰባና የፈተና ቀናት መርሃ-ግብር',
+              label:
+                currentLang === 'om'
+                  ? 'Beeksisoota M/B'
+                  : currentLang === 'en'
+                  ? 'School Announcements'
+                  : 'የት/ቤት ማስታወቂያዎች',
+              desc:
+                currentLang === 'om'
+                  ? 'Walgahii maatii fi sagantaa guyyoota qormaataa'
+                  : currentLang === 'en'
+                  ? 'PTA meetings & notices'
+                  : 'የወላጆች ስብሰባና የፈተና ቀናት መርሃ-ግብር',
               icon: <Award className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -497,26 +825,53 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
 
       case 'accountant':
         return {
-          roleTitle: currentLang === 'en' ? 'School Accountant & Cashier' : 'ዋና ሒሳብ ሹም / ፋይናንስ ኃላፊ',
-          salutation: currentLang === 'en' ? 'Welcome, Finance Officer' : 'እንኳን ደህና መጡ፣ ዋና ሒሳብ ሹም',
-          roleBadge: '💵 ፋይናንስ (Finance)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Itti-Gaafatamaa Faayinaansii / Qabaa Herregaa'
+              : currentLang === 'en'
+              ? 'School Accountant & Cashier'
+              : 'ዋና ሒሳብ ሹም / ፋይናንስ ኃላፊ',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Hogganaa Faayinaansii'
+              : currentLang === 'en'
+              ? 'Welcome, Finance Officer'
+              : 'እንኳን ደህና መጡ፣ ዋና ሒሳብ ሹም',
+          roleBadge:
+            currentLang === 'om'
+              ? '💵 Faayinaansii (Finance)'
+              : currentLang === 'en'
+              ? '💵 Finance'
+              : '💵 ፋይናንስ (Finance)',
           badgeColor: 'bg-green-400 text-slate-950 border-green-300',
           cardBg: 'from-slate-900 via-green-950 to-slate-900',
           borderGlow: 'border-green-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Kutaa faayinaansii keessan: Kaffaltii ji\'aa barattootaa sassaabaa, nagahee seera-qabeessa maxxansaa, baasiiwwan bulchiinsaa galmeessaa fi madaallii baajataa baasaa.'
+              : currentLang === 'en'
               ? 'Your isolated school finance desk: Collect monthly tuition fees, print electronic official receipts, record operating expenses, and balance school books.'
               : 'የተከለለ የፋይናንስ ጽ/ቤትዎ፡ የተማሪዎች ወርሃዊ የትምህርት ክፍያ ይሰብስቡ፣ ይፋዊ ደረሰኝ ያትሙ፣ አስተዳደራዊ ወጪዎችን ይመዝግቡና የበጀት ሚዛን ያውጡ።',
           actions: [
             {
               id: 'acc-fees',
-              label: currentLang === 'en' ? 'Tuition Collection Desk' : 'የወር ክፍያ መሰብሰቢያ ጽ/ቤት',
-              desc: currentLang === 'en' ? 'Collect fee & print receipts' : 'ክፍያ መቀበልና ይፋዊ ደረሰኝ ማውጣት',
+              label:
+                currentLang === 'om'
+                  ? 'Kutaa Kaffaltii Ji\'aa Sassaabuu'
+                  : currentLang === 'en'
+                  ? 'Tuition Collection Desk'
+                  : 'የወር ክፍያ መሰብሰቢያ ጽ/ቤት',
+              desc:
+                currentLang === 'om'
+                  ? 'Kaffaltii fuudhuu fi nagahee seera-qabeessa baasuu'
+                  : currentLang === 'en'
+                  ? 'Collect fee & print receipts'
+                  : 'ክፍያ መቀበልና ይፋዊ ደረሰኝ ማውጣት',
               icon: <DollarSign className="w-4 h-4 text-emerald-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
               textColor: 'text-white',
-              badge: 'ዋና ስራ',
+              badge: currentLang === 'om' ? 'Hojii Guddaa' : currentLang === 'en' ? 'Main' : 'ዋና ስራ',
               onClick: () => {
                 onNavigateTab('school_portal');
                 if (onNavigateSchoolSubTab) onNavigateSchoolSubTab('finance');
@@ -524,8 +879,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'acc-expenses',
-              label: currentLang === 'en' ? 'School Expenses Desk' : 'አስተዳደራዊ ወጪዎች መመዝገቢያ',
-              desc: currentLang === 'en' ? 'Salaries, utilities & supplies' : 'የደመወዝ፣ መብራትና ውሃ፣ የጥገና ወጪዎች',
+              label:
+                currentLang === 'om'
+                  ? 'Galmee Baasiiwwan Bulchiinsaa'
+                  : currentLang === 'en'
+                  ? 'School Expenses Desk'
+                  : 'አስተዳደራዊ ወጪዎች መመዝገቢያ',
+              desc:
+                currentLang === 'om'
+                  ? 'Mindaa, ibsaa fi bishaanii, baasii suphaa'
+                  : currentLang === 'en'
+                  ? 'Salaries, utilities & supplies'
+                  : 'የደመወዝ፣ መብራትና ውሃ፣ የጥገና ወጪዎች',
               icon: <FileText className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -537,8 +902,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'acc-balance',
-              label: currentLang === 'en' ? 'Statement & Net Balance' : 'የገቢና ወጪ ሚዛን መግለጫ',
-              desc: currentLang === 'en' ? 'Real-time financial status' : 'ጠቅላላ ገቢ፣ ወጪና የካዝና ሚዛን',
+              label:
+                currentLang === 'om'
+                  ? 'Ibsa Madaallii Galii fi Baasii'
+                  : currentLang === 'en'
+                  ? 'Statement & Net Balance'
+                  : 'የገቢና ወጪ ሚዛን መግለጫ',
+              desc:
+                currentLang === 'om'
+                  ? 'Galii waliigalaa, baasii fi madaallii kaazinaa'
+                  : currentLang === 'en'
+                  ? 'Real-time financial status'
+                  : 'ጠቅላላ ገቢ፣ ወጪና የካዝና ሚዛን',
               icon: <CreditCard className="w-4 h-4 text-cyan-300" />,
               bgGradient: 'from-teal-700 to-cyan-900 hover:from-teal-800 hover:to-cyan-950',
               borderColor: 'border-teal-400/40',
@@ -550,8 +925,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'acc-notices',
-              label: currentLang === 'en' ? 'Finance Notices' : 'የፋይናንስ ማስታወቂያ ሰሌዳ',
-              desc: currentLang === 'en' ? 'Payment deadline announcements' : 'የክፍያ ማሳሰቢያና አስተዳደራዊ መልዕክቶች',
+              label:
+                currentLang === 'om'
+                  ? 'Gabatee Beeksisa Faayinaansii'
+                  : currentLang === 'en'
+                  ? 'Finance Notices'
+                  : 'የፋይናንስ ማስታወቂያ ሰሌዳ',
+              desc:
+                currentLang === 'om'
+                  ? 'Yaadachiisa kaffaltii fi ergaawwan bulchiinsaa'
+                  : currentLang === 'en'
+                  ? 'Payment deadline announcements'
+                  : 'የክፍያ ማሳሰቢያና አስተዳደራዊ መልዕክቶች',
               icon: <Award className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -566,26 +951,53 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
 
       case 'registrar':
         return {
-          roleTitle: currentLang === 'en' ? 'Registrar & Admissions Officer' : 'ሬጅስትራር / የተማሪዎች ቅበላ ክፍል',
-          salutation: currentLang === 'en' ? 'Welcome, Registrar' : 'እንኳን ደህና መጡ፣ የሬጅስትራር ኃላፊ',
-          roleBadge: '📋 ሬጅስትራር (Registrar)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Reejistiraara / Kutaa Simannaa Barattootaa'
+              : currentLang === 'en'
+              ? 'Registrar & Admissions Officer'
+              : 'ሬጅስትራር / የተማሪዎች ቅበላ ክፍል',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Hogganaa Reejistiraaraa'
+              : currentLang === 'en'
+              ? 'Welcome, Registrar'
+              : 'እንኳን ደህና መጡ፣ የሬጅስትራር ኃላፊ',
+          roleBadge:
+            currentLang === 'om'
+              ? '📋 Reejistiraara (Registrar)'
+              : currentLang === 'en'
+              ? '📋 Registrar'
+              : '📋 ሬጅስትራር (Registrar)',
           badgeColor: 'bg-blue-400 text-slate-950 border-blue-300',
           cardBg: 'from-slate-900 via-blue-950 to-slate-900',
           borderGlow: 'border-blue-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Kutaa simannaa barattootaa keessan: Barattoota haaraa galmeessaa, kutaa fi sekshiniitti ramadaa, waraqaa eenyummaa qopheessaa fi galmee to\'adhaa.'
+              : currentLang === 'en'
               ? 'Your isolated student admissions desk: Register new students, assign classroom sections, issue official photo ID cards, and manage the student master register.'
               : 'የተከለለ የተማሪዎች ቅበላ ጽ/ቤትዎ፡ አዳዲስ ተማሪዎችን ይመዝግቡ፣ በክፍል እና በሴክሽን ይመድቡ፣ የተማሪ መታወቂያ ካርድ ያዘጋጁና መዝገብ ይያዙ።',
           actions: [
             {
               id: 'reg-enroll',
-              label: currentLang === 'en' ? 'New Student Enrollment' : 'አዲስ ተማሪ ምዝገባ & ኮድ',
-              desc: currentLang === 'en' ? 'Enroll & generate student/parent codes' : 'አዲስ ተማሪ መዝግቦ መግቢያ ኮድ መስጠት',
+              label:
+                currentLang === 'om'
+                  ? 'Galmee Barataa Haaraa & Koodii'
+                  : currentLang === 'en'
+                  ? 'New Student Enrollment'
+                  : 'አዲስ ተማሪ ምዝገባ & ኮድ',
+              desc:
+                currentLang === 'om'
+                  ? 'Barataa haaraa galmeessee koodii seensaa kennuu'
+                  : currentLang === 'en'
+                  ? 'Enroll & generate student/parent codes'
+                  : 'አዲስ ተማሪ መዝግቦ መግቢያ ኮድ መስጠት',
               icon: <Plus className="w-4 h-4 text-blue-300" />,
               bgGradient: 'from-blue-700 to-indigo-900 hover:from-blue-800 hover:to-indigo-950',
               borderColor: 'border-blue-400/40',
               textColor: 'text-white',
-              badge: 'ዋና ስራ',
+              badge: currentLang === 'om' ? 'Hojii Guddaa' : currentLang === 'en' ? 'Core' : 'ዋና ስራ',
               onClick: () => {
                 onNavigateTab('school_portal');
                 if (onNavigateSchoolSubTab) onNavigateSchoolSubTab('registrar');
@@ -593,8 +1005,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'reg-id',
-              label: currentLang === 'en' ? 'Issue Student ID Cards' : 'የተማሪ መታወቂያ ካርድ ማተሚያ',
-              desc: currentLang === 'en' ? 'Print official cards with school logo' : 'የት/ቤቱ አርማ ያለበት መታወቂያ ካርድ ማዘጋጀት',
+              label:
+                currentLang === 'om'
+                  ? 'Waraqaa Eenyummaa Barataa Maxxansuu'
+                  : currentLang === 'en'
+                  ? 'Issue Student ID Cards'
+                  : 'የተማሪ መታወቂያ ካርድ ማተሚያ',
+              desc:
+                currentLang === 'om'
+                  ? 'Asxaa mana barnootaa qabuun kaardii eenyummaa qopheessuu'
+                  : currentLang === 'en'
+                  ? 'Print official cards with school logo'
+                  : 'የት/ቤቱ አርማ ያለበት መታወቂያ ካርድ ማዘጋጀት',
               icon: <CreditCard className="w-4 h-4 text-teal-300" />,
               bgGradient: 'from-teal-700 to-emerald-900 hover:from-teal-800 hover:to-emerald-950',
               borderColor: 'border-teal-400/40',
@@ -606,8 +1028,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'reg-roster',
-              label: currentLang === 'en' ? 'Student Master Roster' : 'የተማሪዎች አጠቃላይ መዝገብ',
-              desc: currentLang === 'en' ? 'View all grades, sections & info' : 'የሁሉም ክፍሎች ተማሪዎችና የወላጅ ስልክ',
+              label:
+                currentLang === 'om'
+                  ? 'Galmee Barattootaa Waliigalaa'
+                  : currentLang === 'en'
+                  ? 'Student Master Roster'
+                  : 'የተማሪዎች አጠቃላይ መዝገብ',
+              desc:
+                currentLang === 'om'
+                  ? 'Barattoota kutaalee hundaafi bilbila maatii'
+                  : currentLang === 'en'
+                  ? 'View all grades, sections & info'
+                  : 'የሁሉም ክፍሎች ተማሪዎችና የወላጅ ስልክ',
               icon: <GraduationCap className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -619,8 +1051,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'reg-notices',
-              label: currentLang === 'en' ? 'Admissions Notices' : 'የምዝገባ ማስታወቂያዎች',
-              desc: currentLang === 'en' ? 'New semester admissions alerts' : 'የአዲስ ተማሪዎች ቅበላና የዝውውር ቀናት',
+              label:
+                currentLang === 'om'
+                  ? 'Beeksisoota Galmee'
+                  : currentLang === 'en'
+                  ? 'Admissions Notices'
+                  : 'የምዝገባ ማስታወቂያዎች',
+              desc:
+                currentLang === 'om'
+                  ? 'Guyyoota simannaa fi jijjiirraa barattoota haaraa'
+                  : currentLang === 'en'
+                  ? 'New semester admissions alerts'
+                  : 'የአዲስ ተማሪዎች ቅበላና የዝውውር ቀናት',
               icon: <Award className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -637,34 +1079,71 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
       case 'bureau_staff':
       default:
         return {
-          roleTitle: currentLang === 'en' ? 'City Education Bureau Admin' : 'የትምህርት ቢሮ አመራርና ተቆጣጣሪ',
-          salutation: currentLang === 'en' ? 'Welcome, Education Bureau Leader' : 'እንኳን ደህና መጡ፣ ክቡር የትምህርት ቢሮ አመራር',
-          roleBadge: '🏛️ የትምህርት ቢሮ (Bureau Admin)',
+          roleTitle:
+            currentLang === 'om'
+              ? 'Bulchiinsa fi To\'ataa Biiroo Barnootaa'
+              : currentLang === 'en'
+              ? 'City Education Bureau Admin'
+              : 'የትምህርት ቢሮ አመራርና ተቆጣጣሪ',
+          salutation:
+            currentLang === 'om'
+              ? 'Baga nagaan dhuftan, Kabajamoo Hogganaa Biiroo Barnootaa'
+              : currentLang === 'en'
+              ? 'Welcome, Education Bureau Leader'
+              : 'እንኳን ደህና መጡ፣ ክቡር የትምህርት ቢሮ አመራር',
+          roleBadge:
+            currentLang === 'om'
+              ? '🏛️ Biiroo Barnootaa (Bureau Admin)'
+              : currentLang === 'en'
+              ? '🏛️ Bureau Admin'
+              : '🏛️ የትምህርት ቢሮ (Bureau Admin)',
           badgeColor: 'bg-emerald-400 text-slate-950 border-emerald-300',
           cardBg: 'from-slate-900 via-emerald-950 to-slate-900',
           borderGlow: 'border-emerald-500/40',
           summaryText:
-            currentLang === 'en'
+            currentLang === 'om'
+              ? 'Wiirtuu to\'annoo ol-aanaa Biiroo Barnootaa Magaalaa: Qabxii waliigalaa manneen barnootaa hordofaa, ragaalee barsiisotaa mirkaneessaa fi wiirtuu qormaataa to\'adhaa.'
+              : currentLang === 'en'
               ? 'Regional regulatory command center: Monitor citywide school performance, audit teacher credentials, oversee online exams, and review semester submissions.'
               : 'የከተማው የትምህርት ቢሮ የበላይ መቆጣጠሪያ፡ የትምህርት ቤቶችን አጠቃላይ ውጤት ይከታተሉ፣ የመምህራን ማስረጃዎችን ያረጋግጡና የፈተና ማዕከሉን ያስተዳድሩ።',
           actions: [
             {
               id: 'bur-schools',
-              label: currentLang === 'en' ? 'School Institutions' : 'የትምህርት ቤቶች ተቋማት',
-              desc: currentLang === 'en' ? 'All schools across Shashemene' : 'በሻሸመኔ ከተማ ያሉ ት/ቤቶች ዝርዝር',
+              label:
+                currentLang === 'om'
+                  ? 'Dhaabbilee Manneen Barnootaa'
+                  : currentLang === 'en'
+                  ? 'School Institutions'
+                  : 'የትምህርት ቤቶች ተቋማት',
+              desc:
+                currentLang === 'om'
+                  ? 'Tarree manneen barnootaa Magaalaa Shaashamannee'
+                  : currentLang === 'en'
+                  ? 'All schools across Shashemene'
+                  : 'በሻሸመኔ ከተማ ያሉ ት/ቤቶች ዝርዝር',
               icon: <Building2 className="w-4 h-4 text-emerald-300" />,
               bgGradient: 'from-emerald-700 to-teal-900 hover:from-emerald-800 hover:to-teal-950',
               borderColor: 'border-emerald-400/40',
               textColor: 'text-white',
-              badge: 'ዋና ዳሽቦርድ',
+              badge: currentLang === 'om' ? 'Daashboordii Guddaa' : currentLang === 'en' ? 'Main' : 'ዋና ዳሽቦርድ',
               onClick: () => {
                 onNavigateTab('schools');
               }
             },
             {
               id: 'bur-reports',
-              label: currentLang === 'en' ? 'Semester Reports' : 'የት/ቤቶች ውጤት ሪፖርቶች',
-              desc: currentLang === 'en' ? 'Audit student grade submissions' : 'ከት/ቤቶች የተላኩ የውጤት ሪፖርቶች መገምገሚያ',
+              label:
+                currentLang === 'om'
+                  ? 'Gabaasawwan Bu\'aa M/Barnootaa'
+                  : currentLang === 'en'
+                  ? 'Semester Reports'
+                  : 'የት/ቤቶች ውጤት ሪፖርቶች',
+              desc:
+                currentLang === 'om'
+                  ? 'Gabaasa qabxii m/b irraa ergame gamaaggamuu'
+                  : currentLang === 'en'
+                  ? 'Audit student grade submissions'
+                  : 'ከት/ቤቶች የተላኩ የውጤት ሪፖርቶች መገምገሚያ',
               icon: <FileText className="w-4 h-4 text-amber-300" />,
               bgGradient: 'from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900',
               borderColor: 'border-amber-400/40',
@@ -675,8 +1154,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'bur-credentials',
-              label: currentLang === 'en' ? 'Teacher Credentials Audit' : 'የመምህራን ብቃት ኦዲት',
-              desc: currentLang === 'en' ? 'Verify diplomas, degrees & licenses' : 'ዲፕሎማ፣ ዲግሪ እና የሙያ ፈቃድ ማረጋገጫ',
+              label:
+                currentLang === 'om'
+                  ? 'Ooditii Gahumsa Barsiisotaa'
+                  : currentLang === 'en'
+                  ? 'Teacher Credentials Audit'
+                  : 'የመምህራን ብቃት ኦዲት',
+              desc:
+                currentLang === 'om'
+                  ? 'Diploomaa, digirii fi eeyyama ogummaa mirkaneessuu'
+                  : currentLang === 'en'
+                  ? 'Verify diplomas, degrees & licenses'
+                  : 'ዲፕሎማ፣ ዲግሪ እና የሙያ ፈቃድ ማረጋገጫ',
               icon: <ShieldCheck className="w-4 h-4 text-cyan-300" />,
               bgGradient: 'from-teal-700 to-cyan-900 hover:from-teal-800 hover:to-cyan-950',
               borderColor: 'border-teal-400/40',
@@ -687,8 +1176,18 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
             },
             {
               id: 'bur-exams',
-              label: currentLang === 'en' ? 'Online Exams Center' : 'ኦንላይን የፈተና ማዕከል',
-              desc: currentLang === 'en' ? 'Teacher competency assessment' : 'የመምህራን ብቃት ፈተና ጥያቄዎች ባንክ',
+              label:
+                currentLang === 'om'
+                  ? 'Wiirtuu Qormaata Toora Irraa'
+                  : currentLang === 'en'
+                  ? 'Online Exams Center'
+                  : 'ኦንላይን የፈተና ማዕከል',
+              desc:
+                currentLang === 'om'
+                  ? 'Baankii gaaffilee qormaata gahumsa barsiisotaa'
+                  : currentLang === 'en'
+                  ? 'Teacher competency assessment'
+                  : 'የመምህራን ብቃት ፈተና ጥያቄዎች ባንክ',
               icon: <Award className="w-4 h-4 text-purple-300" />,
               bgGradient: 'from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950',
               borderColor: 'border-purple-400/40',
@@ -740,7 +1239,7 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
 
             {/* Dynamic Personalized Name Heading */}
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight flex items-center gap-2 flex-wrap pt-1">
-              <span>{config.salutation}፣</span>
+              <span>{config.salutation}{currentLang === 'am' ? '፣' : ','}</span>
               <span className="text-amber-300 underline decoration-amber-400/50 underline-offset-4">
                 {currentUser.name}
               </span>
@@ -759,19 +1258,45 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
                 type="button"
                 onClick={onOpenQuickRoleModal}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 hover:text-white border border-amber-400/40 transition-all cursor-pointer shadow-xs"
-                title="የስራ ሚና ቀይር / Switch Active Role"
+                title={
+                  currentLang === 'om'
+                    ? 'Gahee Hojii Jijjiiri'
+                    : currentLang === 'en'
+                    ? 'Switch Role'
+                    : 'የስራ ሚና ቀይር'
+                }
               >
                 <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                <span className="hidden sm:inline">የስራ ሚና ቀይር (Switch)</span>
-                <span className="sm:hidden">ቀይር</span>
+                <span className="hidden sm:inline">
+                  {currentLang === 'om'
+                    ? 'Gahee Hojii Jijjiiri'
+                    : currentLang === 'en'
+                    ? 'Switch Role'
+                    : 'የስራ ሚና ቀይር'}
+                </span>
+                <span className="sm:hidden">
+                  {currentLang === 'om' ? 'Jijjiiri' : currentLang === 'en' ? 'Switch' : 'ቀይር'}
+                </span>
               </button>
             )}
 
             <button
               type="button"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white border border-white/10 transition-colors"
-              title={isCollapsed ? 'አሳይ / Expand' : 'ደብቅ / Collapse'}
+              className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
+              title={
+                isCollapsed
+                  ? currentLang === 'om'
+                    ? 'Bani (Expand)'
+                    : currentLang === 'en'
+                    ? 'Expand'
+                    : 'አሳይ'
+                  : currentLang === 'om'
+                  ? 'Dheksi (Collapse)'
+                  : currentLang === 'en'
+                  ? 'Collapse'
+                  : 'ደብቅ'
+              }
             >
               {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
             </button>
@@ -785,13 +1310,19 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
               <span className="text-xs font-bold text-amber-200 flex items-center gap-1.5 uppercase tracking-wider">
                 <BookmarkCheck className="w-4 h-4 text-amber-400" />
                 <span>
-                  {currentLang === 'en'
+                  {currentLang === 'om'
+                    ? 'Qabduuwwan Hojii Saffisaa (Quick-Start Desk)'
+                    : currentLang === 'en'
                     ? 'Quick-Start Actions (Direct Access)'
                     : 'በቀጥታ ወደ ስራ መግቢያ ፈጣን ቁልፎች (Quick-Start Desk)'}
                 </span>
               </span>
               <span className="text-[11px] text-slate-400">
-                {currentLang === 'en' ? 'Click to navigate immediately' : 'ወደ ተፈለገው ገፅ በቅጽበት ይሂዱ'}
+                {currentLang === 'om'
+                  ? 'Fuula barbaadame dafanii banuuf cuqaasaa'
+                  : currentLang === 'en'
+                  ? 'Click to navigate immediately'
+                  : 'ወደ ተፈለገው ገፅ በቅጽበት ይሂዱ'}
               </span>
             </div>
 

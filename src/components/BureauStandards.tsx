@@ -46,7 +46,6 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
     <div className="space-y-6">
       {/* =========================================================================
           🌟 STANDARDS TOP ACTION TOOLBAR: All actions unified at the top!
-          "ሁሉም በየራሱ ገፅ ላይ ያሉ በተን ሳይዘበራረቅ ከላይ እንዲቀመጥ"
          ========================================================================= */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
@@ -60,7 +59,8 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
                   {t.standards_title} (MoE Quality Standards)
                 </h2>
                 <span className="text-xs text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 font-bold">
-                  {filteredStandards.length} / {standards.length} መስፈርቶች
+                  {filteredStandards.length} / {standards.length}{' '}
+                  {currentLang === 'om' ? 'Ulaagaalee' : currentLang === 'en' ? 'Criteria' : 'መስፈርቶች'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">{t.standards_desc}</p>
@@ -72,10 +72,10 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
               type="button"
               onClick={() => window.print()}
               className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              title="የትምህርት ጥራት መስፈርቶችን አትም"
+              title={currentLang === 'om' ? 'Ulaagaalee Qulqullina Barnootaa Maxxansi' : currentLang === 'en' ? 'Print Education Quality Standards' : 'የትምህርት ጥራት መስፈርቶችን አትም'}
             >
               <Printer className="w-4 h-4 text-slate-600" />
-              <span>መስፈርቱን አትም</span>
+              <span>{currentLang === 'om' ? 'Ulaagaa Maxxansi' : currentLang === 'en' ? 'Print Standards' : 'መስፈርቱን አትም'}</span>
             </button>
           </div>
         </div>
@@ -88,7 +88,13 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="የጥራት መስፈርት ወይም መመሪያ ፈልግ..."
+              placeholder={
+                currentLang === 'om'
+                  ? 'Ulaagaa qulqullinaa ykn qajeelfama barbaadi...'
+                  : currentLang === 'en'
+                  ? 'Search quality standard or guideline...'
+                  : 'የጥራት መስፈርት ወይም መመሪያ ፈልግ...'
+              }
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden font-medium"
             />
             {searchTerm && (
@@ -105,10 +111,22 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
           {/* Category Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs">
             {[
-              { id: 'all', label: 'ሁሉም መስፈርቶች' },
-              { id: 'ግብአት', label: 'ግብአት (Input)' },
-              { id: 'ሂደት', label: 'ሂደት (Process)' },
-              { id: 'ውጤት', label: 'ውጤት (Output)' }
+              {
+                id: 'all',
+                label: currentLang === 'om' ? 'Ulaagaalee Hunda' : currentLang === 'en' ? 'All Criteria' : 'ሁሉም መስፈርቶች'
+              },
+              {
+                id: 'ግብአት',
+                label: currentLang === 'om' ? 'Galtee (Input)' : currentLang === 'en' ? 'Input' : 'ግብአት (Input)'
+              },
+              {
+                id: 'ሂደት',
+                label: currentLang === 'om' ? 'Adeemsa (Process)' : currentLang === 'en' ? 'Process' : 'ሂደት (Process)'
+              },
+              {
+                id: 'ውጤት',
+                label: currentLang === 'om' ? 'Bu’aa (Output)' : currentLang === 'en' ? 'Output' : 'ውጤት (Output)'
+              }
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -140,7 +158,11 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
             {t.std_level1}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            ዝቅተኛ የጥራት መስፈርቶችን ያላሟላ፤ የመማሪያ ክፍሎች እጥረት፣ ያልሰለጠኑ መምህራን እና ከፍተኛ ቁጥጥር የሚሻ ተቋም።
+            {currentLang === 'om'
+              ? 'Ulaagaalee qulqullinaa gadi aanaa hin guutne; hanqina daree barnootaa, barsiisota leenjii hin qabnee fi to’annoo cimaa barbaadu.'
+              : currentLang === 'en'
+              ? 'Does not meet minimum quality standards; lacks classrooms and trained teachers, requiring strict supervision.'
+              : 'ዝቅተኛ የጥራት መስፈርቶችን ያላሟላ፤ የመማሪያ ክፍሎች እጥረት፣ ያልሰለጠኑ መምህራን እና ከፍተኛ ቁጥጥር የሚሻ ተቋም።'}
           </p>
         </div>
 
@@ -155,7 +177,11 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
             {t.std_level2}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            በማደግ ላይ ያለ፤ መሰረታዊ ግብአቶች ቢኖሩትም በላብራቶሪ፣ በመጽሐፍት እና በመምህራን ስልጠና ማሻሻያ የሚሻ።
+            {currentLang === 'om'
+              ? 'Guddina irra kan jiru; galteewwan bu’uuraa qabaatus laabooraatoorii, kitaabotaa fi leenjii barsiisotaatiin fooyya’insa barbaada.'
+              : currentLang === 'en'
+              ? 'Developing institution; has basic inputs but needs improvement in laboratories, books, and teacher training.'
+              : 'በማደግ ላይ ያለ፤ መሰረታዊ ግብአቶች ቢኖሩትም በላብራቶሪ፣ በመጽሐፍት እና በመምህራን ስልጠና ማሻሻያ የሚሻ።'}
           </p>
         </div>
 
@@ -170,7 +196,11 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
             {t.std_level3}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            የተሟላ የትምህርት ጥራት ፍቃድ (Accredited)፤ የተሟሉ መምህራን፣ ጥሩ የተማሪ ውጤት እና ደረጃውን የጠበቀ የመማሪያ አካባቢ።
+            {currentLang === 'om'
+              ? 'Hayyama qulqullina barnootaa guutuu (Accredited); barsiisota guutuu, qabxii barattootaa gaarii fi naannoo barnootaa sadarkaa eeggate.'
+              : currentLang === 'en'
+              ? 'Fully Accredited; qualified teaching staff, good student performance, and standard learning environment.'
+              : 'የተሟላ የትምህርት ጥራት ፍቃድ (Accredited)፤ የተሟሉ መምህራን፣ ጥሩ የተማሪ ውጤት እና ደረጃውን የጠበቀ የመማሪያ አካባቢ።'}
           </p>
         </div>
 
@@ -185,7 +215,11 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
             {t.std_level4}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            የላቀ እና ለሌሎች ሞዴል የሆነ ትምህርት ቤት፤ ዘመናዊ ሳይንስ ላቦራቶሪ፣ 100% ፈቃድ ያላቸው መምህራን እና ከፍተኛ የማለፍ ምጣኔ።
+            {currentLang === 'om'
+              ? 'Mana barumsaa olaanaa fi moodeela; laabooraatoorii saayinsii ammayyaa, barsiisota 100% hayyama qaban fi harka darbinsaa olaanaa.'
+              : currentLang === 'en'
+              ? 'Exemplary & model school; modern science labs, 100% licensed teachers, and high pass rates.'
+              : 'የላቀ እና ለሌሎች ሞዴል የሆነ ትምህርት ቤት፤ ዘመናዊ ሳይንስ ላቦራቶሪ፣ 100% ፈቃድ ያላቸው መምህራን እና ከፍተኛ የማለፍ ምጣኔ።'}
           </p>
         </div>
       </div>
@@ -193,7 +227,11 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
       {/* Standards Evaluation Criteria Table */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
         <h3 className="text-sm font-bold text-slate-900">
-          የሻሸመኔ ከተማ አስተዳደር የጥራት መስፈርቶች እና የአሁን አማካይ (City Benchmarks)
+          {currentLang === 'om'
+            ? 'Ulaagaalee Qulqullinaa fi Giddugaleessa Magaalaa Shaashamannee (City Benchmarks)'
+            : currentLang === 'en'
+            ? 'Shashemene City Quality Standards & Current City Benchmarks'
+            : 'የሻሸመኔ ከተማ አስተዳደር የጥራት መስፈርቶች እና የአሁን አማካይ (City Benchmarks)'}
         </h3>
 
         <div className="divide-y divide-slate-100">
@@ -228,12 +266,12 @@ export const BureauStandards: React.FC<BureauStandardsProps> = ({
                   {std.status === 'on_track' ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>ተሟልቷል</span>
+                      <span>{currentLang === 'om' ? 'Guutameera' : currentLang === 'en' ? 'On Track' : 'ተሟልቷል'}</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                      <span>ትኩረት የሚሻ</span>
+                      <span>{currentLang === 'om' ? 'Xiyyeeffannoo Barbaada' : currentLang === 'en' ? 'Needs Attention' : 'ትኩረት የሚሻ'}</span>
                     </span>
                   )}
                 </div>

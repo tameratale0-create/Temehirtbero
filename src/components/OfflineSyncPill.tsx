@@ -10,11 +10,15 @@ interface OfflineSyncPillProps {
 }
 
 export const OfflineSyncPill: React.FC<OfflineSyncPillProps> = ({
-  currentLang = 'am',
+  currentLang = 'om',
   compact = false
 }) => {
   const { isOnline, isSyncing, pendingCount, simulatedOffline, triggerSync } = useOfflineSync();
   const [showHubModal, setShowHubModal] = useState(false);
+
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
 
   return (
     <>
@@ -30,7 +34,11 @@ export const OfflineSyncPill: React.FC<OfflineSyncPillProps> = ({
             ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
             : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
         }`}
-        title="የኦፍላይን እና ኦንላይን መረጃ ማመሳሰያ ሁኔታን ይመልከቱ"
+        title={t3(
+          'Haala walsimsiisa oflaayinii fi onlaayinii ilaali',
+          'View offline & online sync status',
+          'የኦፍላይን እና ኦንላይን መረጃ ማመሳሰያ ሁኔታን ይመልከቱ'
+        )}
       >
         {isSyncing ? (
           <RefreshCw className="w-3.5 h-3.5 text-indigo-700 animate-spin" />
@@ -50,14 +58,14 @@ export const OfflineSyncPill: React.FC<OfflineSyncPillProps> = ({
 
         <span className="truncate">
           {isSyncing
-            ? 'በማመሳሰል ላይ...'
+            ? t3('Walsimsiisaa jira...', 'Syncing...', 'በማመሳሰል ላይ...')
             : !isOnline
-            ? '🔴 ኦፍላይን (Offline)'
+            ? t3('🔴 Oflaayinii (Offline)', '🔴 Offline', '🔴 ኦፍላይን (Offline)')
             : pendingCount > 0
-            ? `🟡 ${pendingCount} የሚላኩ መረጃዎች`
+            ? t3(`🟡 Odeeffannoo ergamu ${pendingCount}`, `🟡 ${pendingCount} Pending`, `🟡 ${pendingCount} የሚላኩ መረጃዎች`)
             : compact
-            ? '🟢 ተመሳስሏል'
-            : '🟢 መስመር ላይ (Online)'}
+            ? t3('🟢 Walsimeera', '🟢 Synced', '🟢 ተመሳስሏል')
+            : t3('🟢 Toora Irra (Online)', '🟢 Online', '🟢 መስመር ላይ (Online)')}
         </span>
 
         {pendingCount > 0 && isOnline && !isSyncing && (
@@ -67,9 +75,9 @@ export const OfflineSyncPill: React.FC<OfflineSyncPillProps> = ({
               triggerSync();
             }}
             className="ml-1 text-[10px] font-black underline hover:text-amber-950"
-            title="አሁን አመሳስል"
+            title={t3('Amma walsimsiisi', 'Sync now', 'አሁን አመሳስል')}
           >
-            አመሳስል
+            {t3('Walsimsiisi', 'Sync', 'አመሳስል')}
           </span>
         )}
       </button>

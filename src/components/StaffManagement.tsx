@@ -106,7 +106,6 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
     <div className="space-y-6">
       {/* =========================================================================
           🌟 STAFF TOP ACTION TOOLBAR: All actions unified at the top!
-          "ሁሉም በየራሱ ገፅ ላይ ያሉ በተን ሳይዘበራረቅ ከላይ እንዲቀመጥ"
          ========================================================================= */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
@@ -120,7 +119,8 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
                   {t.staff_title} (Bureau Staff Registry)
                 </h2>
                 <span className="text-xs text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 font-bold">
-                  {filteredStaff.length} / {staff.length} ሰራተኞች
+                  {filteredStaff.length} / {staff.length}{' '}
+                  {currentLang === 'om' ? 'Hojjettoota' : currentLang === 'en' ? 'Staff' : 'ሰራተኞች'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">{t.staff_desc}</p>
@@ -144,7 +144,13 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="የሰራተኛውን ስም፣ የስራ ድርሻ ወይም የመግቢያ ኮድ ፈልግ..."
+              placeholder={
+                currentLang === 'om'
+                  ? 'Maqaa hojjetaa, gahee hojii ykn koodii seensaa barbaadi...'
+                  : currentLang === 'en'
+                  ? 'Search staff name, role title, or access code...'
+                  : 'የሰራተኛውን ስም፣ የስራ ድርሻ ወይም የመግቢያ ኮድ ፈልግ...'
+              }
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden font-medium"
             />
             {searchTerm && (
@@ -161,11 +167,11 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
           {/* Department Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs">
             {[
-              { id: 'all', label: 'ሁሉም ክፍሎች' },
-              { id: 'Inspection', label: 'ኢንስፔክሽን' },
-              { id: 'Curriculum', label: 'ስርዓተ-ትምህርት' },
-              { id: 'Examination', label: 'ፈተና' },
-              { id: 'Planning', label: 'ፕላን' }
+              { id: 'all', label: currentLang === 'om' ? 'Kutaalee Hunda' : currentLang === 'en' ? 'All Departments' : 'ሁሉም ክፍሎች' },
+              { id: 'Inspection', label: currentLang === 'om' ? 'Inispeekshinii' : currentLang === 'en' ? 'Inspection' : 'ኢንስፔክሽን' },
+              { id: 'Curriculum', label: currentLang === 'om' ? 'Sirna Barnootaa' : currentLang === 'en' ? 'Curriculum' : 'ስርዓተ-ትምህርት' },
+              { id: 'Examination', label: currentLang === 'om' ? 'Qormaata' : currentLang === 'en' ? 'Examinations' : 'ፈተና' },
+              { id: 'Planning', label: currentLang === 'om' ? 'Karoora' : currentLang === 'en' ? 'Planning' : 'ፕላን' }
             ].map((dept) => (
               <button
                 key={dept.id}
@@ -205,21 +211,29 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
                   </div>
                 </div>
                 <span className="text-[10px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded font-medium border border-emerald-200">
-                  {member.status === 'active' ? 'በስራ ላይ' : 'እረፍት'}
+                  {member.status === 'active'
+                    ? currentLang === 'om' ? 'Hojii Irra' : currentLang === 'en' ? 'Active' : 'በስራ ላይ'
+                    : currentLang === 'om' ? 'Boqonnaa Irra' : currentLang === 'en' ? 'On Leave' : 'እረፍት'}
                 </span>
               </div>
 
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-[10px]">የስራ ክፍል፡</span>
+                  <span className="text-slate-400 text-[10px]">
+                    {currentLang === 'om' ? 'Kutaa Hojii:' : currentLang === 'en' ? 'Department:' : 'የስራ ክፍል፡'}
+                  </span>
                   <span className="font-semibold text-slate-700">{member.department}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-[10px]">ስልክ፡</span>
+                  <span className="text-slate-400 text-[10px]">
+                    {currentLang === 'om' ? 'Bilbila:' : currentLang === 'en' ? 'Phone:' : 'ስልክ፡'}
+                  </span>
                   <span className="text-slate-700">{member.phone}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-[10px]">የተመዘገበበት ቀን፡</span>
+                  <span className="text-slate-400 text-[10px]">
+                    {currentLang === 'om' ? 'Guyyaa Galmee:' : currentLang === 'en' ? 'Joined Date:' : 'የተመዘገበበት ቀን፡'}
+                  </span>
                   <span className="text-slate-500 text-[11px]">{member.joinedDate}</span>
                 </div>
               </div>
@@ -228,7 +242,9 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
             {/* Access Code display with copy button */}
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 block">የመግቢያ ኮድ (Access Code)</span>
+                <span className="text-[10px] text-slate-400 block">
+                  {currentLang === 'om' ? 'Koodii Seensaa (Access Code)' : currentLang === 'en' ? 'Access Code' : 'የመግቢያ ኮድ (Access Code)'}
+                </span>
                 <span className="font-mono font-bold text-emerald-900 text-xs">
                   {member.accessCode}
                 </span>
@@ -236,17 +252,19 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
               <button
                 onClick={() => copyToClipboard(member.accessCode, member.id)}
                 className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                title="ኮዱን ቅዳ"
+                title={currentLang === 'om' ? 'Koodii Garagalchi' : currentLang === 'en' ? 'Copy code' : 'ኮዱን ቅዳ'}
               >
                 {copiedCodeId === member.id ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">ተቀድቷል</span>
+                    <span className="text-emerald-700">
+                      {currentLang === 'om' ? 'Garagalfameera' : currentLang === 'en' ? 'Copied' : 'ተቀድቷል'}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>ኮድ ቅዳ</span>
+                    <span>{currentLang === 'om' ? 'Koodii Garagalchi' : currentLang === 'en' ? 'Copy Code' : 'ኮድ ቅዳ'}</span>
                   </>
                 )}
               </button>
@@ -282,7 +300,7 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="አቶ/ወ/ሮ ..."
+                  placeholder={currentLang === 'om' ? 'Obbo/Aadde ...' : currentLang === 'en' ? 'Mr./Ms. ...' : 'አቶ/ወ/ሮ ...'}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -296,7 +314,13 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
                   required
                   value={roleTitle}
                   onChange={(e) => setRoleTitle(e.target.value)}
-                  placeholder="ምሳሌ፡ የትምህርት ጥራት ኢንስፔክተር"
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fkn: Inispeektera Qulqullina Barnootaa'
+                      : currentLang === 'en'
+                      ? 'e.g., Education Quality Inspector'
+                      : 'ምሳሌ፡ የትምህርት ጥራት ኢንስፔክተር'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -311,19 +335,19 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden bg-white"
                 >
                   <option value="ኢንስፔክሽንና ደረጃ ምዘና (Inspection)">
-                    ኢንስፔክሽንና ደረጃ ምዘና (Inspection)
+                    {currentLang === 'om' ? 'Inispeekshinii fi Madaallii Sadarkaa (Inspection)' : currentLang === 'en' ? 'Inspection & Accreditation' : 'ኢንስፔክሽንና ደረጃ ምዘና (Inspection)'}
                   </option>
                   <option value="ስርዓተ-ትምህርትና ስልጠና (Curriculum & CPD)">
-                    ስርዓተ-ትምህርትና ስልጠና (Curriculum & CPD)
+                    {currentLang === 'om' ? 'Sirna Barnootaa fi Leenjii (Curriculum & CPD)' : currentLang === 'en' ? 'Curriculum & Teacher CPD' : 'ስርዓተ-ትምህርትና ስልጠና (Curriculum & CPD)'}
                   </option>
                   <option value="ፈተናና ምዘና (Examinations)">
-                    ፈተናና ምዘና (Examinations)
+                    {currentLang === 'om' ? 'Qormaataa fi Madaallii (Examinations)' : currentLang === 'en' ? 'Examinations & Assessment' : 'ፈተናና ምዘና (Examinations)'}
                   </option>
                   <option value="ፕላንና መረጃ (Planning & EMIS)">
-                    ፕላንና መረጃ (Planning & EMIS)
+                    {currentLang === 'om' ? 'Karooraa fi Odeeffannoo (Planning & EMIS)' : currentLang === 'en' ? 'Planning & EMIS' : 'ፕላንና መረጃ (Planning & EMIS)'}
                   </option>
                   <option value="የቢሮ አመራር (Executive Unit)">
-                    የቢሮ አመራር (Executive Unit)
+                    {currentLang === 'om' ? 'Hoggansa Biiroo (Executive Unit)' : currentLang === 'en' ? 'Bureau Executive Unit' : 'የቢሮ አመራር (Executive Unit)'}
                   </option>
                 </select>
               </div>
@@ -344,7 +368,7 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ኢሜይል (Email)
+                  {currentLang === 'om' ? 'Imeelii (Email)' : currentLang === 'en' ? 'Email' : 'ኢሜይል (Email)'}
                 </label>
                 <input
                   type="email"
@@ -356,7 +380,12 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
               </div>
 
               <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-[11px] text-emerald-900">
-                <span className="font-bold">ማስታወሻ፡</span> ሰራተኛው ሲመዘገብ ልዩ ይፋዊ የመግቢያ ኮድ በራስ-ሰር ይፈጠርለታል። ይህንን ኮድ በመጠቀም ወደ ሲስተሙ መግባት ይችላል።
+                <span className="font-bold">{currentLang === 'om' ? 'Yaadachiisa:' : currentLang === 'en' ? 'Note:' : 'ማስታወሻ፡'}</span>{' '}
+                {currentLang === 'om'
+                  ? 'Yeroo hojjetaan galmaa’u koodiin seensaa addaa ofumaan uumamaaf. Koodii kana fayyadamuun sirnicha seenuu danda’a.'
+                  : currentLang === 'en'
+                  ? 'When staff are registered, a unique official access code is automatically generated for system login.'
+                  : 'ሰራተኛው ሲመዘገብ ልዩ ይፋዊ የመግቢያ ኮድ በራስ-ሰር ይፈጠርለታል። ይህንን ኮድ በመጠቀም ወደ ሲስተሙ መግባት ይችላል።'}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -365,13 +394,13 @@ export const StaffManagement: React.FC<StaffManagementProps> = ({
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs"
                 >
-                  መዝግብ እና ኮድ አፍልቅ
+                  {currentLang === 'om' ? 'Galmeessi & Koodii Uumi' : currentLang === 'en' ? 'Register & Generate Code' : 'መዝግብ እና ኮድ አፍልቅ'}
                 </button>
               </div>
             </form>

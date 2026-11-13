@@ -8,7 +8,7 @@ interface SplashScreenProps {
   onComplete: () => void;
 }
 
-export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
+export const SplashScreen: React.FC<SplashScreenProps> = ({ currentLang = 'om', onComplete }) => {
   useEffect(() => {
     // 10-second timer: automatically transitions to code gate after 10 seconds
     const timer = setTimeout(() => {
@@ -22,7 +22,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
     <div
       onClick={onComplete}
       className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center select-none overflow-hidden cursor-pointer"
-      title="ጠቅ በማድረግ ማለፍ ይቻላል (Click to continue)"
+      title={
+        currentLang === 'om'
+          ? 'Itti fufuuf cuqaasaa (Click to continue)'
+          : currentLang === 'en'
+          ? 'Click to continue'
+          : 'ጠቅ በማድረግ ማለፍ ይቻላል (Click to continue)'
+      }
     >
       {/* Background ambient lighting around the emblem */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

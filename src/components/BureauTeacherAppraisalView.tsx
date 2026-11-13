@@ -37,6 +37,10 @@ import {
 } from '../types';
 import { translations } from '../data/translations';
 import { StorageService } from '../utils/storage';
+import {
+  getLocalizedTeacherEvaluations,
+  getLocalizedTeacherSummaries
+} from '../utils/localizedData';
 import { OfflineSyncManager } from '../utils/offlineSync';
 import { TeacherEvaluationModal } from './TeacherEvaluationModal';
 
@@ -77,12 +81,18 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
   // Modal to add a new evaluation directly from this view if needed
   const [showAddEvalModal, setShowAddEvalModal] = useState(false);
 
-  // Reload summaries
+  // Reload summaries (localized)
+  const localizedEvaluations = useMemo(
+    () => getLocalizedTeacherEvaluations(evaluations, currentLang),
+    [evaluations, currentLang]
+  );
+
   const teacherSummaries = useMemo(() => {
-    return StorageService.getAllTeacherSummaries(
+    const raw = StorageService.getAllTeacherSummaries(
       selectedSchoolFilter !== 'all' ? selectedSchoolFilter : undefined
     );
-  }, [evaluations, selectedSchoolFilter]);
+    return getLocalizedTeacherSummaries(raw, currentLang);
+  }, [evaluations, selectedSchoolFilter, currentLang]);
 
   // Overall Bureau KPIs
   const kpis = useMemo(() => {
@@ -161,7 +171,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
 
   // Filtered individual logs
   const filteredLogs = useMemo(() => {
-    return evaluations.filter((item) => {
+    return localizedEvaluations.filter((item) => {
       const matchSearch =
         searchTerm.trim() === '' ||
         item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -177,7 +187,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
 
       return matchSearch && matchSchool && matchSubject;
     });
-  }, [evaluations, searchTerm, selectedSchoolFilter, selectedSubjectFilter]);
+  }, [localizedEvaluations, searchTerm, selectedSchoolFilter, selectedSubjectFilter]);
 
   const handleRecordAppraisalDecision = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,12 +195,40 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
 
     // Find all evaluations for this teacher and annotate them
     const teacherEvals = evaluations.filter((ev) => ev.teacherId === selectedTeacherForDecision.teacherId);
-    let actionLabel = 'ለደረጃ እድገት ግብዓት ተመዝግቧል';
-    if (decisionActionType === 'renewal') actionLabel = 'ለማስተማር ፈቃድ እድሳት ግብዓት ተመዝግቧል';
-    if (decisionActionType === 'training') actionLabel = 'ለአቅም ግንባታ ስልጠና ተመርጧል';
-    if (decisionActionType === 'award') actionLabel = 'ለትምህርት ቢሮ ልዩ የላቀ ውጤት የምስክር ወረቀት ተመዝግቧል';
+    let actionLabel =
+      currentLang === 'om'
+        ? 'Galteen guddina sadarkaaf galmaa’eera'
+        : currentLang === 'en'
+        ? 'Recorded input for grade promotion'
+        : 'ለደረጃ እድገት ግብዓት ተመዝግቧል';
+    if (decisionActionType === 'renewal') {
+      actionLabel =
+        currentLang === 'om'
+          ? 'Galteen haaromsa hayyama barsiisummaaf galmaa’eera'
+          : currentLang === 'en'
+          ? 'Recorded input for license renewal'
+          : 'ለማስተማር ፈቃድ እድሳት ግብዓት ተመዝግቧል';
+    }
+    if (decisionActionType === 'training') {
+      actionLabel =
+        currentLang === 'om'
+          ? 'Leenjii ijaarsa dandeettiif filatameera'
+          : currentLang === 'en'
+          ? 'Selected for capacity-building CPD training'
+          : 'ለአቅም ግንባታ ስልጠና ተመርጧል';
+    }
+    if (decisionActionType === 'award') {
+      actionLabel =
+        currentLang === 'om'
+          ? 'Waraqaa ragaa qabxii olaanaa Biiroo Barnootaatiif galmaa’eera'
+          : currentLang === 'en'
+          ? 'Nominated for Bureau Certificate of Excellence'
+          : 'ለትምህርት ቢሮ ልዩ የላቀ ውጤት የምስክር ወረቀት ተመዝግቧል';
+    }
 
-    const fullNote = `[${new Date().toISOString().split('T')[0]}] ${currentUser?.name || 'የትምህርት ቢሮ ኃላፊ'}: ${actionLabel} - ${decisionNotes}`;
+    const fullNote = `[${new Date().toISOString().split('T')[0]}] ${
+      currentUser?.name || (currentLang === 'om' ? 'Itti Gaafatamaa Biiroo Barnootaa' : currentLang === 'en' ? 'Education Bureau Officer' : 'የትምህርት ቢሮ ኃላፊ')
+    }: ${actionLabel} - ${decisionNotes}`;
 
     teacherEvals.forEach((ev) => {
       StorageService.updateTeacherEvaluationAppraisal(ev.id, fullNote, true);
@@ -208,13 +246,25 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
   const getTierBadge = (tier: string) => {
     switch (tier) {
       case 'outstanding':
-        return { label: 'የላቀ (Outstanding)', cls: 'bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold' };
+        return {
+          label: currentLang === 'om' ? 'Olaanaa (Outstanding)' : currentLang === 'en' ? 'Outstanding' : 'የላቀ (Outstanding)',
+          cls: 'bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold'
+        };
       case 'very_good':
-        return { label: 'በጣም ጥሩ (Very Good)', cls: 'bg-teal-100 text-teal-900 border-teal-300 font-bold' };
+        return {
+          label: currentLang === 'om' ? 'Baay’ee Gaarii (Very Good)' : currentLang === 'en' ? 'Very Good' : 'በጣም ጥሩ (Very Good)',
+          cls: 'bg-teal-100 text-teal-900 border-teal-300 font-bold'
+        };
       case 'satisfactory':
-        return { label: 'አጥጋቢ (Satisfactory)', cls: 'bg-amber-100 text-amber-950 border-amber-300 font-bold' };
+        return {
+          label: currentLang === 'om' ? 'Quubsaa (Satisfactory)' : currentLang === 'en' ? 'Satisfactory' : 'አጥጋቢ (Satisfactory)',
+          cls: 'bg-amber-100 text-amber-950 border-amber-300 font-bold'
+        };
       default:
-        return { label: 'ማሻሻያ የሚሻ (Needs CPD)', cls: 'bg-rose-100 text-rose-950 border-rose-300 font-bold' };
+        return {
+          label: currentLang === 'om' ? 'Fooyya’insa Barbaada (Needs CPD)' : currentLang === 'en' ? 'Needs Improvement' : 'ማሻሻያ የሚሻ (Needs CPD)',
+          cls: 'bg-rose-100 text-rose-950 border-rose-300 font-bold'
+        };
     }
   };
 
@@ -230,18 +280,33 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/30">
-                  የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ ማዕከል
+                  {currentLang === 'om'
+                    ? 'Wiirtuu Idilee Biiroo Barnootaa Magaalaa Shaashamannee'
+                    : currentLang === 'en'
+                    ? 'Shashemene City Education Bureau Official Desk'
+                    : 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ ማዕከል'}
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-300">
-                  · የተማሪ እና ወላጅ ግብረ-መልስ ትንተና
+                  {currentLang === 'om'
+                    ? '· Xiinxala Duub-deebii Barattootaa fi Maatii'
+                    : currentLang === 'en'
+                    ? '· Student & Parent Feedback Analytics'
+                    : '· የተማሪ እና ወላጅ ግብረ-መልስ ትንተና'}
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
-                የመምህራን የማስተማር ብቃትና ምዘና መመዘኛ ግብዓት (Teacher Appraisal Desk)
+                {currentLang === 'om'
+                  ? 'Galtee Madaallii Gahumsa Barsiisuu Barsiisotaa (Teacher Appraisal Desk)'
+                  : currentLang === 'en'
+                  ? 'Teacher Competency & Appraisal Desk'
+                  : 'የመምህራን የማስተማር ብቃትና ምዘና መመዘኛ ግብዓት (Teacher Appraisal Desk)'}
               </h2>
               <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                ከተማሪዎችና ከወላጆች የተሰበሰቡትን 6 ዋና ዋና የማስተማር መስፈርቶች (እያንዳንዳቸው ከ 10 ነጥብ) በመተንተን ለመምህራን የደረጃ እድገት፣
-                ለማስተማር ፈቃድ እድሳት እና ለአቅም ግንባታ ስልጠናዎች በግብዓትነት ማዋል
+                {currentLang === 'om'
+                  ? 'Ulaagaalee barsiisuu ijoo 6 barattootaa fi maatiirraa walitti qabaman (tokkoon tokkoon isaanii qabxii 10 keessaa) xiinxaluun guddina sadarkaa, haaromsa hayyamaa fi leenjii ijaarsa dandeettiitiif galteetti oolchuu.'
+                  : currentLang === 'en'
+                  ? 'Analyze the 6 core teaching criteria collected from students and parents (10 pts each) for teacher promotions, license renewals, and targeted CPD training.'
+                  : 'ከተማሪዎችና ከወላጆች የተሰበሰቡትን 6 ዋና ዋና የማስተማር መስፈርቶች (እያንዳንዳቸው ከ 10 ነጥብ) በመተንተን ለመምህራን የደረጃ እድገት፣ ለማስተማር ፈቃድ እድሳት እና ለአቅም ግንባታ ስልጠናዎች በግብዓትነት ማዋል'}
               </p>
             </div>
           </div>
@@ -253,7 +318,13 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
               className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer"
             >
               <Star className="w-4 h-4 fill-slate-950" />
-              <span>አዲስ ግምገማ መዝግብ (Rate Teacher)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Madaallii Haaraa Galmeessi (Rate Teacher)'
+                  : currentLang === 'en'
+                  ? 'Record Evaluation (Rate Teacher)'
+                  : 'አዲስ ግምገማ መዝግብ (Rate Teacher)'}
+              </span>
             </button>
 
             <button
@@ -262,7 +333,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
               className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors border border-white/20 cursor-pointer shadow-xs"
             >
               <Printer className="w-4 h-4 text-emerald-300" />
-              <span>ሪፖርት አትም (Print Roster)</span>
+              <span>
+                {currentLang === 'om' ? 'Gabaasa Maxxansi (Print)' : currentLang === 'en' ? 'Print Roster' : 'ሪፖርት አትም (Print Roster)'}
+              </span>
             </button>
           </div>
         </div>
@@ -272,63 +345,84 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* KPI 1: Total Evaluations */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] text-slate-500 font-semibold block">ጠቅላላ ግምገማዎች</span>
+          <span className="text-[10px] text-slate-500 font-semibold block">
+            {currentLang === 'om' ? 'Madaallii Waliigalaa' : currentLang === 'en' ? 'Total Evaluations' : 'ጠቅላላ ግምገማዎች'}
+          </span>
           <span className="text-2xl font-black text-slate-900 mt-0.5 block">
             {kpis.totalEvaluations}
           </span>
           <span className="text-[10px] text-emerald-700 font-bold block mt-1">
-            ከተማሪዎች & ወላጆች
+            {currentLang === 'om' ? 'Barattoota & Maatiirraa' : currentLang === 'en' ? 'From Students & Parents' : 'ከተማሪዎች & ወላጆች'}
           </span>
         </div>
 
         {/* KPI 2: Teaching Competence (Mastery) */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] text-slate-500 font-semibold block">1. የማስተማር ብቃት</span>
+          <span className="text-[10px] text-slate-500 font-semibold block">
+            {currentLang === 'om' ? '1. Gahumsa Barsiisuu' : currentLang === 'en' ? '1. Teaching Mastery' : '1. የማስተማር ብቃት'}
+          </span>
           <div className="flex items-baseline gap-1 mt-0.5">
             <span className="text-2xl font-black text-emerald-800">{kpis.avgComp}</span>
             <span className="text-xs text-slate-400 font-bold">/10</span>
           </div>
-          <span className="text-[10px] text-slate-500 block mt-1">የይዘትና እውቀት ጥልቀት</span>
+          <span className="text-[10px] text-slate-500 block mt-1">
+            {currentLang === 'om' ? 'Gadi-fageenya qabiyyee fi beekumsaa' : currentLang === 'en' ? 'Subject & content depth' : 'የይዘትና እውቀት ጥልቀት'}
+          </span>
         </div>
 
         {/* KPI 3: Pedagogical Delivery */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] text-slate-500 font-semibold block">2. የትምህርት አሰጣጥ</span>
+          <span className="text-[10px] text-slate-500 font-semibold block">
+            {currentLang === 'om' ? '2. Dhiyeessa Barnootaa' : currentLang === 'en' ? '2. Delivery Clarity' : '2. የትምህርት አሰጣጥ'}
+          </span>
           <div className="flex items-baseline gap-1 mt-0.5">
             <span className="text-2xl font-black text-teal-800">{kpis.avgPed}</span>
             <span className="text-xs text-slate-400 font-bold">/10</span>
           </div>
-          <span className="text-[10px] text-slate-500 block mt-1">ግልጽነትና ስነ-ዘዴ</span>
+          <span className="text-[10px] text-slate-500 block mt-1">
+            {currentLang === 'om' ? 'Ifaa fi mala barsiisuu' : currentLang === 'en' ? 'Clarity & methodology' : 'ግልጽነትና ስነ-ዘዴ'}
+          </span>
         </div>
 
         {/* KPI 4: Motivation */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] text-slate-500 font-semibold block">3. ተነሳሽነት & ፍቅር</span>
+          <span className="text-[10px] text-slate-500 font-semibold block">
+            {currentLang === 'om' ? '3. Kaka’umsa & Jaalala' : currentLang === 'en' ? '3. Motivation' : '3. ተነሳሽነት & ፍቅር'}
+          </span>
           <div className="flex items-baseline gap-1 mt-0.5">
             <span className="text-2xl font-black text-amber-700">{kpis.avgMot}</span>
             <span className="text-xs text-slate-400 font-bold">/10</span>
           </div>
-          <span className="text-[10px] text-slate-500 block mt-1">ለሙያው ቁርጠኝነት</span>
+          <span className="text-[10px] text-slate-500 block mt-1">
+            {currentLang === 'om' ? 'Kutannoo ogummaaf qabu' : currentLang === 'en' ? 'Commitment to profession' : 'ለሙያው ቁርጠኝነት'}
+          </span>
         </div>
 
         {/* KPI 5: Student Support */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] text-slate-500 font-semibold block">4. የተማሪ ድጋፍ</span>
+          <span className="text-[10px] text-slate-500 font-semibold block">
+            {currentLang === 'om' ? '4. Deeggarsa Barataa' : currentLang === 'en' ? '4. Student Support' : '4. የተማሪ ድጋፍ'}
+          </span>
           <div className="flex items-baseline gap-1 mt-0.5">
             <span className="text-2xl font-black text-blue-800">{kpis.avgSup}</span>
             <span className="text-xs text-slate-400 font-bold">/10</span>
           </div>
-          <span className="text-[10px] text-slate-500 block mt-1">ትዕግስት & እኩልነት</span>
+          <span className="text-[10px] text-slate-500 block mt-1">
+            {currentLang === 'om' ? 'Obsaa & walqixxummaa' : currentLang === 'en' ? 'Patience & fairness' : 'ትዕግስት & እኩልነት'}
+          </span>
         </div>
 
         {/* KPI 6: City Average Satisfaction */}
         <div className="bg-gradient-to-br from-emerald-800 to-teal-900 text-white p-3.5 rounded-2xl shadow-xs">
-          <span className="text-[10px] text-emerald-200 font-semibold block">የከተማው አማካይ</span>
+          <span className="text-[10px] text-emerald-200 font-semibold block">
+            {currentLang === 'om' ? 'Giddugaleessa Magaalaa' : currentLang === 'en' ? 'City Average' : 'የከተማው አማካይ'}
+          </span>
           <span className="text-2xl font-black text-amber-300 mt-0.5 block">
             {kpis.cityAveragePercent}%
           </span>
           <span className="text-[10px] text-white/90 font-medium block mt-1">
-            {kpis.outstandingCount} የላቁ መምህራን
+            {kpis.outstandingCount}{' '}
+            {currentLang === 'om' ? 'Barsiisota Olaanoo' : currentLang === 'en' ? 'Outstanding Teachers' : 'የላቁ መምህራን'}
           </span>
         </div>
       </div>
@@ -347,7 +441,11 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              የመምህራን የውጤት ካርድና ደረጃ ({filteredSummaries.length})
+              {currentLang === 'om'
+                ? `Kaardii Qabxii fi Sadarkaa Barsiisotaa (${filteredSummaries.length})`
+                : currentLang === 'en'
+                ? `Teacher Scorecards & Ranks (${filteredSummaries.length})`
+                : `የመምህራን የውጤት ካርድና ደረጃ (${filteredSummaries.length})`}
             </button>
             <button
               type="button"
@@ -358,12 +456,20 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              የተማሪና ወላጅ ዝርዝር አስተያየቶች ({filteredLogs.length})
+              {currentLang === 'om'
+                ? `Yaada Bal’aa Barattootaa fi Maatii (${filteredLogs.length})`
+                : currentLang === 'en'
+                ? `Detailed Student & Parent Logs (${filteredLogs.length})`
+                : `የተማሪና ወላጅ ዝርዝር አስተያየቶች (${filteredLogs.length})`}
             </button>
           </div>
 
           <div className="text-xs text-slate-500 font-medium">
-            ሻሸመኔ ከተማ አስተዳደር · ይፋዊ የትምህርት ጥራት መከታተያ
+            {currentLang === 'om'
+              ? 'Bulchiinsa Magaalaa Shaashamannee · Hordoffii Qulqullina Barnootaa Idilee'
+              : currentLang === 'en'
+              ? 'Shashemene City Administration · Official Quality Tracker'
+              : 'ሻሸመኔ ከተማ አስተዳደር · ይፋዊ የትምህርት ጥራት መከታተያ'}
           </div>
         </div>
 
@@ -374,7 +480,13 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="የመምህር ስም ወይም ትምህርት አይነት..."
+              placeholder={
+                currentLang === 'om'
+                  ? 'Maqaa barsiisaa ykn gosa barnootaa...'
+                  : currentLang === 'en'
+                  ? 'Teacher name or subject...'
+                  : 'የመምህር ስም ወይም ትምህርት አይነት...'
+              }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 bg-white"
@@ -389,7 +501,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                 onChange={(e) => setSelectedSchoolFilter(e.target.value)}
                 className="w-full px-3 py-1.5 text-xs font-medium border border-slate-300 rounded-xl bg-white"
               >
-                <option value="all">ሁሉም ትምህርት ቤቶች (All Schools)</option>
+                <option value="all">
+                  {currentLang === 'om' ? 'Manneen Barnootaa Hunda' : currentLang === 'en' ? 'All Schools' : 'ሁሉም ትምህርት ቤቶች (All Schools)'}
+                </option>
                 {schools.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -406,13 +520,15 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
               onChange={(e) => setSelectedSubjectFilter(e.target.value)}
               className="w-full px-3 py-1.5 text-xs font-medium border border-slate-300 rounded-xl bg-white"
             >
-              <option value="all">ሁሉም የትምህርት አይነቶች (All Subjects)</option>
-              <option value="Math">Mathematics (ሂሳብ)</option>
-              <option value="Oromo">Afaan Oromoo (ኦሮሚኛ)</option>
-              <option value="Physics">Physics (ፊዚክስ)</option>
-              <option value="Chemistry">Chemistry (ኬሚስትሪ)</option>
-              <option value="Biology">Biology (ባዮሎጂ)</option>
-              <option value="English">English (እንግሊዝኛ)</option>
+              <option value="all">
+                {currentLang === 'om' ? 'Gosa Barnootaa Hunda' : currentLang === 'en' ? 'All Subjects' : 'ሁሉም የትምህርት አይነቶች (All Subjects)'}
+              </option>
+              <option value="Math">Mathematics ({currentLang === 'om' ? 'Herrega' : currentLang === 'en' ? 'Math' : 'ሂሳብ'})</option>
+              <option value="Oromo">Afaan Oromoo ({currentLang === 'om' ? 'Afaan Oromoo' : currentLang === 'en' ? 'Oromiffa' : 'ኦሮሚኛ'})</option>
+              <option value="Physics">Physics ({currentLang === 'om' ? 'Fiiziksii' : currentLang === 'en' ? 'Physics' : 'ፊዚክስ'})</option>
+              <option value="Chemistry">Chemistry ({currentLang === 'om' ? 'Keemistirii' : currentLang === 'en' ? 'Chemistry' : 'ኬሚስትሪ'})</option>
+              <option value="Biology">Biology ({currentLang === 'om' ? 'Baayolojii' : currentLang === 'en' ? 'Biology' : 'ባዮሎጂ'})</option>
+              <option value="English">English ({currentLang === 'om' ? 'Ingiliffa' : currentLang === 'en' ? 'English' : 'እንግሊዝኛ'})</option>
             </select>
           </div>
 
@@ -423,11 +539,21 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
               onChange={(e) => setSelectedTierFilter(e.target.value)}
               className="w-full px-3 py-1.5 text-xs font-medium border border-slate-300 rounded-xl bg-white"
             >
-              <option value="all">ሁሉም ደረጃዎች (All Tiers)</option>
-              <option value="outstanding">የላቀ ውጤት (Outstanding - 90%+)</option>
-              <option value="very_good">በጣም ጥሩ (Very Good - 75-89%)</option>
-              <option value="satisfactory">አጥጋቢ (Satisfactory - 60-74%)</option>
-              <option value="needs_improvement">ማሻሻያ የሚሻ (Needs CPD - &lt;60%)</option>
+              <option value="all">
+                {currentLang === 'om' ? 'Sadarkaa Hunda (All Tiers)' : currentLang === 'en' ? 'All Tiers' : 'ሁሉም ደረጃዎች (All Tiers)'}
+              </option>
+              <option value="outstanding">
+                {currentLang === 'om' ? 'Qabxii Olaanaa (Outstanding - 90%+)' : currentLang === 'en' ? 'Outstanding (90%+)' : 'የላቀ ውጤት (Outstanding - 90%+)'}
+              </option>
+              <option value="very_good">
+                {currentLang === 'om' ? 'Baay’ee Gaarii (Very Good - 75-89%)' : currentLang === 'en' ? 'Very Good (75-89%)' : 'በጣም ጥሩ (Very Good - 75-89%)'}
+              </option>
+              <option value="satisfactory">
+                {currentLang === 'om' ? 'Quubsaa (Satisfactory - 60-74%)' : currentLang === 'en' ? 'Satisfactory (60-74%)' : 'አጥጋቢ (Satisfactory - 60-74%)'}
+              </option>
+              <option value="needs_improvement">
+                {currentLang === 'om' ? 'Fooyya’insa Barbaada (<60%)' : currentLang === 'en' ? 'Needs CPD (<60%)' : 'ማሻሻያ የሚሻ (Needs CPD - <60%)'}
+              </option>
             </select>
           </div>
         </div>
@@ -441,9 +567,19 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
           {filteredSummaries.length === 0 ? (
             <div className="col-span-full bg-white p-12 text-center rounded-3xl border border-slate-200 text-slate-500 space-y-2">
               <Star className="w-10 h-10 text-slate-300 mx-auto" />
-              <p className="font-bold text-slate-700">ምንም የመምህር ምዘና መረጃ አልተገኘም</p>
+              <p className="font-bold text-slate-700">
+                {currentLang === 'om'
+                  ? 'Odeeffannoon madaallii barsiisaa tokkollee hin argamne'
+                  : currentLang === 'en'
+                  ? 'No teacher evaluation records found'
+                  : 'ምንም የመምህር ምዘና መረጃ አልተገኘም'}
+              </p>
               <p className="text-xs text-slate-400">
-                የፍለጋ ቃላትን ይቀይሩ ወይም በተማሪ/ወላጅ ፖርታል በኩል አዲስ ግምገማ እንዲሰጥ ያድርጉ።
+                {currentLang === 'om'
+                  ? 'Jechoota barbaachaa jijjiiraa ykn poortaala barataa/maatiitiin madaallii haaraa galchaa.'
+                  : currentLang === 'en'
+                  ? 'Adjust search filters or submit a new evaluation via Student/Parent portal.'
+                  : 'የፍለጋ ቃላትን ይቀይሩ ወይም በተማሪ/ወላጅ ፖርታል በኩል አዲስ ግምገማ እንዲሰጥ ያድርጉ።'}
               </p>
             </div>
           ) : (
@@ -469,7 +605,11 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
                           <Users className="w-3.5 h-3.5 text-slate-400" />
                           <span>
-                            {summary.totalEvaluations} ግምገማዎች ({summary.studentEvaluationsCount} ተማሪ፣ {summary.parentEvaluationsCount} ወላጅ)
+                            {currentLang === 'om'
+                              ? `Madaallii ${summary.totalEvaluations} (Barataa ${summary.studentEvaluationsCount}, Maatii ${summary.parentEvaluationsCount})`
+                              : currentLang === 'en'
+                              ? `${summary.totalEvaluations} evaluations (${summary.studentEvaluationsCount} student, ${summary.parentEvaluationsCount} parent)`
+                              : `${summary.totalEvaluations} ግምገማዎች (${summary.studentEvaluationsCount} ተማሪ፣ ${summary.parentEvaluationsCount} ወላጅ)`}
                           </span>
                         </div>
                       </div>
@@ -494,7 +634,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       {/* 1. Teaching Competence */}
                       <div>
                         <div className="flex justify-between text-[11px] font-bold py-0.5 text-slate-700">
-                          <span>1. የማስተማር ብቃቱ (Subject Mastery)</span>
+                          <span>
+                            {currentLang === 'om' ? '1. Gahumsa Barsiisuu (Subject Mastery)' : currentLang === 'en' ? '1. Teaching Competence' : '1. የማስተማር ብቃቱ (Subject Mastery)'}
+                          </span>
                           <span className="text-emerald-800">{summary.averageScores.teaching_competence} / 10</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -508,7 +650,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       {/* 2. Pedagogical Delivery */}
                       <div>
                         <div className="flex justify-between text-[11px] font-bold py-0.5 text-slate-700">
-                          <span>2. የትምህርት አሰጣጡ (Clarity & Methodology)</span>
+                          <span>
+                            {currentLang === 'om' ? '2. Dhiyeessa Barnootaa (Clarity)' : currentLang === 'en' ? '2. Pedagogical Delivery' : '2. የትምህርት አሰጣጡ (Clarity & Methodology)'}
+                          </span>
                           <span className="text-teal-800">{summary.averageScores.pedagogical_delivery} / 10</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -522,7 +666,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       {/* 3. Teaching Motivation */}
                       <div>
                         <div className="flex justify-between text-[11px] font-bold py-0.5 text-slate-700">
-                          <span>3. ለማስተማር ያለው ተነሳሽነት (Motivation)</span>
+                          <span>
+                            {currentLang === 'om' ? '3. Kaka’umsa Barsiisuuf Qabu (Motivation)' : currentLang === 'en' ? '3. Teaching Motivation' : '3. ለማስተማር ያለው ተነሳሽነት (Motivation)'}
+                          </span>
                           <span className="text-amber-800">{summary.averageScores.teaching_motivation} / 10</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -536,7 +682,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       {/* 4. Student Support */}
                       <div>
                         <div className="flex justify-between text-[11px] font-bold py-0.5 text-slate-700">
-                          <span>4. የተማሪ ጥያቄን ማዳመጥ & መደገፍ</span>
+                          <span>
+                            {currentLang === 'om' ? '4. Gaaffii Barataa Dhaggeeffachuu & Deeggaruu' : currentLang === 'en' ? '4. Student Support & Listening' : '4. የተማሪ ጥያቄን ማዳመጥ & መደገፍ'}
+                          </span>
                           <span className="text-blue-800">{summary.averageScores.student_support} / 10</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -550,7 +698,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       {/* 5. Classroom Discipline */}
                       <div>
                         <div className="flex justify-between text-[11px] font-bold py-0.5 text-slate-700">
-                          <span>5. የክፍል ስነ-ስርዓትና የጊዜ አጠቃቀም</span>
+                          <span>
+                            {currentLang === 'om' ? '5. Naamusa Daree & Itti Fayyadama Yeroo' : currentLang === 'en' ? '5. Classroom Management & Punctuality' : '5. የክፍል ስነ-ስርዓትና የጊዜ አጠቃቀም'}
+                          </span>
                           <span className="text-indigo-800">{summary.averageScores.classroom_management} / 10</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -564,7 +714,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       {/* 6. Assessment & Feedback */}
                       <div>
                         <div className="flex justify-between text-[11px] font-bold py-0.5 text-slate-700">
-                          <span>6. የቤት ስራና ፈተናን በወቅቱ ማረም</span>
+                          <span>
+                            {currentLang === 'om' ? '6. Hojii Manaa & Qormaata Yeroon Sirreessuu' : currentLang === 'en' ? '6. Timely Homework & Exam Grading' : '6. የቤት ስራና ፈተናን በወቅቱ ማረም'}
+                          </span>
                           <span className="text-purple-800">{summary.averageScores.timely_assessment} / 10</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -581,7 +733,13 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       <div className="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200/80 text-[11px] space-y-1">
                         <span className="font-bold text-emerald-950 flex items-center gap-1">
                           <ThumbsUp className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>የተማሪና ወላጅ ምስክርነት (Key Strengths):</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? 'Ragaa Barattootaa fi Maatii (Key Strengths):'
+                              : currentLang === 'en'
+                              ? 'Student & Parent Testimonials (Key Strengths):'
+                              : 'የተማሪና ወላጅ ምስክርነት (Key Strengths):'}
+                          </span>
                         </span>
                         <p className="text-emerald-900 italic">
                           "{summary.strengthsSummary[0]}"
@@ -593,7 +751,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                   {/* Bureau Official Action Trigger */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                     <span className="text-[10px] text-slate-400 font-semibold">
-                      የቢሮ መመዘኛ ግብዓት
+                      {currentLang === 'om' ? 'Galtee Madaallii Biiroo' : currentLang === 'en' ? 'Bureau Appraisal Input' : 'የቢሮ መመዘኛ ግብዓት'}
                     </span>
 
                     <button
@@ -605,7 +763,13 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
                     >
                       <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-                      <span>የቢሮ ውሳኔ መዝግብ (Appraisal Action)</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'Murtii Biiroo Galmeessi (Appraisal Action)'
+                          : currentLang === 'en'
+                          ? 'Record Bureau Decision'
+                          : 'የቢሮ ውሳኔ መዝግብ (Appraisal Action)'}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -622,10 +786,15 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
         <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">
-              የተሰበሰቡ ግምገማዎች ዝርዝር መዝገብ (Direct Feedbacks Log)
+              {currentLang === 'om'
+                ? 'Galmee Bal’aa Madaalliiwwan Sassaabamanii (Direct Feedbacks Log)'
+                : currentLang === 'en'
+                ? 'Detailed Evaluations Log'
+                : 'የተሰበሰቡ ግምገማዎች ዝርዝር መዝገብ (Direct Feedbacks Log)'}
             </h3>
             <span className="text-xs text-slate-500 font-semibold">
-              ድምር: {filteredLogs.length} ምዘናዎች
+              {currentLang === 'om' ? 'Ida’ama:' : currentLang === 'en' ? 'Total:' : 'ድምር:'} {filteredLogs.length}{' '}
+              {currentLang === 'om' ? 'Madaalliiwwan' : currentLang === 'en' ? 'Evaluations' : 'ምዘናዎች'}
             </span>
           </div>
 
@@ -633,13 +802,13 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 text-slate-600 font-bold border-y border-slate-200">
                 <tr>
-                  <th className="py-3 px-3">ቀን</th>
-                  <th className="py-3 px-3">የመምህር ስም & ትምህርት</th>
-                  <th className="py-3 px-3">ትምህርት ቤት</th>
-                  <th className="py-3 px-3">ገምጋሚ</th>
-                  <th className="py-3 px-3 text-center">ውጤት (ከ 60)</th>
-                  <th className="py-3 px-3">የተማሪ/ወላጅ ዋና አስተያየት</th>
-                  <th className="py-3 px-3">የቢሮ ማስታወሻ</th>
+                  <th className="py-3 px-3">{currentLang === 'om' ? 'Guyyaa' : currentLang === 'en' ? 'Date' : 'ቀን'}</th>
+                  <th className="py-3 px-3">{currentLang === 'om' ? 'Maqaa Barsiisaa & Gosa Barnootaa' : currentLang === 'en' ? 'Teacher & Subject' : 'የመምህር ስም & ትምህርት'}</th>
+                  <th className="py-3 px-3">{currentLang === 'om' ? 'Mana Barumsaa' : currentLang === 'en' ? 'School' : 'ትምህርት ቤት'}</th>
+                  <th className="py-3 px-3">{currentLang === 'om' ? 'Madaalaa' : currentLang === 'en' ? 'Evaluator' : 'ገምጋሚ'}</th>
+                  <th className="py-3 px-3 text-center">{currentLang === 'om' ? 'Qabxii (60 Keessaa)' : currentLang === 'en' ? 'Score (/60)' : 'ውጤት (ከ 60)'}</th>
+                  <th className="py-3 px-3">{currentLang === 'om' ? 'Yaada Ijoo Barataa/Maatii' : currentLang === 'en' ? 'Key Feedback' : 'የተማሪ/ወላጅ ዋና አስተያየት'}</th>
+                  <th className="py-3 px-3">{currentLang === 'om' ? 'Yaadannoo Biiroo' : currentLang === 'en' ? 'Bureau Notes' : 'የቢሮ ማስታወሻ'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -655,8 +824,12 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                     <td className="py-3 px-3 text-slate-600">{log.schoolName}</td>
                     <td className="py-3 px-3">
                       <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
-                        {log.evaluatorRole === 'student' ? '🎓 ተማሪ' : '👨‍👩‍👧 ወላጅ'}
-                        {log.isAnonymous ? ' (ምስጢራዊ)' : ` - ${log.evaluatorName || log.evaluatorParentName}`}
+                        {log.evaluatorRole === 'student'
+                          ? currentLang === 'om' ? '🎓 Barataa' : currentLang === 'en' ? '🎓 Student' : '🎓 ተማሪ'
+                          : currentLang === 'om' ? '👨‍👩‍👧 Maatii' : currentLang === 'en' ? '👨‍👩‍👧 Parent' : '👨‍👩‍👧 ወላጅ'}
+                        {log.isAnonymous
+                          ? currentLang === 'om' ? ' (Iccitii)' : currentLang === 'en' ? ' (Anonymous)' : ' (ምስጢራዊ)'
+                          : ` - ${log.evaluatorName || log.evaluatorParentName}`}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
@@ -672,7 +845,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                       )}
                       {log.improvementAreas && (
                         <p className="line-clamp-1 text-slate-500 text-[11px] mt-0.5">
-                          መሻሻል ያለበት፡ {log.improvementAreas}
+                          {currentLang === 'om' ? 'Kan fooyya’uu qabu:' : currentLang === 'en' ? 'To improve:' : 'መሻሻል ያለበት፡'} {log.improvementAreas}
                         </p>
                       )}
                     </td>
@@ -682,7 +855,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                           {log.bureauDecisionNotes}
                         </span>
                       ) : (
-                        <span className="text-slate-400">በሂደት ላይ</span>
+                        <span className="text-slate-400">
+                          {currentLang === 'om' ? 'Adeemsa Irra' : currentLang === 'en' ? 'Pending' : 'በሂደት ላይ'}
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -702,13 +877,22 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
             <div className="flex items-start justify-between border-b border-slate-200 pb-3">
               <div>
                 <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wide">
-                  የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ የመምህራን ውሳኔ
+                  {currentLang === 'om'
+                    ? 'Murtii Idilee Barsiisotaa Biiroo Barnootaa Shaashamannee'
+                    : currentLang === 'en'
+                    ? 'Shashemene City Education Bureau Official Decision'
+                    : 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ የመምህራን ውሳኔ'}
                 </span>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  የመምህር መመዘኛ ውሳኔ መዝግብ (Record Appraisal Decision)
+                  {currentLang === 'om'
+                    ? 'Murtii Madaallii Barsiisaa Galmeessi (Record Appraisal Decision)'
+                    : currentLang === 'en'
+                    ? 'Record Teacher Appraisal Decision'
+                    : 'የመምህር መመዘኛ ውሳኔ መዝግብ (Record Appraisal Decision)'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  መምህር፡ <strong>{selectedTeacherForDecision.teacherName}</strong> ({selectedTeacherForDecision.subject})
+                  {currentLang === 'om' ? 'Barsiisaa:' : currentLang === 'en' ? 'Teacher:' : 'መምህር፡'}{' '}
+                  <strong>{selectedTeacherForDecision.teacherName}</strong> ({selectedTeacherForDecision.subject})
                 </p>
               </div>
 
@@ -725,10 +909,14 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
               <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
                 <h4 className="text-sm font-bold text-emerald-950">
-                  ውሳኔው በስኬት ተመዝግቧል!
+                  {currentLang === 'om' ? 'Murtiin milkaa’inaan galmaa’eera!' : currentLang === 'en' ? 'Decision recorded successfully!' : 'ውሳኔው በስኬት ተመዝግቧል!'}
                 </h4>
                 <p className="text-xs text-emerald-800">
-                  የመምህሩ የግምገማ ውጤት ወደ ትምህርት ቢሮ ማዕከላዊ የሰው ኃይል እና ፈቃድ አሰጣጥ ሰነድ ተካቷል።
+                  {currentLang === 'om'
+                    ? 'Qabxiin madaallii barsiisaa gara sanada humna namaa fi hayyama kenniinsa Biiroo Barnootaatti dabalameera.'
+                    : currentLang === 'en'
+                    ? 'The teacher appraisal result has been added to the Bureau HR and licensing file.'
+                    : 'የመምህሩ የግምገማ ውጤት ወደ ትምህርት ቢሮ ማዕከላዊ የሰው ኃይል እና ፈቃድ አሰጣጥ ሰነድ ተካቷል።'}
                 </p>
               </div>
             ) : (
@@ -736,7 +924,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                 {/* Teacher Score Summary Pills */}
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-slate-500 block">የተማሪ/ወላጅ አማካይ ውጤት፡</span>
+                    <span className="text-slate-500 block">
+                      {currentLang === 'om' ? 'Qabxii giddugaleessaa barataa/maatii:' : currentLang === 'en' ? 'Student/Parent Average Score:' : 'የተማሪ/ወላጅ አማካይ ውጤት፡'}
+                    </span>
                     <span className="text-base font-black text-slate-900">
                       {selectedTeacherForDecision.overallAverageScore}/60 ({selectedTeacherForDecision.overallPercentage}%)
                     </span>
@@ -749,7 +939,11 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                 {/* Decision Action Type */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    የውሳኔ አይነት ምረጥ (Select Bureau Action Category):
+                    {currentLang === 'om'
+                      ? 'Gosa Murtii Filadhu (Select Bureau Action Category):'
+                      : currentLang === 'en'
+                      ? 'Select Bureau Action Category:'
+                      : 'የውሳኔ አይነት ምረጥ (Select Bureau Action Category):'}
                   </label>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <button
@@ -761,7 +955,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      ⭐ ለደረጃ እድገት ግብዓት (Promotion)
+                      {currentLang === 'om' ? '⭐ Guddina Sadarkaaf (Promotion)' : currentLang === 'en' ? '⭐ Promotion Input' : '⭐ ለደረጃ እድገት ግብዓት (Promotion)'}
                     </button>
 
                     <button
@@ -773,7 +967,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      📜 ለማስተማር ፈቃድ እድሳት (License Renewal)
+                      {currentLang === 'om' ? '📜 Haaromsa Hayyamaa (Renewal)' : currentLang === 'en' ? '📜 License Renewal' : '📜 ለማስተማር ፈቃድ እድሳት (License Renewal)'}
                     </button>
 
                     <button
@@ -785,7 +979,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      🏆 የላቀ ውጤት የምስጋና ወረቀት (Award)
+                      {currentLang === 'om' ? '🏆 Waraqaa Ragaa Galataa (Award)' : currentLang === 'en' ? '🏆 Excellence Award' : '🏆 የላቀ ውጤት የምስጋና ወረቀት (Award)'}
                     </button>
 
                     <button
@@ -797,7 +991,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      📚 ለአቅም ግንባታ ስልጠና (Target CPD)
+                      {currentLang === 'om' ? '📚 Leenjii Ijaarsa Dandeettii (CPD)' : currentLang === 'en' ? '📚 Target CPD Training' : '📚 ለአቅም ግንባታ ስልጠና (Target CPD)'}
                     </button>
                   </div>
                 </div>
@@ -805,14 +999,24 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                 {/* Decision Official Notes */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    የትምህርት ቢሮ ይፋዊ ማስታወሻ እና መመሪያ (Official Bureau Appraisal Notes):
+                    {currentLang === 'om'
+                      ? 'Yaadannoo fi Qajeelfama Idilee Biiroo (Official Appraisal Notes):'
+                      : currentLang === 'en'
+                      ? 'Official Bureau Appraisal Notes:'
+                      : 'የትምህርት ቢሮ ይፋዊ ማስታወሻ እና መመሪያ (Official Bureau Appraisal Notes):'}
                   </label>
                   <textarea
                     rows={3}
                     required
                     value={decisionNotes}
                     onChange={(e) => setDecisionNotes(e.target.value)}
-                    placeholder="ምሳሌ፡ የተማሪዎችን እና የወላጆችን ግምገማ (95%) መሰረት በማድረግ ለመጪው የደረጃ እድገት በእጩነት እንዲያዝ ተወስኗል..."
+                    placeholder={
+                      currentLang === 'om'
+                        ? 'Fkn: Madaallii barattootaa fi maatii (95%) bu’uura godhachuun guddina sadarkaa dhufuuf kaadhimamaa ta’ee akka qabamu murtaa’eera...'
+                        : currentLang === 'en'
+                        ? 'e.g., Based on 95% student and parent appraisal, nominated for upcoming grade promotion...'
+                        : 'ምሳሌ፡ የተማሪዎችን እና የወላጆችን ግምገማ (95%) መሰረት በማድረግ ለመጪው የደረጃ እድገት በእጩነት እንዲያዝ ተወስኗል...'
+                    }
                     className="w-full p-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 bg-white"
                   />
                 </div>
@@ -823,7 +1027,7 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                     onClick={() => setSelectedTeacherForDecision(null)}
                     className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                   >
-                    ሰርዝ
+                    {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                   </button>
 
                   <button
@@ -831,7 +1035,9 @@ export const BureauTeacherAppraisalView: React.FC<BureauTeacherAppraisalViewProp
                     className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                    <span>ውሳኔውን በይፋ መዝግብ</span>
+                    <span>
+                      {currentLang === 'om' ? 'Murtii Seeraan Galmeessi' : currentLang === 'en' ? 'Record Official Decision' : 'ውሳኔውን በይፋ መዝግብ'}
+                    </span>
                   </button>
                 </div>
               </form>

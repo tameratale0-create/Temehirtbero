@@ -12,17 +12,19 @@ import {
   Paperclip,
   Share2
 } from 'lucide-react';
-import { TrainingAttachment } from '../types';
+import { TrainingAttachment, Language } from '../types';
 
 interface TrainingAttachmentViewerModalProps {
   attachment: TrainingAttachment | null;
   materialTitle?: string;
+  currentLang?: Language;
   onClose: () => void;
 }
 
 export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerModalProps> = ({
   attachment,
   materialTitle,
+  currentLang = 'om',
   onClose
 }) => {
   const [copied, setCopied] = useState(false);
@@ -45,7 +47,6 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
       a.click();
       document.body.removeChild(a);
     } else {
-      // Create downloadable text file
       const blob = new Blob([attachment.textContent || ''], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -76,7 +77,13 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${attachment.fileName} - የስልጠና አታችመንት ሰነድ</title>
+          <title>${attachment.fileName} - ${
+      currentLang === 'om'
+        ? 'Sanada Dabalataa Leenjii'
+        : currentLang === 'en'
+        ? 'Training Attachment Document'
+        : 'የስልጠና አታችመንት ሰነድ'
+    }</title>
           <style>
             body { font-family: sans-serif; padding: 30px; line-height: 1.6; color: #1e293b; }
             .header { border-bottom: 2px solid #047857; padding-bottom: 15px; margin-bottom: 20px; }
@@ -89,18 +96,50 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
         </head>
         <body>
           <div class="header">
-            <div class="bureau">የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · ይፋዊ የስልጠና አታችመንት ሰነድ</div>
+            <div class="bureau">${
+              currentLang === 'om'
+                ? 'Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee · Sanada Dabalataa Leenjii Ifaa'
+                : currentLang === 'en'
+                ? 'Shashemene City Education Bureau · Official Training Attachment'
+                : 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · ይፋዊ የስልጠና አታችመንት ሰነድ'
+            }</div>
             <div class="title">${attachment.fileName}</div>
           </div>
           <div class="meta">
-            <div><strong>ዋና የስልጠና ርዕስ:</strong> ${materialTitle || 'አጠቃላይ የስልጠና ሞጁል'}</div>
-            <div><strong>የሰነድ አይነት:</strong> ${attachment.fileType.toUpperCase()} · <strong>መጠን:</strong> ${attachment.fileSize} · <strong>የተጫነበት ቀን:</strong> ${attachment.uploadedAt}</div>
-            ${attachment.uploadedBy ? `<div><strong>የጫነው ባለሙያ:</strong> ${attachment.uploadedBy}</div>` : ''}
+            <div><strong>${
+              currentLang === 'om'
+                ? 'Mata-duree Leenjii Ijoo:'
+                : currentLang === 'en'
+                ? 'Main Training Title:'
+                : 'ዋና የስልጠና ርዕስ:'
+            }</strong> ${
+      materialTitle ||
+      (currentLang === 'om'
+        ? 'Mooduula Leenjii Waliigalaa'
+        : currentLang === 'en'
+        ? 'General Training Module'
+        : 'አጠቃላይ የስልጠና ሞጁል')
+    }</div>
+            <div><strong>${currentLang === 'om' ? 'Gosa Sanadaa:' : currentLang === 'en' ? 'File Type:' : 'የሰነድ አይነት:'}</strong> ${attachment.fileType.toUpperCase()} · <strong>${currentLang === 'om' ? 'Hammamtaa:' : currentLang === 'en' ? 'Size:' : 'መጠን:'}</strong> ${attachment.fileSize} · <strong>${currentLang === 'om' ? 'Guyyaa Fe\'ame:' : currentLang === 'en' ? 'Uploaded:' : 'የተጫነበት ቀን:'}</strong> ${attachment.uploadedAt}</div>
+            ${attachment.uploadedBy ? `<div><strong>${currentLang === 'om' ? 'Ogeessa Fe\'e:' : currentLang === 'en' ? 'Uploaded By:' : 'የጫነው ባለሙያ:'}</strong> ${attachment.uploadedBy}</div>` : ''}
           </div>
-          ${attachment.description ? `<p style="font-style: italic; color: #334155;"><strong>መግለጫ፡</strong> ${attachment.description}</p>` : ''}
-          <div class="content">${attachment.textContent || 'ምንም የተያያዘ ዝርዝር ጽሑፍ የለም።'}</div>
+          ${attachment.description ? `<p style="font-style: italic; color: #334155;"><strong>${currentLang === 'om' ? 'Ibsa:' : currentLang === 'en' ? 'Description:' : 'መግለጫ፡'}</strong> ${attachment.description}</p>` : ''}
+          <div class="content">${
+            attachment.textContent ||
+            (currentLang === 'om'
+              ? 'Barreeffamni bal\'aan walqabate hin jiru.'
+              : currentLang === 'en'
+              ? 'No embedded text content.'
+              : 'ምንም የተያያዘ ዝርዝር ጽሑፍ የለም።')
+          }</div>
           <div class="footer">
-            ይህ የስልጠና አታችመንት ሰነድ ከሻሸመኔ ትምህርት ቢሮ ፖርታል በቀጥታ ለመምህራን የተዘጋጀ ነው።
+            ${
+              currentLang === 'om'
+                ? 'Sanadni dabalataa leenjii kun poortaala Biiroo Barnootaa Shaashamannee irraa barsiisotaaf qophaa\'e.'
+                : currentLang === 'en'
+                ? 'This training attachment was prepared for teachers via the Shashemene Education Bureau Portal.'
+                : 'ይህ የስልጠና አታችመንት ሰነድ ከሻሸመኔ ትምህርት ቢሮ ፖርታል በቀጥታ ለመምህራን የተዘጋጀ ነው።'
+            }
           </div>
         </body>
       </html>
@@ -141,14 +180,16 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${getBadgeColor(attachment.fileType)}`}>
-                  {attachment.fileType} ሰነድ
+                  {attachment.fileType}{' '}
+                  {currentLang === 'om' ? 'Sanada' : currentLang === 'en' ? 'Document' : 'ሰነድ'}
                 </span>
                 <span className="text-[11px] text-emerald-300 font-mono">
                   {attachment.fileSize}
                 </span>
                 {attachment.uploadedBy && (
                   <span className="text-[11px] text-slate-300">
-                    · በ <strong className="text-white">{attachment.uploadedBy}</strong>
+                    · {currentLang === 'om' ? 'Kan fe\'e:' : currentLang === 'en' ? 'By' : 'በ'}{' '}
+                    <strong className="text-white">{attachment.uploadedBy}</strong>
                   </span>
                 )}
               </div>
@@ -160,7 +201,15 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
               {materialTitle && (
                 <p className="text-xs text-slate-300 flex items-center gap-1.5">
                   <Paperclip className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span className="truncate">ከስልጠና፡ <strong>{materialTitle}</strong> ጋር የተያያዘ</span>
+                  <span className="truncate">
+                    {currentLang === 'om'
+                      ? 'Leenjii:'
+                      : currentLang === 'en'
+                      ? 'Attached to:'
+                      : 'ከስልጠና፡'}{' '}
+                    <strong>{materialTitle}</strong>{' '}
+                    {currentLang === 'am' ? 'ጋር የተያያዘ' : ''}
+                  </span>
                 </p>
               )}
             </div>
@@ -179,7 +228,14 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-800 leading-relaxed">
           {attachment.description && (
             <div className="p-3.5 bg-amber-50/80 border-l-4 border-amber-500 rounded-r-xl text-xs text-amber-950">
-              <strong>የሰነዱ መግለጫ / ማጠቃለያ፡</strong> {attachment.description}
+              <strong>
+                {currentLang === 'om'
+                  ? 'Ibsa / Cuunfaa Sanadaa:'
+                  : currentLang === 'en'
+                  ? 'Document Summary / Description:'
+                  : 'የሰነዱ መግለጫ / ማጠቃለያ፡'}
+              </strong>{' '}
+              {attachment.description}
             </div>
           )}
 
@@ -187,10 +243,24 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
             <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
               <span className="font-bold flex items-center gap-1.5 text-slate-700">
                 <FileText className="w-4 h-4 text-emerald-700" />
-                <span>የአታችመንት ጽሑፉ ሙሉ ይዘት (Document Text Content)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Qabiyyee Barreeffamaa Guutuu (Document Text Content)'
+                    : currentLang === 'en'
+                    ? 'Document Text Content'
+                    : 'የአታችመንት ጽሑፉ ሙሉ ይዘት (Document Text Content)'}
+                </span>
               </span>
               <span className="font-mono text-[11px]">
-                {attachment.textContent ? `${attachment.textContent.length} ቁምፊዎች` : ''}
+                {attachment.textContent
+                  ? `${attachment.textContent.length} ${
+                      currentLang === 'om'
+                        ? 'qubeewwan'
+                        : currentLang === 'en'
+                        ? 'chars'
+                        : 'ቁምፊዎች'
+                    }`
+                  : ''}
               </span>
             </div>
 
@@ -198,7 +268,13 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
               {attachment.textContent || (
                 <div className="py-8 text-center text-slate-400 space-y-2">
                   <FileText className="w-10 h-10 mx-auto text-slate-300" />
-                  <p>ይህ ሰነድ የተያያዘ የውጭ ፋይል ነው (PDF/DOCX)። ሙሉ ፋይሉን ለማንበብ ከታች ያለውን "አውርድ" ወይም "አትም" ይጠቀሙ።</p>
+                  <p>
+                    {currentLang === 'om'
+                      ? 'Sanadni kun faayila alaa (PDF/DOCX) walqabateedha. Guutuu isaa dubbisuuf gadi irraa "Buusi" ykn "Maxxansi" fayyadamaa.'
+                      : currentLang === 'en'
+                      ? 'This attachment is an external file (PDF/DOCX). Use "Download" or "Print" below to view the full file.'
+                      : 'ይህ ሰነድ የተያያዘ የውጭ ፋይል ነው (PDF/DOCX)። ሙሉ ፋይሉን ለማንበብ ከታች ያለውን "አውርድ" ወይም "አትም" ይጠቀሙ።'}
+                  </p>
                 </div>
               )}
             </div>
@@ -216,12 +292,24 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
               {copied ? (
                 <>
                   <Check className="w-4 h-4 text-emerald-600" />
-                  <span className="text-emerald-700">ጽሑፉ ተቀድቷል!</span>
+                  <span className="text-emerald-700">
+                    {currentLang === 'om'
+                      ? 'Barreeffamni garagalfameera!'
+                      : currentLang === 'en'
+                      ? 'Text copied!'
+                      : 'ጽሑፉ ተቀድቷል!'}
+                  </span>
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4 text-slate-500" />
-                  <span>ጽሑፉን ቅዳ</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Barreeffama Garagalchi'
+                      : currentLang === 'en'
+                      ? 'Copy Text'
+                      : 'ጽሑፉን ቅዳ'}
+                  </span>
                 </>
               )}
             </button>
@@ -232,7 +320,9 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
               className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Printer className="w-4 h-4 text-slate-500" />
-              <span>አትም</span>
+              <span>
+                {currentLang === 'om' ? 'Maxxansi' : currentLang === 'en' ? 'Print' : 'አትም'}
+              </span>
             </button>
 
             <button
@@ -241,7 +331,13 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
               className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Download className="w-4 h-4" />
-              <span>ሰነዱን አውርድ</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Sanada Buusi'
+                  : currentLang === 'en'
+                  ? 'Download Document'
+                  : 'ሰነዱን አውርድ'}
+              </span>
             </button>
           </div>
 
@@ -250,7 +346,7 @@ export const TrainingAttachmentViewerModal: React.FC<TrainingAttachmentViewerMod
             onClick={onClose}
             className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer"
           >
-            ዝጋ (Close)
+            {currentLang === 'om' ? 'Cufi (Close)' : currentLang === 'en' ? 'Close' : 'ዝጋ (Close)'}
           </button>
         </div>
       </div>

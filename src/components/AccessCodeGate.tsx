@@ -44,6 +44,10 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
   onReplaySplash
 }) => {
   const t = translations[currentLang];
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const [enteredCode, setEnteredCode] = useState<string>('');
   const [showCode, setShowCode] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -55,9 +59,14 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
     setSuccessMsg('');
 
     // Rule 1: 123456 -> Direct into Education Bureau Page
-    // "123456 ሲያስገቡ ቀጥታ ወድ ትምህርት ቢሮ ገፅ ያስገባል"
     if (code === '123456') {
-      setSuccessMsg('የትምህርት ቢሮ አስተዳዳሪ ተረጋግጧል! ወደ ቢሮ ገጽ እየገባ ነው...');
+      setSuccessMsg(
+        t3(
+          'Bulchaan Biiroo Barnootaa mirkanaa\'eera! Gara fuula Biirootti seenaa jira...',
+          'Education Bureau Admin verified! Entering Bureau Portal...',
+          'የትምህርት ቢሮ አስተዳዳሪ ተረጋግጧል! ወደ ቢሮ ገጽ እየገባ ነው...'
+        )
+      );
       setTimeout(() => {
         onNavigateBureau();
       }, 350);
@@ -65,9 +74,14 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
     }
 
     // Rule 2: 2222 -> Direct into Schools Registration Form
-    // "2222 ሲያስገቡ ወደ ትምህርት ቤቶች ምዝገባ ያስገባል"
     if (code === '2222') {
-      setSuccessMsg('የትምህርት ቤቶች ምዝገባ ተመርጧል! የምዝገባ ፎርሙ እየተከፈተ ነው...');
+      setSuccessMsg(
+        t3(
+          'Galmeen Manneen Barnootaa filatameera! Unki galmee banamaa jira...',
+          'School Registration selected! Opening registration form...',
+          'የትምህርት ቤቶች ምዝገባ ተመርጧል! የምዝገባ ፎርሙ እየተከፈተ ነው...'
+        )
+      );
       setTimeout(() => {
         onNavigateSchoolRegister();
       }, 350);
@@ -75,9 +89,14 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
     }
 
     // Rule 3: 3333 -> Direct into Schools Login
-    // "3333 ሲያስገቡ ወደ ትምህርት ቤቶች መግብያ ያስገባል"
     if (code === '3333') {
-      setSuccessMsg('የትምህርት ቤቶች መግቢያ ተመርጧል! እየተከፈተ ነው...');
+      setSuccessMsg(
+        t3(
+          'Seensi Manneen Barnootaa filatameera! Banamaa jira...',
+          'School Login selected! Opening...',
+          'የትምህርት ቤቶች መግቢያ ተመርጧል! እየተከፈተ ነው...'
+        )
+      );
       setTimeout(() => {
         onNavigateSchoolLogin();
       }, 350);
@@ -93,7 +112,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
       (s) => s.accessCode.trim().toUpperCase() === upperCode
     );
     if (matchedStaff) {
-      setSuccessMsg(`የቢሮ ሰራተኛ: ${matchedStaff.fullName} ተረጋግጧል!`);
+      setSuccessMsg(
+        t3(
+          `Hojjetaa Biiroo: ${matchedStaff.fullName} mirkanaa'eera!`,
+          `Bureau Staff: ${matchedStaff.fullName} verified!`,
+          `የቢሮ ሰራተኛ: ${matchedStaff.fullName} ተረጋግጧል!`
+        )
+      );
       setTimeout(() => {
         onLoginSession({
           role: 'bureau_staff',
@@ -112,7 +137,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
       (s) => s.accessCode.trim().toUpperCase() === upperCode || s.code.toUpperCase() === upperCode
     );
     if (matchedSchool) {
-      setSuccessMsg(`የትምህርት ቤት: ${matchedSchool.name} ተረጋግጧል!`);
+      setSuccessMsg(
+        t3(
+          `Mana Barumsaa: ${matchedSchool.name} mirkanaa'eera!`,
+          `School: ${matchedSchool.name} verified!`,
+          `የትምህርት ቤት: ${matchedSchool.name} ተረጋግጧል!`
+        )
+      );
       setTimeout(() => {
         onLoginSession({
           role: 'school_admin',
@@ -137,13 +168,27 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
       const isParent = matchedStudent.parentAccessCode?.trim().toUpperCase() === upperCode;
       setSuccessMsg(
         isParent
-          ? `የተማሪ ${matchedStudent.fullName} ወላጅ ተረጋግጧል!`
-          : `ተማሪ ${matchedStudent.fullName} ተረጋግጧል!`
+          ? t3(
+              `Maatii Barataa ${matchedStudent.fullName} mirkanaa'aniiru!`,
+              `Parent of ${matchedStudent.fullName} verified!`,
+              `የተማሪ ${matchedStudent.fullName} ወላጅ ተረጋግጧል!`
+            )
+          : t3(
+              `Barataa ${matchedStudent.fullName} mirkanaa'eera!`,
+              `Student ${matchedStudent.fullName} verified!`,
+              `ተማሪ ${matchedStudent.fullName} ተረጋግጧል!`
+            )
       );
       setTimeout(() => {
         onLoginSession({
           role: isParent ? 'parent' : 'student',
-          name: isParent ? `የ${matchedStudent.fullName} ወላጅ` : matchedStudent.fullName,
+          name: isParent
+            ? t3(
+                `Maatii ${matchedStudent.fullName}`,
+                `Parent of ${matchedStudent.fullName}`,
+                `የ${matchedStudent.fullName} ወላጅ`
+              )
+            : matchedStudent.fullName,
           schoolId: matchedStudent.schoolId,
           identifier: matchedStudent.id,
           accessCode: upperCode
@@ -158,7 +203,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
       (c) => c.licenseNumber.trim().toUpperCase() === upperCode
     );
     if (matchedTeacher) {
-      setSuccessMsg(`መምህር: ${matchedTeacher.teacherName} ተረጋግጧል!`);
+      setSuccessMsg(
+        t3(
+          `Barsiisaa: ${matchedTeacher.teacherName} mirkanaa'eera!`,
+          `Teacher: ${matchedTeacher.teacherName} verified!`,
+          `መምህር: ${matchedTeacher.teacherName} ተረጋግጧል!`
+        )
+      );
       setTimeout(() => {
         onLoginSession({
           role: 'teacher',
@@ -187,22 +238,28 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
       else if (matchedSchoolCode.role === 'student') resolvedRole = 'student';
       else if (matchedSchoolCode.role === 'parent') resolvedRole = 'parent';
 
-      const roleAmharicTitle =
+      const roleTitle =
         resolvedRole === 'school_owner'
-          ? 'የት/ቤት ባለቤት (የቦርድ ሰብሳቢ)'
+          ? t3('Abbaa Qabeenyaa M/B (Walitti-Qabaa Boordii)', 'School Owner (Board Chair)', 'የት/ቤት ባለቤት (የቦርድ ሰብሳቢ)')
           : resolvedRole === 'school_director'
-          ? 'ዋና ዳይሬክተር'
+          ? t3('Daarektara Olaanaa', 'Head Director', 'ዋና ዳይሬክተር')
           : resolvedRole === 'accountant'
-          ? 'የሒሳብ ሰራተኛ (Finance)'
+          ? t3('Ogeessa Faayinaansii', 'Accountant (Finance)', 'የሒሳብ ሰራተኛ (Finance)')
           : resolvedRole === 'registrar'
-          ? 'ሬጅስትራር (የተማሪዎች ምዝገባ)'
+          ? t3('Reejistiraara (Galmee Barattootaa)', 'Registrar (Admissions)', 'ሬጅስትራር (የተማሪዎች ምዝገባ)')
           : resolvedRole === 'teacher'
-          ? 'መምህር'
+          ? t3('Barsiisaa', 'Teacher', 'መምህር')
           : resolvedRole === 'student'
-          ? 'ተማሪ'
-          : 'ወላጅ';
+          ? t3('Barataa', 'Student', 'ተማሪ')
+          : t3('Maatii Barataa', 'Parent', 'ወላጅ');
 
-      setSuccessMsg(`${roleAmharicTitle}: ${matchedSchoolCode.fullName} ተረጋግጧል! ወደ ተፈቀደው የስራ ገፅ በመግባት ላይ...`);
+      setSuccessMsg(
+        t3(
+          `${roleTitle}: ${matchedSchoolCode.fullName} mirkanaa'eera! Gara fuula hojiitti seenaa jira...`,
+          `${roleTitle}: ${matchedSchoolCode.fullName} verified! Entering workspace...`,
+          `${roleTitle}: ${matchedSchoolCode.fullName} ተረጋግጧል! ወደ ተፈቀደው የስራ ገፅ በመግባት ላይ...`
+        )
+      );
       setTimeout(() => {
         onLoginSession({
           role: resolvedRole,
@@ -238,13 +295,14 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
         resolvedRole = 'school_owner';
       } else if (
         matchedStakeholder.role === 'registrar_finance' &&
-        (roleText.includes('ሒሳብ') || roleText.includes('ፋይናንስ') || roleText.includes('finance') || roleText.includes('accountant'))
+        (roleText.includes('ሒሳብ') || roleText.includes('ፋይናንስ') || roleText.includes('finance') || roleText.includes('accountant') || roleText.includes('faayinaansii'))
       ) {
         resolvedRole = 'accountant';
       } else if (
         matchedStakeholder.role === 'registrar_finance' ||
         roleText.includes('ሬጅስትራር') ||
-        roleText.includes('registrar')
+        roleText.includes('registrar') ||
+        roleText.includes('reejistiraara')
       ) {
         resolvedRole = 'registrar';
       } else if (matchedStakeholder.role === 'teacher' || matchedStakeholder.role === 'department_head') {
@@ -253,7 +311,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
         resolvedRole = 'parent';
       }
 
-      setSuccessMsg(`የ${matchedStakeholder.officeOrDepartment} ባለሙያ፡ ${matchedStakeholder.fullName} ተረጋግጧል!`);
+      setSuccessMsg(
+        t3(
+          `Ogeessa ${matchedStakeholder.officeOrDepartment}: ${matchedStakeholder.fullName} mirkanaa'eera!`,
+          `${matchedStakeholder.officeOrDepartment} Specialist: ${matchedStakeholder.fullName} verified!`,
+          `የ${matchedStakeholder.officeOrDepartment} ባለሙያ፡ ${matchedStakeholder.fullName} ተረጋግጧል!`
+        )
+      );
       setTimeout(() => {
         onLoginSession({
           role: resolvedRole,
@@ -270,11 +334,11 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
 
     // Invalid Code Error
     setErrorMsg(
-      currentLang === 'am'
-        ? 'የተሳሳተ ኮድ! እባክዎ 123456 (የትምህርት ቢሮ)፣ 2222 (የት/ቤቶች ምዝገባ) ወይም 3333 (የት/ቤቶች መግቢያ) ያስገቡ።'
-        : currentLang === 'om'
-        ? 'Koodiin dogoggora! Maaloo 123456 (Biiroo), 2222 (Galmee Mana Barnootaa) ykn 3333 (Seensa Mana Barnootaa) galchaa.'
-        : 'Invalid code! Please enter 123456 (Education Bureau), 2222 (School Registration), or 3333 (School Login).'
+      t3(
+        'Koodiin dogoggora! Maaloo 123456 (Biiroo), 2222 (Galmee Mana Barnootaa) ykn 3333 (Seensa Mana Barnootaa) galchaa.',
+        'Invalid code! Please enter 123456 (Education Bureau), 2222 (School Registration), or 3333 (School Login).',
+        'የተሳሳተ ኮድ! እባክዎ 123456 (የትምህርት ቢሮ)፣ 2222 (የት/ቤቶች ምዝገባ) ወይም 3333 (የት/ቤቶች መግቢያ) ያስገቡ።'
+      )
     );
   };
 
@@ -329,7 +393,7 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
               {t.bureau_full_name}
             </h2>
             <p className="text-xs text-emerald-400 font-medium">
-              {t.city_name} · ኦንላይን/ኦፍላይን ሲስተም
+              {t.city_name} · {t3('Sirna Oonlaayinii / Of-laayinii', 'Online / Offline System', 'ኦንላይን/ኦፍላይን ሲስተም')}
             </p>
           </div>
         </div>
@@ -476,7 +540,7 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
               onClick={handleClear}
               className="py-2.5 rounded-xl bg-rose-950/50 hover:bg-rose-900/50 border border-rose-700/40 text-xs font-bold text-rose-300 transition-all active:scale-95 cursor-pointer"
             >
-              አጽዳ (C)
+              {t3('Haqi (C)', 'Clear (C)', 'አጽዳ (C)')}
             </button>
             <button
               type="button"
@@ -490,7 +554,7 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
               onClick={handleBackspace}
               className="py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-sm font-bold text-slate-300 transition-all active:scale-95 cursor-pointer"
             >
-              ⌫ ደምስስ
+              ⌫ {t3('Balleessi', 'Delete', 'ደምስስ')}
             </button>
           </div>
 
@@ -508,7 +572,11 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
         {/* "123456 ሲያስገቡ ቀጥታ ወድ ትምህርት ቢሮ ገፅ ያስገባል 2222 ሲያስገቡ ወደ ትምህርት ቤቶች ምዝገባ ያስገባል 3333 ሲያስገቡ ወደ ትምህርት ቤቶች መግብያ ያስገባል" */}
         <div className="space-y-2 pt-2 border-t border-slate-800">
           <p className="text-[11px] font-bold text-slate-400 text-center uppercase tracking-wider mb-2">
-            ፈጣን መግቢያ ምርጫዎች (Quick Shortcuts)
+            {currentLang === 'om'
+              ? 'Filannoowwan Seensa Saffisaa (Quick Shortcuts)'
+              : currentLang === 'en'
+              ? 'Quick Access Shortcuts'
+              : 'ፈጣን መግቢያ ምርጫዎች (Quick Shortcuts)'}
           </p>
 
           {/* Card 1: 123456 Bureau */}
@@ -611,7 +679,11 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                 <span>{t.quick_demo_login_title} (1-Click)</span>
               </span>
               <span className="text-[10px] text-slate-400">
-                ያለ ኮድ በቀጥታ ግባ
+                {currentLang === 'om'
+                  ? 'Koodii malee kallattiin seenaa'
+                  : currentLang === 'en'
+                  ? 'Direct login without code'
+                  : 'ያለ ኮድ በቀጥታ ግባ'}
               </span>
             </div>
 
@@ -619,68 +691,168 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
               {[
                 {
                   role: 'bureau_admin' as const,
-                  name: 'የሻሸመኔ ትምህርት ቢሮ አስተዳዳሪ (Bureau Admin)',
-                  title: 'የትምህርት ቢሮ አስተዳዳሪ',
+                  name:
+                    currentLang === 'om'
+                      ? 'Bulchaa Biiroo Barnootaa Shaashamannee (Admin)'
+                      : currentLang === 'en'
+                      ? 'Shashemene Education Bureau Admin'
+                      : 'የሻሸመኔ ትምህርት ቢሮ አስተዳዳሪ (Bureau Admin)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Bulchaa Biiroo Barnootaa'
+                      : currentLang === 'en'
+                      ? 'Education Bureau Admin'
+                      : 'የትምህርት ቢሮ አስተዳዳሪ',
                   code: '123456',
                   icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />,
                   color: 'hover:bg-emerald-950/60 hover:border-emerald-500/60'
                 },
                 {
                   role: 'school_owner' as const,
-                  name: 'ዶ/ር ተስፋዬ በቀለ (ባለቤት / ቦርድ ሰብሳቢ)',
-                  title: 'የት/ቤት ባለቤት (የቦርድ ሰብሳቢ)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Dr. Tasfaayee Baqqalaa (Abbaa Qabeenyaa / Walitti-Qabaa Boordii)'
+                      : currentLang === 'en'
+                      ? 'Dr. Tesfaye Bekele (Owner / Board Chair)'
+                      : 'ዶ/ር ተስፋዬ በቀለ (ባለቤት / ቦርድ ሰብሳቢ)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Abbaa Qabeenyaa M/B (Walitti-Qabaa Boordii)'
+                      : currentLang === 'en'
+                      ? 'School Owner (Board Chair)'
+                      : 'የት/ቤት ባለቤት (የቦርድ ሰብሳቢ)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'OWN-SHAS-01',
                   icon: <Building2 className="w-3.5 h-3.5 text-amber-400" />,
                   color: 'hover:bg-amber-950/60 hover:border-amber-500/60'
                 },
                 {
                   role: 'school_director' as const,
-                  name: 'አቶ ጉተማ ዋቆ (ዋና ዳይሬክተር)',
-                  title: 'ዋና ዳይሬክተር / ርዕሰ መምህር',
+                  name:
+                    currentLang === 'om'
+                      ? 'Obbo Gutamaa Waaqoo (Daarektara Olaanaa)'
+                      : currentLang === 'en'
+                      ? 'Ato Gutema Wako (Principal)'
+                      : 'አቶ ጉተማ ዋቆ (ዋና ዳይሬክተር)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Daarektara Olaanaa / Hogganaa M/B'
+                      : currentLang === 'en'
+                      ? 'Principal / Director'
+                      : 'ዋና ዳይሬክተር / ርዕሰ መምህር',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'DIR-SHAS-01',
                   icon: <SchoolIcon className="w-3.5 h-3.5 text-teal-400" />,
                   color: 'hover:bg-teal-950/60 hover:border-teal-500/60'
                 },
                 {
                   role: 'teacher' as const,
-                  name: 'መ/ር በፈቃዱ ጥላሁን (ሂሳብ/ፊዚክስ)',
-                  title: 'መምህር (የቤት ስራና ውጤት)',
+                  name:
+                    currentLang === 'om'
+                      ? 'B/saa Bafqaaduu Xilahun (Herrega/Fiiziksii)'
+                      : currentLang === 'en'
+                      ? 'Tr. Befekadu Tilahun (Math/Physics)'
+                      : 'መ/ር በፈቃዱ ጥላሁን (ሂሳብ/ፊዚክስ)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Barsiisaa (Hojii Manaa fi Qabxii)'
+                      : currentLang === 'en'
+                      ? 'Teacher (Homework & Scores)'
+                      : 'መምህር (የቤት ስራና ውጤት)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'TCH-BEFE-01',
                   icon: <Award className="w-3.5 h-3.5 text-emerald-400" />,
                   color: 'hover:bg-emerald-950/60 hover:border-emerald-500/60'
                 },
                 {
                   role: 'accountant' as const,
-                  name: 'ወ/ሮ ሰላማዊት አበራ (ዋና ሒሳብ ሹም)',
-                  title: 'የሒሳብ ሰራተኛ (Finance)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Aaddee Salaamaawiit Abbarraa (Qabaa Herregaa)'
+                      : currentLang === 'en'
+                      ? 'W/ro Selamawit Abera (Chief Accountant)'
+                      : 'ወ/ሮ ሰላማዊት አበራ (ዋና ሒሳብ ሹም)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Ogeessa Faayinaansii (Finance)'
+                      : currentLang === 'en'
+                      ? 'Accountant (Finance)'
+                      : 'የሒሳብ ሰራተኛ (Finance)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'ACC-SHAS-01',
                   icon: <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />,
                   color: 'hover:bg-green-950/60 hover:border-green-500/60'
                 },
                 {
                   role: 'registrar' as const,
-                  name: 'አቶ ዳንኤል ንጉሴ (ተማሪ መዝጋቢ)',
-                  title: 'ሬጅስትራር (ተማሪ ቅበላ & መታወቂያ)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Obbo Daan\'el Nigusee (Galmeessaa Barattootaa)'
+                      : currentLang === 'en'
+                      ? 'Ato Daniel Nigussie (Registrar)'
+                      : 'አቶ ዳንኤል ንጉሴ (ተማሪ መዝጋቢ)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Reejistiraara (Simannaa & Eenyummaa)'
+                      : currentLang === 'en'
+                      ? 'Registrar (Admissions & IDs)'
+                      : 'ሬጅስትራር (ተማሪ ቅበላ & መታወቂያ)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'REG-SHAS-01',
                   icon: <Users className="w-3.5 h-3.5 text-blue-400" />,
                   color: 'hover:bg-blue-950/60 hover:border-blue-500/60'
                 },
                 {
                   role: 'school_admin' as const,
-                  name: 'ወ/ሮ ሙሉእመቤት ደረሰ (ቤተ-መጻሕፍት)',
-                  title: 'የቤተ-መጻሕፍት ኃላፊ (Library)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Aaddee Mulukabarat Darassee (Mana Kitaabaa)'
+                      : currentLang === 'en'
+                      ? 'W/ro Muluemebet Derese (Librarian)'
+                      : 'ወ/ሮ ሙሉእመቤት ደረሰ (ቤተ-መጻሕፍት)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Itti-Gaafatamaa Mana Kitaabaa (Library)'
+                      : currentLang === 'en'
+                      ? 'Head Librarian'
+                      : 'የቤተ-መጻሕፍት ኃላፊ (Library)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   staffDepartment: 'library',
                   code: 'LIB-MULU-02',
                   icon: <BookOpen className="w-3.5 h-3.5 text-indigo-400" />,
@@ -688,20 +860,50 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                 },
                 {
                   role: 'student' as const,
-                  name: 'ኪያር ከድር አሊ (ተማሪ)',
-                  title: 'ተማሪ (10ኛ ክፍል)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Kiyaar Kadir Alii (Barataa)'
+                      : currentLang === 'en'
+                      ? 'Kiyar Kedir Ali (Student)'
+                      : 'ኪያር ከድር አሊ (ተማሪ)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Barataa (Kutaa 10ffaa)'
+                      : currentLang === 'en'
+                      ? 'Student (Grade 10)'
+                      : 'ተማሪ (10ኛ ክፍል)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'STU-KIYAR-01',
                   icon: <GraduationCap className="w-3.5 h-3.5 text-violet-400" />,
                   color: 'hover:bg-violet-950/60 hover:border-violet-500/60'
                 },
                 {
                   role: 'parent' as const,
-                  name: 'አቶ ከድር አሊ (የተማሪ ወላጅ)',
-                  title: 'የተማሪ ወላጅ (ክትትል & ክፍያ)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Obbo Kadir Alii (Maatii Barataa)'
+                      : currentLang === 'en'
+                      ? 'Ato Kedir Ali (Parent)'
+                      : 'አቶ ከድር አሊ (የተማሪ ወላጅ)',
+                  title:
+                    currentLang === 'om'
+                      ? 'Maatii Barataa (Hordoffii & Kaffaltii)'
+                      : currentLang === 'en'
+                      ? 'Student Parent (Tracking & Fees)'
+                      : 'የተማሪ ወላጅ (ክትትል & ክፍያ)',
                   schoolId: 'sch-1',
-                  schoolName: 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
+                  schoolName:
+                    currentLang === 'om'
+                      ? 'M/B Sad. 2ffaa Waliigalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene General Secondary School'
+                      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት',
                   code: 'PAR-KIYAR-01',
                   icon: <Users className="w-3.5 h-3.5 text-rose-400" />,
                   color: 'hover:bg-rose-950/60 hover:border-rose-500/60'
@@ -711,7 +913,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                   key={acc.code}
                   type="button"
                   onClick={() => {
-                    setSuccessMsg(`${acc.title} ተመርጧል! በመግባት ላይ...`);
+                    setSuccessMsg(
+                      currentLang === 'om'
+                        ? `${acc.title} filatameera! Seenaa jira...`
+                        : currentLang === 'en'
+                        ? `${acc.title} selected! Logging in...`
+                        : `${acc.title} ተመርጧል! በመግባት ላይ...`
+                    );
                     setTimeout(() => {
                       onLoginSession({
                         role: acc.role,
@@ -764,9 +972,21 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
 
       {/* Bottom Footer Credits */}
       <div className="max-w-5xl mx-auto w-full text-center text-xs text-slate-500 py-2 border-t border-slate-800">
-        <span>© 2016-2017 ዓ.ም የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ</span>
+        <span>
+          {t3(
+            '© 2016-2017 Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee',
+            '© 2016-2017 Shashemene City Administration Education Bureau',
+            '© 2016-2017 ዓ.ም የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ'
+          )}
+        </span>
         <span className="mx-2">·</span>
-        <span>የኢትዮጵያ ፌዴራላዊ ዴሞክራሲያዊ ሪፐብሊክ የትምህርት ሚኒስቴር እውቅና የተሰጠው</span>
+        <span>
+          {t3(
+            'Beekamtii Ministeera Barnootaa RFDI kan qabu',
+            'Accredited by the Ministry of Education of Ethiopia',
+            'የኢትዮጵያ ፌዴራላዊ ዴሞክራሲያዊ ሪፐብሊክ የትምህርት ሚኒስቴር እውቅና የተሰጠው'
+          )}
+        </span>
       </div>
     </div>
   );

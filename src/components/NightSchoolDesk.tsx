@@ -69,6 +69,18 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
   const [programFilter, setProgramFilter] = useState<string>('all');
   const [selectedStudentForIdCard, setSelectedStudentForIdCard] = useState<StudentRecord | null>(null);
 
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
+  const getStreamDisplay = (val?: string) => {
+    if (!val) return '';
+    if (val === 'Natural') return t3('Saayinsii Uumamaa', 'Natural Science', 'የተፈጥሮ ሳይንስ');
+    if (val === 'Social') return t3('Saayinsii Hawaasaa', 'Social Science', 'ማህበራዊ ሳይንስ');
+    if (val === 'General') return t3('Waliigalaa', 'General', 'አጠቃላይ');
+    return val;
+  };
+
   // Timetable State
   const [scheduleItems, setScheduleItems] = useState<NightClassScheduleItem[]>(() =>
     StorageService.getNightClassSchedule()
@@ -82,10 +94,16 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
   const [newPeriodNumber, setNewPeriodNumber] = useState<number>(1);
   const [newPeriodGrade, setNewPeriodGrade] = useState<number>(10);
   const [newPeriodSection, setNewPeriodSection] = useState<string>('N1');
-  const [newPeriodSubject, setNewPeriodSubject] = useState<string>('Mathematics (ሂሳብ)');
-  const [newPeriodTeacher, setNewPeriodTeacher] = useState<string>('መ/ር በፈቃዱ ጥላሁን');
-  const [newPeriodRoom, setNewPeriodRoom] = useState<string>('ክፍል 14 (ማታ)');
-  const [newPeriodDays, setNewPeriodDays] = useState<string>('ሰኞ፣ ረቡዕ፣ አርብ');
+  const [newPeriodSubject, setNewPeriodSubject] = useState<string>('Mathematics');
+  const [newPeriodTeacher, setNewPeriodTeacher] = useState<string>(() =>
+    t3('Barsiisaa Bafaqaaduu Xilaahun', 'Teacher Befekadu Tilahun', 'መ/ር በፈቃዱ ጥላሁን')
+  );
+  const [newPeriodRoom, setNewPeriodRoom] = useState<string>(() =>
+    t3('Kutaa 14 (Galgalaa)', 'Room 14 (Evening)', 'ክፍል 14 (ማታ)')
+  );
+  const [newPeriodDays, setNewPeriodDays] = useState<string>(() =>
+    t3('Wiixata, Roobii, Jimaata', 'Mon, Wed, Fri', 'ሰኞ፣ ረቡዕ፣ አርብ')
+  );
 
   // New Night Student Admission Form state
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
@@ -200,7 +218,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
       grade,
       section: section.trim().toUpperCase(),
       accessCode: studentAccessCode,
-      parentName: parentName.trim() || 'ተጠሪ (Guardian)',
+      parentName: parentName.trim() || t3('Bakka Bu\'aa (Guardian)', 'Guardian', 'ተጠሪ (Guardian)'),
       parentPhone: parentPhone.trim(),
       parentAccessCode: parentAccessCode,
       scores: defaultScores,
@@ -209,12 +227,16 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
       rank: nightStudents.length + 1,
       shift: 'night_shift',
       nightProgramType: programType,
-      occupation: occupation.trim() || 'የግል ስራ (Self-Employed)',
-      workplace: workplace.trim() || 'ሻሸመኔ (Shashemene)',
+      occupation: occupation.trim() || t3('Hojii Dhuunfaa', 'Self-Employed', 'የግል ስራ (Self-Employed)'),
+      workplace: workplace.trim() || t3('Shaashamannee', 'Shashemene', 'ሻሸመኔ (Shashemene)'),
       stream: grade >= 11 ? stream : undefined,
-      shiftSchedule: 'ሰኞ - አርብ | 11:30 - 3:00 ማታ (5:30 - 9:00 PM)',
+      shiftSchedule: t3(
+        'Wiixata - Jimaata | 11:30 - 3:00 Galgala (5:30 - 9:00 PM)',
+        'Mon - Fri | 5:30 PM - 9:00 PM',
+        'ሰኞ - አርብ | 11:30 - 3:00 ማታ (5:30 - 9:00 PM)'
+      ),
       emergencyContact: emergencyContact.trim() || parentPhone.trim(),
-      enrollmentYear: '2016/2017 ዓ.ም'
+      enrollmentYear: t3('2016/2017 A.L.I', '2024/2025 AY', '2016/2017 ዓ.ም')
     };
 
     StorageService.addStudent(newStudent);
@@ -228,9 +250,13 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
       newStudent.id,
       newStudent,
       {
-        authorName: currentUser?.name || 'የማታ ትምህርት አስተባባሪ',
+        authorName: currentUser?.name || t3('Qindeessaa Barnoota Galgalaa', 'Night School Coordinator', 'የማታ ትምህርት አስተባባሪ'),
         schoolName: school.name,
-        description: `የማታ ተማሪ ምዝገባ፡ ${newStudent.fullName} (ክፍል ${newStudent.grade}${newStudent.section}) - ${newStudent.occupation}`
+        description: t3(
+          `Galmee Barataa Galgalaa: ${newStudent.fullName} (Kutaa ${newStudent.grade}${newStudent.section}) - ${newStudent.occupation}`,
+          `Night Student Registration: ${newStudent.fullName} (Grade ${newStudent.grade}${newStudent.section}) - ${newStudent.occupation}`,
+          `የማታ ተማሪ ምዝገባ፡ ${newStudent.fullName} (ክፍል ${newStudent.grade}${newStudent.section}) - ${newStudent.occupation}`
+        )
       }
     );
 
@@ -240,9 +266,9 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
       schoolId: school.id,
       schoolName: school.name,
       role: 'student',
-      fullName: `${newStudent.fullName} (የማታ ተማሪ)`,
+      fullName: `${newStudent.fullName} (${t3('Barataa Galgalaa', 'Night Student', 'የማታ ተማሪ')})`,
       accessCode: studentAccessCode,
-      assignedClassOrSubject: `Grade ${newStudent.grade}${newStudent.section} (ማታ)`,
+      assignedClassOrSubject: `${t3('Kutaa', 'Grade', 'ክፍል')} ${newStudent.grade}${newStudent.section} (${t3('Galgala', 'Night', 'ማታ')})`,
       createdAt: new Date().toISOString().split('T')[0]
     });
 
@@ -258,11 +284,12 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
   // Add Class Schedule Period
   const handleAddSchedulePeriod = (e: React.FormEvent) => {
     e.preventDefault();
+    const eveningTag = t3('Galgala', 'PM', 'ማታ');
     const timesMap: Record<number, { start: string; end: string; std: string }> = {
-      1: { start: '11:30 ማታ', end: '12:15 ማታ', std: '5:30 PM - 6:15 PM' },
-      2: { start: '12:20 ማታ', end: '1:05 ማታ', std: '6:20 PM - 7:05 PM' },
-      3: { start: '1:25 ማታ', end: '2:10 ማታ', std: '7:25 PM - 8:10 PM' },
-      4: { start: '2:15 ማታ', end: '3:00 ማታ', std: '8:15 PM - 9:00 PM' }
+      1: { start: `11:30 ${eveningTag}`, end: `12:15 ${eveningTag}`, std: '5:30 PM - 6:15 PM' },
+      2: { start: `12:20 ${eveningTag}`, end: `1:05 ${eveningTag}`, std: '6:20 PM - 7:05 PM' },
+      3: { start: `1:25 ${eveningTag}`, end: `2:10 ${eveningTag}`, std: '7:25 PM - 8:10 PM' },
+      4: { start: `2:15 ${eveningTag}`, end: `3:00 ${eveningTag}`, std: '8:15 PM - 9:00 PM' }
     };
 
     const chosen = timesMap[newPeriodNumber] || timesMap[1];
@@ -288,6 +315,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
 
   // Save Night Attendance
   const handleSaveNightAttendance = () => {
+    const eveningTag = t3('Galgala', 'PM', 'ማታ');
     const entries: NightAttendanceEntry[] = nightStudents.map((st) => {
       const log = attendanceLogs[st.id] || { status: 'present' };
       return {
@@ -298,9 +326,9 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
         section: st.section,
         date: attendanceDate,
         status: log.status,
-        arrivalTime: log.status === 'late' ? '11:50 ማታ' : '11:25 ማታ',
+        arrivalTime: log.status === 'late' ? `11:50 ${eveningTag}` : `11:25 ${eveningTag}`,
         lateReason: log.lateReason,
-        recordedBy: currentUser?.name || 'የማታ ክፍለ-ጊዜ ተረኛ መምህር'
+        recordedBy: currentUser?.name || t3('Barsiisaa Dabaree Galgalaa', 'Evening Duty Teacher', 'የማታ ክፍለ-ጊዜ ተረኛ መምህር')
       };
     });
 
@@ -328,24 +356,27 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 flex items-center gap-1.5">
                 <Moon className="w-3.5 h-3.5 text-amber-300" />
-                <span>የማታ ትምህርት ፕሮግራም (Evening Extension Program)</span>
+                <span>{t3('Sagantaa Barnoota Galgalaa (Evening Extension)', 'Evening Extension Program', 'የማታ ትምህርት ፕሮግራም (Evening Extension Program)')}</span>
               </span>
               <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
                 <Clock className="w-3 h-3 text-amber-300" />
-                <span>11:30 - 3:00 ማታ (5:30 PM - 9:00 PM)</span>
+                <span>{t3('11:30 - 3:00 Galgala (5:30 - 9:00 PM)', '5:30 PM - 9:00 PM', '11:30 - 3:00 ማታ (5:30 PM - 9:00 PM)')}</span>
               </span>
               <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3 text-emerald-300" />
-                <span>በሻሸመኔ ትምህርት ቢሮ እውቅና ያለው</span>
+                <span>{t3('Biiroo Barnootaa Shaashamanneen Beekamtii Qaba', 'Accredited by Shashemene Bureau', 'በሻሸመኔ ትምህርት ቢሮ እውቅና ያለው')}</span>
               </span>
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              የማታ ተማሪዎች አስተዳደር እና ክፍለ-ጊዜ ማዕከል
+              {t3('Wiirtuu Bulchiinsaa fi Wayitii Barattoota Galgalaa', 'Evening School Student & Schedule Hub', 'የማታ ተማሪዎች አስተዳደር እና ክፍለ-ጊዜ ማዕከል')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              በቀን ስራና ንግድ ላይ ለተሰማሩ ወጣቶችና ጎልማሶች የተመቻቸ የ 2ኛ ደረጃ፣ የመሰናዶና የማካካሻ ትምህርት ፕሮግራም። 
-              የተማሪዎች ምዝገባ፣ የፈረቃ መታወቂያ ካርድ፣ የማታ ክፍለ-ጊዜ ሰሌዳ እና የዕለት መገኘት ቁጥጥር።
+              {t3(
+                'Sagantaa barnoota sadarkaa 2ffaa, qophaa\'inaa fi gargaarsa dabalataa dargaggootaa fi ga\'eessota guyyaa hojii fi daldala irra jiraniif qophaa\'e. Galmee barattootaa, kaardii eenyummaa, sagantaa wayitii galgalaa fi hordoffii argamuu guyyaa.',
+                'Secondary, preparatory, and remedial evening program tailored for working youth and adults. Manages admissions, shift ID cards, evening timetable, and daily attendance.',
+                'በቀን ስራና ንግድ ላይ ለተሰማሩ ወጣቶችና ጎልማሶች የተመቻቸ የ 2ኛ ደረጃ፣ የመሰናዶና የማካካሻ ትምህርት ፕሮግራም። የተማሪዎች ምዝገባ፣ የፈረቃ መታወቂያ ካርድ፣ የማታ ክፍለ-ጊዜ ሰሌዳ እና የዕለት መገኘት ቁጥጥር።'
+              )}
             </p>
           </div>
 
@@ -357,12 +388,12 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-amber-500/20 transition-all cursor-pointer transform active:scale-95"
               >
                 <Plus className="w-4 h-4 text-slate-950 stroke-[3]" />
-                <span>አዲስ የማታ ተማሪ መዝግብ</span>
+                <span>{t3('Barataa Galgalaa Haaraa Galmeessi', 'Register Night Student', 'አዲስ የማታ ተማሪ መዝግብ')}</span>
               </button>
             ) : (
               <div className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
                 <Lock className="w-4 h-4 text-amber-300" />
-                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+                <span>{t3('Ilaalcha Biiroo Barnootaa (Ilaaluu Qofa)', 'Bureau View (Read-Only)', 'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)')}</span>
               </div>
             )}
 
@@ -372,7 +403,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4 text-slate-300" />
-              <span>ይፋዊ ሪፖርት አትም</span>
+              <span>{t3('Gabaasa Seeraa Maxxansi', 'Print Official Report', 'ይፋዊ ሪፖርት አትም')}</span>
             </button>
           </div>
         </div>
@@ -383,59 +414,59 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-6 border-t border-slate-800/80">
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] font-bold">ጠቅላላ ተማሪዎች</span>
+              <span className="text-[10px] font-bold">{t3('Barattoota Waliigalaa', 'Total Students', 'ጠቅላላ ተማሪዎች')}</span>
               <Users className="w-3.5 h-3.5 text-indigo-400" />
             </div>
             <div className="text-xl font-black text-white">{metrics.total}</div>
-            <div className="text-[10px] text-indigo-300 mt-0.5">የማታ ፈረቃ ተመዝጋቢዎች</div>
+            <div className="text-[10px] text-indigo-300 mt-0.5">{t3('Galmaa\'an Dabaree Galgalaa', 'Evening Shift Enrollees', 'የማታ ፈረቃ ተመዝጋቢዎች')}</div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] font-bold">ወንድ / ሴት ተሳትፎ</span>
+              <span className="text-[10px] font-bold">{t3('Hirmaannaa Dhiira / Dubara', 'Male / Female Split', 'ወንድ / ሴት ተሳትፎ')}</span>
               <GraduationCap className="w-3.5 h-3.5 text-teal-400" />
             </div>
             <div className="text-xl font-black text-white">
               {metrics.maleCount} <span className="text-xs font-normal text-slate-400">/</span> {metrics.femaleCount}
             </div>
             <div className="text-[10px] text-teal-300 mt-0.5">
-              {metrics.total > 0 ? Math.round((metrics.femaleCount / metrics.total) * 100) : 0}% ሴቶች
+              {metrics.total > 0 ? Math.round((metrics.femaleCount / metrics.total) * 100) : 0}% {t3('Dubartoota', 'Female', 'ሴቶች')}
             </div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] font-bold">የቀን ሰራተኛ / ነጋዴ</span>
+              <span className="text-[10px] font-bold">{t3('Hojjettoota / Daldaltoota', 'Working Adults', 'የቀን ሰራተኛ / ነጋዴ')}</span>
               <Briefcase className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <div className="text-xl font-black text-amber-300">{metrics.workingAdultsCount}</div>
-            <div className="text-[10px] text-amber-400 mt-0.5">የስራ ዘርፍ የተመዘገበላቸው</div>
+            <div className="text-[10px] text-amber-400 mt-0.5">{t3('Ogummaa hojii kan galmeessan', 'With recorded occupation', 'የስራ ዘርፍ የተመዘገበላቸው')}</div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] font-bold">የማታ መገኘት ምጣኔ</span>
+              <span className="text-[10px] font-bold">{t3('Reetii Argamuu Galgalaa', 'Night Attendance Rate', 'የማታ መገኘት ምጣኔ')}</span>
               <Clock className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <div className="text-xl font-black text-emerald-400">{metrics.avgAttendance}%</div>
-            <div className="text-[10px] text-emerald-300 mt-0.5">አማካይ የሰዓት አከባበር</div>
+            <div className="text-[10px] text-emerald-300 mt-0.5">{t3('Kabaja yeroo giddugaleessaa', 'Avg. punctuality rate', 'አማካይ የሰዓት አከባበር')}</div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] font-bold">አማካይ ውጤት</span>
+              <span className="text-[10px] font-bold">{t3('Qabxii Giddugaleessaa', 'Average Score', 'አማካይ ውጤት')}</span>
               <Award className="w-3.5 h-3.5 text-indigo-400" />
             </div>
             <div className="text-xl font-black text-white">{metrics.avgScore}%</div>
-            <div className="text-[10px] text-indigo-300 mt-0.5">የሴሚስተር ፈተናዎች</div>
+            <div className="text-[10px] text-indigo-300 mt-0.5">{t3('Qormaata Semisteeraa', 'Semester Assessments', 'የሴሚስተር ፈተናዎች')}</div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] font-bold">የማታ ክፍሎች</span>
+              <span className="text-[10px] font-bold">{t3('Kutaalee Galgalaa', 'Night Classrooms', 'የማታ ክፍሎች')}</span>
               <BookOpen className="w-3.5 h-3.5 text-teal-400" />
             </div>
-            <div className="text-xl font-black text-white">4 ክፍሎች</div>
+            <div className="text-xl font-black text-white">{t3('Kutaalee 4', '4 Grades', '4 ክፍሎች')}</div>
             <div className="text-[10px] text-teal-300 mt-0.5">Grades 9N, 10N, 11N, 12N</div>
           </div>
         </div>
@@ -455,7 +486,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           }`}
         >
           <Users className="w-4 h-4 text-indigo-400" />
-          <span>የማታ ተማሪዎች መዝገብ ({nightStudents.length})</span>
+          <span>{t3('Galmee Barattoota Galgalaa', 'Night Students Roster', 'የማታ ተማሪዎች መዝገብ')} ({nightStudents.length})</span>
         </button>
 
         <button
@@ -468,7 +499,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           }`}
         >
           <Clock className="w-4 h-4 text-amber-400" />
-          <span>የማታ ክፍለ-ጊዜ ሰሌዳ (Timetable)</span>
+          <span>{t3('Sagantaa Wayitii Galgalaa', 'Night Shift Timetable', 'የማታ ክፍለ-ጊዜ ሰሌዳ (Timetable)')}</span>
         </button>
 
         <button
@@ -481,7 +512,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           }`}
         >
           <UserCheck className="w-4 h-4 text-emerald-400" />
-          <span>የማታ መገኘት ቁጥጥር (Attendance)</span>
+          <span>{t3('To\'annoo Argamuu Galgalaa', 'Night Attendance', 'የማታ መገኘት ቁጥጥር (Attendance)')}</span>
         </button>
 
         <button
@@ -494,7 +525,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           }`}
         >
           <FileText className="w-4 h-4 text-teal-400" />
-          <span>ይፋዊ የቢሮ ማረጋገጫ ሪፖርት</span>
+          <span>{t3('Gabaasa Mirkaneessaa Biiroo', 'Official Bureau Report', 'ይፋዊ የቢሮ ማረጋገጫ ሪፖርት')}</span>
         </button>
       </div>
 
@@ -511,7 +542,11 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="የማታ ተማሪ በስም፣ መታወቂያ፣ የቀን ስራ/ሞያ ወይም ስልክ ፈልግ..."
+                placeholder={t3(
+                  'Barataa galgalaa maqaan, waraqaa eenyummaan, ogummaan ykn bilbilaan barbaadi...',
+                  'Search night student by name, ID, occupation, or phone...',
+                  'የማታ ተማሪ በስም፣ መታወቂያ፣ የቀን ስራ/ሞያ ወይም ስልክ ፈልግ...'
+                )}
                 className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600"
               />
               {searchQuery && (
@@ -532,11 +567,11 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 onChange={(e) => setGradeFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                 className="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               >
-                <option value="all">ሁሉም የክፍል ደረጃዎች</option>
-                <option value="9">9ኛ ክፍል (Grade 9N)</option>
-                <option value="10">10ኛ ክፍል (Grade 10N)</option>
-                <option value="11">11ኛ ክፍል (Grade 11N)</option>
-                <option value="12">12ኛ ክፍል (Grade 12N)</option>
+                <option value="all">{t3('Sadarkaa Kutaa Hunda', 'All Grade Levels', 'ሁሉም የክፍል ደረጃዎች')}</option>
+                <option value="9">{t3('Kutaa 9ffaa (Grade 9N)', 'Grade 9N', '9ኛ ክፍል (Grade 9N)')}</option>
+                <option value="10">{t3('Kutaa 10ffaa (Grade 10N)', 'Grade 10N', '10ኛ ክፍል (Grade 10N)')}</option>
+                <option value="11">{t3('Kutaa 11ffaa (Grade 11N)', 'Grade 11N', '11ኛ ክፍል (Grade 11N)')}</option>
+                <option value="12">{t3('Kutaa 12ffaa (Grade 12N)', 'Grade 12N', '12ኛ ክፍል (Grade 12N)')}</option>
               </select>
 
               {/* Program Filter */}
@@ -545,10 +580,10 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 onChange={(e) => setProgramFilter(e.target.value)}
                 className="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               >
-                <option value="all">ሁሉም ፕሮግራሞች</option>
-                <option value="secondary">አጠቃላይ 2ኛ ደረጃ (Secondary)</option>
-                <option value="remedial">የማካካሻ ትምህርት (Remedial)</option>
-                <option value="adult">የአዋቂዎች ትምህርት (Adult)</option>
+                <option value="all">{t3('Sagantaalee Hunda', 'All Programs', 'ሁሉም ፕሮግራሞች')}</option>
+                <option value="secondary">{t3('Sadarkaa 2ffaa Waliigalaa', 'General Secondary', 'አጠቃላይ 2ኛ ደረጃ (Secondary)')}</option>
+                <option value="remedial">{t3('Barnoota Gargaarsaa (Remedial)', 'Remedial Program', 'የማካካሻ ትምህርት (Remedial)')}</option>
+                <option value="adult">{t3('Barnoota Ga\'eessotaa (Adult)', 'Adult Education', 'የአዋቂዎች ትምህርት (Adult)')}</option>
               </select>
 
               {(searchQuery || gradeFilter !== 'all' || programFilter !== 'all') && (
@@ -562,7 +597,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   className="px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors inline-flex items-center gap-1"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span>አጽዳ</span>
+                  <span>{t3('Qulqulleessi', 'Clear', 'አጽዳ')}</span>
                 </button>
               )}
             </div>
@@ -574,9 +609,13 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
                 <Moon className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-800">ምንም የማታ ተማሪ አልተገኘም</h4>
+              <h4 className="text-sm font-bold text-slate-800">{t3('Barataan galgalaa homtuu hin argamne', 'No Night Students Found', 'ምንም የማታ ተማሪ አልተገኘም')}</h4>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                በተመረጠው ማጣሪያ ምንም ተማሪ የለም ወይም እስካሁን የማታ ተማሪ አልተመዘገበም።
+                {t3(
+                  'Calaltuu filatameen barataan hin jiru ykn ammaaf barataan galgalaa hin galmaa\'in jira.',
+                  'No students match the selected filters or none have been registered yet.',
+                  'በተመረጠው ማጣሪያ ምንም ተማሪ የለም ወይም እስካሁን የማታ ተማሪ አልተመዘገበም።'
+                )}
               </p>
               {!isBureauRole && (
                 <button
@@ -585,7 +624,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-950 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>አዲስ የማታ ተማሪ አስገባ</span>
+                  <span>{t3('Barataa Galgalaa Haaraa Dabali', 'Add Night Student', 'አዲስ የማታ ተማሪ አስገባ')}</span>
                 </button>
               )}
             </div>
@@ -612,11 +651,11 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                           <div>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-900 border border-indigo-200 inline-flex items-center gap-1">
                               <Moon className="w-2.5 h-2.5 text-indigo-700" />
-                              <span>ክፍል {st.grade} - {st.section} (ማታ)</span>
+                              <span>{t3('Kutaa', 'Grade', 'ክፍል')} {st.grade} - {st.section} ({t3('Galgala', 'Night', 'ማታ')})</span>
                             </span>
                             {st.stream && (
                               <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                {st.stream}
+                                {getStreamDisplay(st.stream)}
                               </span>
                             )}
                           </div>
@@ -635,7 +674,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                       <div className="mt-2.5 space-y-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs text-slate-600">
                         <div className="flex items-center gap-1.5 text-slate-800 font-semibold">
                           <Briefcase className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span className="truncate">{st.occupation || 'የግል ስራ (Self-Employed)'}</span>
+                          <span className="truncate">{st.occupation || t3('Hojii Dhuunfaa', 'Self-Employed', 'የግል ስራ (Self-Employed)')}</span>
                         </div>
                         {st.workplace && (
                           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 pl-5">
@@ -644,7 +683,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                         )}
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                           <Clock className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                          <span>{st.shiftSchedule || '11:30 - 3:00 ማታ'}</span>
+                          <span>{st.shiftSchedule || t3('11:30 - 3:00 Galgala', '5:30 - 9:00 PM', '11:30 - 3:00 ማታ')}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                           <Phone className="w-3.5 h-3.5 text-teal-600 shrink-0" />
@@ -658,14 +697,14 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-black border border-emerald-200 text-xs">
-                            {avg}% አማካይ
+                            {avg}% {t3('Giddugaleessa', 'Avg', 'አማካይ')}
                           </span>
                           <span className="text-[11px] text-slate-500">
-                            መገኘት፡ <strong className="text-slate-800">{st.attendanceRate}%</strong>
+                            {t3('Argamuu:', 'Attendance:', 'መገኘት፡')} <strong className="text-slate-800">{st.attendanceRate}%</strong>
                           </span>
                         </div>
                         <span className="text-[10px] font-mono text-slate-400">
-                          ኮድ: {st.accessCode}
+                          {t3('Koodii:', 'Code:', 'ኮድ:')} {st.accessCode}
                         </span>
                       </div>
 
@@ -676,7 +715,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
                         >
                           <CreditCard className="w-3.5 h-3.5 text-amber-300" />
-                          <span>የማታ መታወቂያ</span>
+                          <span>{t3('Waraqaa Eenyummaa Galgalaa', 'Night ID Card', 'የማታ መታወቂያ')}</span>
                         </button>
 
                         {onOpenReportCard && (
@@ -686,7 +725,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                             className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-colors"
                           >
                             <FileText className="w-3.5 h-3.5 text-emerald-700" />
-                            <span>ካርድ</span>
+                            <span>{t3('Kaardii', 'Report', 'ካርድ')}</span>
                           </button>
                         )}
                       </div>
@@ -708,10 +747,10 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
             <div>
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-600" />
-                <span>የማታ ክፍለ-ጊዜ ሰሌዳ (Evening Shift Timetable)</span>
+                <span>{t3('Sagantaa Wayitii Galgalaa (Evening Shift Timetable)', 'Evening Shift Timetable', 'የማታ ክፍለ-ጊዜ ሰሌዳ (Evening Shift Timetable)')}</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                ከሰኞ እስከ አርብ · ከ 11:30 - 3:00 ማታ (5:30 PM - 9:00 PM)
+                {t3('Wiixata hanga Jimaata · 11:30 - 3:00 Galgala (5:30 PM - 9:00 PM)', 'Mon - Fri · 5:30 PM - 9:00 PM', 'ከሰኞ እስከ አርብ · ከ 11:30 - 3:00 ማታ (5:30 PM - 9:00 PM)')}
               </p>
             </div>
 
@@ -723,7 +762,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 text-amber-300" />
-                  <span>ክፍለ-ጊዜ ጨምር</span>
+                  <span>{t3('Wayitii Dabali', 'Add Period', 'ክፍለ-ጊዜ ጨምር')}</span>
                 </button>
               )}
 
@@ -733,7 +772,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
               >
                 <Printer className="w-3.5 h-3.5 text-slate-600" />
-                <span>ሰሌዳውን አትም</span>
+                <span>{t3('Sagantaa Maxxansi', 'Print Timetable', 'ሰሌዳውን አትም')}</span>
               </button>
             </div>
           </div>
@@ -742,19 +781,19 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-3.5 rounded-2xl border border-indigo-900/60 shadow-xs">
               <div className="flex items-center justify-between text-indigo-200 text-xs font-bold mb-1">
-                <span>1ኛ ክፍለ-ጊዜ</span>
-                <span className="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-full font-mono">45 ደቂቃ</span>
+                <span>{t3('Wayitii 1ffaa', 'Period 1', '1ኛ ክፍለ-ጊዜ')}</span>
+                <span className="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-full font-mono">{t3('Daqiiqaa 45', '45 min', '45 ደቂቃ')}</span>
               </div>
-              <div className="text-base font-black text-amber-300">11:30 - 12:15 ማታ</div>
+              <div className="text-base font-black text-amber-300">{t3('11:30 - 12:15 Galgala', '5:30 - 6:15 PM', '11:30 - 12:15 ማታ')}</div>
               <div className="text-[11px] text-slate-400 mt-0.5 font-mono">5:30 PM - 6:15 PM</div>
             </div>
 
             <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-3.5 rounded-2xl border border-indigo-900/60 shadow-xs">
               <div className="flex items-center justify-between text-indigo-200 text-xs font-bold mb-1">
-                <span>2ኛ ክፍለ-ጊዜ</span>
-                <span className="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-full font-mono">45 ደቂቃ</span>
+                <span>{t3('Wayitii 2ffaa', 'Period 2', '2ኛ ክፍለ-ጊዜ')}</span>
+                <span className="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-full font-mono">{t3('Daqiiqaa 45', '45 min', '45 ደቂቃ')}</span>
               </div>
-              <div className="text-base font-black text-amber-300">12:20 - 1:05 ማታ</div>
+              <div className="text-base font-black text-amber-300">{t3('12:20 - 1:05 Galgala', '6:20 - 7:05 PM', '12:20 - 1:05 ማታ')}</div>
               <div className="text-[11px] text-slate-400 mt-0.5 font-mono">6:20 PM - 7:05 PM</div>
             </div>
 
@@ -762,20 +801,20 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               <div className="flex items-center justify-between text-amber-800 text-xs font-bold mb-1">
                 <span className="flex items-center gap-1">
                   <Coffee className="w-3.5 h-3.5 text-amber-600" />
-                  <span>የሻይና እረፍት ሰዓት</span>
+                  <span>{t3('Yeroo Boqonnaa fi Shaayii', 'Tea & Break Time', 'የሻይና እረፍት ሰዓት')}</span>
                 </span>
-                <span className="text-[10px] bg-amber-200/80 px-2 py-0.5 rounded-full font-mono">20 ደቂቃ</span>
+                <span className="text-[10px] bg-amber-200/80 px-2 py-0.5 rounded-full font-mono">{t3('Daqiiqaa 20', '20 min', '20 ደቂቃ')}</span>
               </div>
-              <div className="text-base font-black text-amber-950">1:05 - 1:25 ማታ</div>
-              <div className="text-[11px] text-amber-700 mt-0.5">ለሰራተኛና ተማሪዎች እረፍት</div>
+              <div className="text-base font-black text-amber-950">{t3('1:05 - 1:25 Galgala', '7:05 - 7:25 PM', '1:05 - 1:25 ማታ')}</div>
+              <div className="text-[11px] text-amber-700 mt-0.5">{t3('Boqonnaa hojjettootaa fi barattootaa', 'Break for workers & students', 'ለሰራተኛና ተማሪዎች እረፍት')}</div>
             </div>
 
             <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-3.5 rounded-2xl border border-indigo-900/60 shadow-xs">
               <div className="flex items-center justify-between text-indigo-200 text-xs font-bold mb-1">
-                <span>3ኛ እና 4ኛ ክፍለ-ጊዜ</span>
-                <span className="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-full font-mono">90 ደቂቃ</span>
+                <span>{t3('Wayitii 3ffaa fi 4ffaa', 'Periods 3 & 4', '3ኛ እና 4ኛ ክፍለ-ጊዜ')}</span>
+                <span className="text-[10px] bg-indigo-500/30 px-2 py-0.5 rounded-full font-mono">{t3('Daqiiqaa 90', '90 min', '90 ደቂቃ')}</span>
               </div>
-              <div className="text-base font-black text-amber-300">1:25 - 3:00 ማታ</div>
+              <div className="text-base font-black text-amber-300">{t3('1:25 - 3:00 Galgala', '7:25 - 9:00 PM', '1:25 - 3:00 ማታ')}</div>
               <div className="text-[11px] text-slate-400 mt-0.5 font-mono">7:25 PM - 9:00 PM</div>
             </div>
           </div>
@@ -786,13 +825,13 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               <table className="w-full text-left text-xs min-w-[700px]">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="px-4 py-3">ክፍለ-ጊዜ</th>
-                    <th className="px-4 py-3">የሰዓት እርከን (ማታ)</th>
-                    <th className="px-4 py-3">ክፍል እና ሴክሽን</th>
-                    <th className="px-4 py-3">የትምህርት አይነት</th>
-                    <th className="px-4 py-3">ተረኛ መምህር</th>
-                    <th className="px-4 py-3">የመማሪያ ክፍል</th>
-                    <th className="px-4 py-3">የሚሰጥባቸው ቀናት</th>
+                    <th className="px-4 py-3">{t3('Wayitii', 'Period', 'ክፍለ-ጊዜ')}</th>
+                    <th className="px-4 py-3">{t3('Sa\'aatii (Galgala)', 'Time Slot (Evening)', 'የሰዓት እርከን (ማታ)')}</th>
+                    <th className="px-4 py-3">{t3('Kutaa fi Garee', 'Grade & Section', 'ክፍል እና ሴክሽን')}</th>
+                    <th className="px-4 py-3">{t3('Gosa Barnootaa', 'Subject', 'የትምህርት አይነት')}</th>
+                    <th className="px-4 py-3">{t3('Barsiisaa', 'Teacher', 'ተረኛ መምህር')}</th>
+                    <th className="px-4 py-3">{t3('Kutaa Barnootaa', 'Classroom', 'የመማሪያ ክፍል')}</th>
+                    <th className="px-4 py-3">{t3('Guyyoota Kennamu', 'Days', 'የሚሰጥባቸው ቀናት')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -809,7 +848,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                       </td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-amber-300">
-                          Grade {item.grade} - {item.section}
+                          {t3('Kutaa', 'Grade', 'Grade')} {item.grade} - {item.section}
                         </span>
                       </td>
                       <td className="px-4 py-3 font-bold text-slate-900">
@@ -842,10 +881,14 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
             <div>
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-emerald-600" />
-                <span>የማታ ተማሪዎች የዕለት መገኘትና የበር መግቢያ ቁጥጥር</span>
+                <span>{t3('To\'annoo Argamuu Guyyaa fi Seensa Karraa Galgalaa', 'Night Students Daily Attendance & Gate Check-In', 'የማታ ተማሪዎች የዕለት መገኘትና የበር መግቢያ ቁጥጥር')}</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                ከስራ ዘግይተው የሚመጡ አዋቂዎችንና ቋሚ ተማሪዎችን የሰዓት መከታተያ
+                {t3(
+                  'Hordoffii yeroo ga\'eessota hojii irraa barfatanii dhufanii fi barattoota dhaabbataa',
+                  'Time tracking for working adults arriving from work and regular evening students',
+                  'ከስራ ዘግይተው የሚመጡ አዋቂዎችንና ቋሚ ተማሪዎችን የሰዓት መከታተያ'
+                )}
               </p>
             </div>
 
@@ -870,7 +913,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                     }}
                     className="px-3 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
-                    ሁሉንም በጊዜ ገብተዋል አድርግ
+                    {t3('Hunda yeroon seenaniiru godhi', 'Mark All On-Time', 'ሁሉንም በጊዜ ገብተዋል አድርግ')}
                   </button>
 
                   <button
@@ -879,13 +922,13 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                     className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <Check className="w-3.5 h-3.5 text-amber-300" />
-                    <span>የዛሬውን መገኘት መዝግብ</span>
+                    <span>{t3('Argamuu Har\'aa Galmeessi', 'Save Today\'s Attendance', 'የዛሬውን መገኘት መዝግብ')}</span>
                   </button>
                 </>
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold">
                   <Lock className="w-3.5 h-3.5 text-amber-800" />
-                  <span>የመገኘት መዝገብ ማየት ብቻ (Read-Only)</span>
+                  <span>{t3('Galmee argamuu ilaaluu qofa (Read-Only)', 'Attendance Read-Only', 'የመገኘት መዝገብ ማየት ብቻ (Read-Only)')}</span>
                 </div>
               )}
             </div>
@@ -894,7 +937,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           {attendanceSavedToast && (
             <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-900 font-bold flex items-center gap-2 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>የዛሬ የማታ ክፍለ-ጊዜ መገኘት በስኬት ተመዝግቧል!</span>
+              <span>{t3('Argamuun wayitii galgalaa har\'aa milkaa\'inaan galmaa\'eera!', 'Today\'s evening attendance recorded successfully!', 'የዛሬ የማታ ክፍለ-ጊዜ መገኘት በስኬት ተመዝግቧል!')}</span>
             </div>
           )}
 
@@ -903,11 +946,11 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               <table className="w-full text-left text-xs min-w-[650px]">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="px-4 py-3">የተማሪ ስም</th>
-                    <th className="px-4 py-3">ክፍል</th>
-                    <th className="px-4 py-3">የቀን ስራ / መስሪያ ቤት</th>
-                    <th className="px-4 py-3">የዛሬ መገኘት ሁኔታ</th>
-                    <th className="px-4 py-3">የመዘግየት ምክንያት (ካለ)</th>
+                    <th className="px-4 py-3">{t3('Maqaa Barataa', 'Student Name', 'የተማሪ ስም')}</th>
+                    <th className="px-4 py-3">{t3('Kutaa', 'Grade', 'ክፍል')}</th>
+                    <th className="px-4 py-3">{t3('Hojii Guyyaa / Waajjira', 'Occupation / Workplace', 'የቀን ስራ / መስሪያ ቤት')}</th>
+                    <th className="px-4 py-3">{t3('Haala Argamuu Har\'aa', 'Today\'s Attendance Status', 'የዛሬ መገኘት ሁኔታ')}</th>
+                    <th className="px-4 py-3">{t3('Sababa Barfachuu (yoo jiraate)', 'Late Reason (if any)', 'የመዘግየት ምክንያት (ካለ)')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -946,7 +989,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                               }`}
                             >
-                              ተገኝቷል (11:25)
+                              {t3('Argameera (11:25)', 'Present (5:25)', 'ተገኝቷል (11:25)')}
                             </button>
 
                             <button
@@ -956,7 +999,11 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                                 !isBureauRole &&
                                 setAttendanceLogs((prev) => ({
                                   ...prev,
-                                  [st.id]: { ...prev[st.id], status: 'late', lateReason: prev[st.id]?.lateReason || 'ከስራ መዘግየት' }
+                                  [st.id]: {
+                                    ...prev[st.id],
+                                    status: 'late',
+                                    lateReason: prev[st.id]?.lateReason || t3('Hojii irraa barfachuu', 'Late from work', 'ከስራ መዘግየት')
+                                  }
                                 }))
                               }
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
@@ -967,7 +1014,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                               }`}
                             >
-                              ዘግይቷል (11:50)
+                              {t3('Barfateera (11:50)', 'Late (5:50)', 'ዘግይቷል (11:50)')}
                             </button>
 
                             <button
@@ -988,7 +1035,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                               }`}
                             >
-                              ቀረ
+                              {t3('Hafeera', 'Absent', 'ቀረ')}
                             </button>
                           </div>
                         </td>
@@ -1005,7 +1052,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                                   [st.id]: { ...prev[st.id], lateReason: e.target.value }
                                 }))
                               }
-                              placeholder="ለምሳሌ፡ ከስራ መዘግየት..."
+                              placeholder={t3('Fkn: Hojii irraa barfachuu...', 'e.g. Delayed at work...', 'ለምሳሌ፡ ከስራ መዘግየት...')}
                               className="w-full px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none disabled:bg-slate-100 disabled:cursor-not-allowed"
                             />
                           )}
@@ -1028,32 +1075,32 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           {/* Header Seal */}
           <div className="text-center pb-6 border-b-2 border-slate-900 space-y-1.5">
             <div className="text-xs font-extrabold uppercase tracking-widest text-emerald-900">
-              የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · SHASHEMENE EDUCATION BUREAU
+              {t3('BIIROO BARNOOTAA BULCHIINSA MAGAALAA SHAASHAMANNEE · SHASHEMENE EDUCATION BUREAU', 'SHASHEMENE CITY ADMINISTRATION EDUCATION BUREAU', 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · SHASHEMENE EDUCATION BUREAU')}
             </div>
             <h3 className="text-lg sm:text-xl font-black text-slate-900">
-              የማታ እና የተከታታይ ትምህርት ፕሮግራም ይፋዊ የተማሪዎች ምዝገባ ሪፖርት
+              {t3('Gabaasa Galmee Barattoota Sagantaa Barnoota Galgalaa fi Walitti Fufaa', 'Official Evening & Continuing Education Enrollment Report', 'የማታ እና የተከታታይ ትምህርት ፕሮግራም ይፋዊ የተማሪዎች ምዝገባ ሪፖርት')}
             </h3>
             <p className="text-xs text-slate-600 font-medium">
-              የትምህርት ቤት ስም፡ <strong className="text-slate-900">{school.name}</strong> · የትምህርት ዘመን፡ 2016/2017 ዓ.ም
+              {t3('Maqaa Mana Barumsaa:', 'School Name:', 'የትምህርት ቤት ስም፡')} <strong className="text-slate-900">{school.name}</strong> · {t3('Bara Barnootaa: 2016/2017 A.L.I', 'Academic Year: 2024/2025', 'የትምህርት ዘመን፡ 2016/2017 ዓ.ም')}
             </p>
           </div>
 
           {/* Statistical Breakdown Table */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <span className="text-xs text-slate-500 font-bold block mb-1">ተመዝጋቢዎች ድምር</span>
+              <span className="text-xs text-slate-500 font-bold block mb-1">{t3('Waliigala Galmaa\'anii', 'Total Enrolled', 'ተመዝጋቢዎች ድምር')}</span>
               <span className="text-2xl font-black text-slate-900">{metrics.total}</span>
             </div>
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <span className="text-xs text-slate-500 font-bold block mb-1">ወንድ ተማሪዎች</span>
+              <span className="text-xs text-slate-500 font-bold block mb-1">{t3('Barattoota Dhiiraa', 'Male Students', 'ወንድ ተማሪዎች')}</span>
               <span className="text-2xl font-black text-indigo-900">{metrics.maleCount}</span>
             </div>
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <span className="text-xs text-slate-500 font-bold block mb-1">ሴት ተማሪዎች</span>
+              <span className="text-xs text-slate-500 font-bold block mb-1">{t3('Barattoota Dubaraa', 'Female Students', 'ሴት ተማሪዎች')}</span>
               <span className="text-2xl font-black text-teal-900">{metrics.femaleCount}</span>
             </div>
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <span className="text-xs text-slate-500 font-bold block mb-1">አማካይ የፈተና ውጤት</span>
+              <span className="text-xs text-slate-500 font-bold block mb-1">{t3('Qabxii Qormaata Giddugaleessaa', 'Average Exam Score', 'አማካይ የፈተና ውጤት')}</span>
               <span className="text-2xl font-black text-emerald-800">{metrics.avgScore}%</span>
             </div>
           </div>
@@ -1063,14 +1110,14 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
                 <tr>
-                  <th className="px-3.5 py-2.5">ተ.ቁ</th>
-                  <th className="px-3.5 py-2.5">የተማሪ ስም</th>
-                  <th className="px-3.5 py-2.5">መታወቂያ ቁጥር</th>
-                  <th className="px-3.5 py-2.5">ክፍል</th>
-                  <th className="px-3.5 py-2.5">ፆታ</th>
-                  <th className="px-3.5 py-2.5">የቀን ስራ / ሞያ</th>
-                  <th className="px-3.5 py-2.5">ስልክ ቁጥር</th>
-                  <th className="px-3.5 py-2.5">ውጤት</th>
+                  <th className="px-3.5 py-2.5">{t3('Lakk.', 'No.', 'ተ.ቁ')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Maqaa Barataa', 'Student Name', 'የተማሪ ስም')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Lakkoofsa Eenyummaa', 'ID Number', 'መታወቂያ ቁጥር')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Kutaa', 'Grade', 'ክፍል')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Saala', 'Gender', 'ፆታ')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Hojii Guyyaa / Ogummaa', 'Occupation', 'የቀን ስራ / ሞያ')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Lakkoofsa Bilbilaa', 'Phone', 'ስልክ ቁጥር')}</th>
+                  <th className="px-3.5 py-2.5">{t3('Qabxii', 'Score', 'ውጤት')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -1079,8 +1126,8 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                     <td className="px-3.5 py-2 font-mono">{idx + 1}</td>
                     <td className="px-3.5 py-2 font-bold text-slate-900">{st.fullName}</td>
                     <td className="px-3.5 py-2 font-mono">{st.studentIdNumber}</td>
-                    <td className="px-3.5 py-2 font-semibold">Grade {st.grade}-{st.section}</td>
-                    <td className="px-3.5 py-2">{st.gender === 'M' ? 'ወንድ' : 'ሴት'}</td>
+                    <td className="px-3.5 py-2 font-semibold">{t3('Kutaa', 'Grade', 'Grade')} {st.grade}-{st.section}</td>
+                    <td className="px-3.5 py-2">{st.gender === 'M' ? t3('Dhiira', 'Male', 'ወንድ') : t3('Dubara', 'Female', 'ሴት')}</td>
                     <td className="px-3.5 py-2">{st.occupation}</td>
                     <td className="px-3.5 py-2 font-mono">{st.parentPhone}</td>
                     <td className="px-3.5 py-2 font-black text-emerald-800">
@@ -1097,19 +1144,19 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
           {/* Signatures & Seal Block */}
           <div className="pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs text-slate-700">
             <div>
-              <span className="block text-slate-400 text-[10px] uppercase">የማታ ፕሮግራም አስተባባሪ</span>
-              <div className="font-bold text-slate-900 mt-1">አቶ ዳንኤል ንጉሴ</div>
-              <div className="text-[11px] text-slate-500">ፊርማ፡ _____________________</div>
+              <span className="block text-slate-400 text-[10px] uppercase">{t3('Qindeessaa Sagantaa Galgalaa', 'Night Program Coordinator', 'የማታ ፕሮግራም አስተባባሪ')}</span>
+              <div className="font-bold text-slate-900 mt-1">{t3('Obbo Daani\'eel Nugusee', 'Mr. Daniel Nigussie', 'አቶ ዳንኤል ንጉሴ')}</div>
+              <div className="text-[11px] text-slate-500">{t3('Mallattoo: _____________________', 'Signature: _____________________', 'ፊርማ፡ _____________________')}</div>
             </div>
             <div>
-              <span className="block text-slate-400 text-[10px] uppercase">የትምህርት ቤቱ ዋና ዳይሬክተር</span>
+              <span className="block text-slate-400 text-[10px] uppercase">{t3('Daayirektara Olaanaa Mana Barumsaa', 'School Principal', 'የትምህርት ቤቱ ዋና ዳይሬክተር')}</span>
               <div className="font-bold text-slate-900 mt-1">{school.principalName}</div>
-              <div className="text-[11px] text-slate-500">ፊርማና ማህተም፡ _______________</div>
+              <div className="text-[11px] text-slate-500">{t3('Mallattoo fi Chaappaa: _______________', 'Signature & Seal: _______________', 'ፊርማና ማህተም፡ _______________')}</div>
             </div>
             <div>
-              <span className="block text-slate-400 text-[10px] uppercase">የትምህርት ቢሮ ማረጋገጫ ቁጥር</span>
+              <span className="block text-slate-400 text-[10px] uppercase">{t3('Lakkoofsa Mirkaneessaa Biiroo', 'Bureau Verification No.', 'የትምህርት ቢሮ ማረጋገጫ ቁጥር')}</span>
               <div className="font-mono font-bold text-emerald-950 mt-1">SHAS-NGT-ACCRED-2024</div>
-              <div className="text-[11px] text-emerald-800 font-semibold">✓ በቢሮው ማህደር የጸደቀ</div>
+              <div className="text-[11px] text-emerald-800 font-semibold">{t3('✓ Galmee Biirootiin mirkanaa\'eera', '✓ Accredited in Bureau Registry', '✓ በቢሮው ማህደር የጸደቀ')}</div>
             </div>
           </div>
         </div>
@@ -1127,8 +1174,8 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   <Moon className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">አዲስ የማታ ተማሪ ምዝገባ</h3>
-                  <p className="text-xs text-slate-500">የ 2016/2017 ዓ.ም የማታ ትምህርት ፕሮግራም ቅበላ</p>
+                  <h3 className="text-base font-bold text-slate-900">{t3('Galmee Barataa Galgalaa Haaraa', 'New Night Student Registration', 'አዲስ የማታ ተማሪ ምዝገባ')}</h3>
+                  <p className="text-xs text-slate-500">{t3('Simannaa Sagantaa Barnoota Galgalaa 2016/2017 A.L.I', '2024/2025 Evening Program Admission', 'የ 2016/2017 ዓ.ም የማታ ትምህርት ፕሮግራም ቅበላ')}</p>
                 </div>
               </div>
               <button
@@ -1142,67 +1189,67 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
 
             <form onSubmit={handleRegisterNightStudent} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">የተማሪው ሙሉ ስም (Full Name) *</label>
+                <label className="text-xs font-bold text-slate-700">{t3('Maqaa Guutuu Barataa (Full Name) *', 'Student Full Name *', 'የተማሪው ሙሉ ስም (Full Name) *')}</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="ለምሳሌ፡ አቶ ከድር አህመድ ሁሴን"
+                  placeholder={t3('Fkn: Obbo Kadiir Ahmad Huseen', 'e.g. Kedir Ahmed Hussein', 'ለምሳሌ፡ አቶ ከድር አህመድ ሁሴን')}
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">ፆታ (Gender)</label>
+                  <label className="text-xs font-bold text-slate-700">{t3('Saala (Gender)', 'Gender', 'ፆታ (Gender)')}</label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as 'M' | 'F')}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
                   >
-                    <option value="M">ወንድ (Male)</option>
-                    <option value="F">ሴት (Female)</option>
+                    <option value="M">{t3('Dhiira (Male)', 'Male', 'ወንድ (Male)')}</option>
+                    <option value="F">{t3('Dubara (Female)', 'Female', 'ሴት (Female)')}</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">የክፍል ደረጃ (Grade)</label>
+                  <label className="text-xs font-bold text-slate-700">{t3('Sadarkaa Kutaa (Grade)', 'Grade Level', 'የክፍል ደረጃ (Grade)')}</label>
                   <select
                     value={grade}
                     onChange={(e) => setGrade(Number(e.target.value))}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
                   >
-                    <option value={9}>9ኛ ክፍል (Grade 9)</option>
-                    <option value={10}>10ኛ ክፍል (Grade 10)</option>
-                    <option value={11}>11ኛ ክፍል (Grade 11)</option>
-                    <option value={12}>12ኛ ክፍል (Grade 12)</option>
+                    <option value={9}>{t3('Kutaa 9ffaa (Grade 9)', 'Grade 9', '9ኛ ክፍል (Grade 9)')}</option>
+                    <option value={10}>{t3('Kutaa 10ffaa (Grade 10)', 'Grade 10', '10ኛ ክፍል (Grade 10)')}</option>
+                    <option value={11}>{t3('Kutaa 11ffaa (Grade 11)', 'Grade 11', '11ኛ ክፍል (Grade 11)')}</option>
+                    <option value={12}>{t3('Kutaa 12ffaa (Grade 12)', 'Grade 12', '12ኛ ክፍል (Grade 12)')}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">የማታ ሴክሽን</label>
+                  <label className="text-xs font-bold text-slate-700">{t3('Garee Galgalaa (Section)', 'Night Section', 'የማታ ሴክሽን')}</label>
                   <input
                     type="text"
                     value={section}
                     onChange={(e) => setSection(e.target.value)}
-                    placeholder="ለምሳሌ፡ N1, N2"
+                    placeholder={t3('Fkn: N1, N2', 'e.g. N1, N2', 'ለምሳሌ፡ N1, N2')}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
                   />
                 </div>
 
                 {grade >= 11 && (
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">የትምህርት መስክ (Stream)</label>
+                    <label className="text-xs font-bold text-slate-700">{t3('Damee Barnootaa (Stream)', 'Stream', 'የትምህርት መስክ (Stream)')}</label>
                     <select
                       value={stream}
                       onChange={(e) => setStream(e.target.value as any)}
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
                     >
-                      <option value="Natural">የተፈጥሮ ሳይንስ (Natural)</option>
-                      <option value="Social">ማህበራዊ ሳይንስ (Social)</option>
+                      <option value="Natural">{t3('Saayinsii Uumamaa (Natural)', 'Natural Science', 'የተፈጥሮ ሳይንስ (Natural)')}</option>
+                      <option value="Social">{t3('Saayinsii Hawaasaa (Social)', 'Social Science', 'ማህበራዊ ሳይንስ (Social)')}</option>
                     </select>
                   </div>
                 )}
@@ -1212,28 +1259,28 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                 <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <Briefcase className="w-3.5 h-3.5 text-amber-600" />
-                  <span>የስራና የሙያ መረጃ (Adult Employment Details)</span>
+                  <span>{t3('Odeeffannoo Hojii fi Ogummaa', 'Adult Employment Details', 'የስራና የሙያ መረጃ (Adult Employment Details)')}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-600">የቀን ስራ / ሞያ (Occupation)</label>
+                    <label className="text-[11px] font-semibold text-slate-600">{t3('Hojii Guyyaa / Ogummaa (Occupation)', 'Occupation', 'የቀን ስራ / ሞያ (Occupation)')}</label>
                     <input
                       type="text"
                       value={occupation}
                       onChange={(e) => setOccupation(e.target.value)}
-                      placeholder="ለምሳሌ፡ ነጋዴ፣ ጤና ባለሙያ፣ ሰራተኛ..."
+                      placeholder={t3('Fkn: Daldalaa, Ogeessa Fayyaa, Hojjetaa...', 'e.g. Trader, Health Worker, Staff...', 'ለምሳሌ፡ ነጋዴ፣ ጤና ባለሙያ፣ ሰራተኛ...')}
                       className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-slate-600">የስራ ቦታ / መስሪያ ቤት</label>
+                    <label className="text-[11px] font-semibold text-slate-600">{t3('Bakka Hojii / Waajjira', 'Workplace', 'የስራ ቦታ / መስሪያ ቤት')}</label>
                     <input
                       type="text"
                       value={workplace}
                       onChange={(e) => setWorkplace(e.target.value)}
-                      placeholder="ለምሳሌ፡ ሻሸመኔ አውቶቡስ ተራ"
+                      placeholder={t3('Fkn: Buufata Konkolaataa Shaashamannee', 'e.g. Shashemene Bus Station', 'ለምሳሌ፡ ሻሸመኔ አውቶቡስ ተራ')}
                       className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
                     />
                   </div>
@@ -1243,7 +1290,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               {/* Contacts */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">ስልክ ቁጥር (Phone)</label>
+                  <label className="text-xs font-bold text-slate-700">{t3('Lakkoofsa Bilbilaa (Phone)', 'Phone Number', 'ስልክ ቁጥር (Phone)')}</label>
                   <input
                     type="text"
                     required
@@ -1255,12 +1302,12 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">ተጠሪ / ባለቤት ስም (Contact Person)</label>
+                  <label className="text-xs font-bold text-slate-700">{t3('Maqaa Bakka Bu\'aa / Maatii', 'Contact Person', 'ተጠሪ / ባለቤት ስም (Contact Person)')}</label>
                   <input
                     type="text"
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}
-                    placeholder="ተጠሪ ወይም ወላጅ"
+                    placeholder={t3('Bakka bu\'aa ykn maatii', 'Guardian or parent', 'ተጠሪ ወይም ወላጅ')}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
                   />
                 </div>
@@ -1272,13 +1319,13 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   onClick={() => setShowAddStudentModal(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 rounded-xl"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-500 rounded-xl transition-all shadow-md"
                 >
-                  ተማሪውን መዝግብ እና መታወቂያ አዘጋጅ
+                  {t3('Barataa Galmeessii Waraqaa Eenyummaa Qopheessi', 'Register & Generate ID Card', 'ተማሪውን መዝግብ እና መታወቂያ አዘጋጅ')}
                 </button>
               </div>
             </form>
@@ -1295,7 +1342,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-indigo-700" />
-                <span>አዲስ የማታ ክፍለ-ጊዜ ሰሌዳ</span>
+                <span>{t3('Sagantaa Wayitii Galgalaa Haaraa', 'New Evening Class Schedule', 'አዲስ የማታ ክፍለ-ጊዜ ሰሌዳ')}</span>
               </h3>
               <button
                 type="button"
@@ -1308,35 +1355,35 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
 
             <form onSubmit={handleAddSchedulePeriod} className="space-y-3 text-xs">
               <div>
-                <label className="font-bold text-slate-700 block mb-1">ክፍለ-ጊዜ</label>
+                <label className="font-bold text-slate-700 block mb-1">{t3('Wayitii', 'Period', 'ክፍለ-ጊዜ')}</label>
                 <select
                   value={newPeriodNumber}
                   onChange={(e) => setNewPeriodNumber(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
                 >
-                  <option value={1}>1ኛ ክፍለ-ጊዜ (11:30 - 12:15 ማታ)</option>
-                  <option value={2}>2ኛ ክፍለ-ጊዜ (12:20 - 1:05 ማታ)</option>
-                  <option value={3}>3ኛ ክፍለ-ጊዜ (1:25 - 2:10 ማታ)</option>
-                  <option value={4}>4ኛ ክፍለ-ጊዜ (2:15 - 3:00 ማታ)</option>
+                  <option value={1}>{t3('Wayitii 1ffaa (11:30 - 12:15 Galgala)', 'Period 1 (5:30 - 6:15 PM)', '1ኛ ክፍለ-ጊዜ (11:30 - 12:15 ማታ)')}</option>
+                  <option value={2}>{t3('Wayitii 2ffaa (12:20 - 1:05 Galgala)', 'Period 2 (6:20 - 7:05 PM)', '2ኛ ክፍለ-ጊዜ (12:20 - 1:05 ማታ)')}</option>
+                  <option value={3}>{t3('Wayitii 3ffaa (1:25 - 2:10 Galgala)', 'Period 3 (7:25 - 8:10 PM)', '3ኛ ክፍለ-ጊዜ (1:25 - 2:10 ማታ)')}</option>
+                  <option value={4}>{t3('Wayitii 4ffaa (2:15 - 3:00 Galgala)', 'Period 4 (8:15 - 9:00 PM)', '4ኛ ክፍለ-ጊዜ (2:15 - 3:00 ማታ)')}</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">ክፍል</label>
+                  <label className="font-bold text-slate-700 block mb-1">{t3('Kutaa', 'Grade', 'ክፍል')}</label>
                   <select
                     value={newPeriodGrade}
                     onChange={(e) => setNewPeriodGrade(Number(e.target.value))}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
                   >
-                    <option value={9}>Grade 9</option>
-                    <option value={10}>Grade 10</option>
-                    <option value={11}>Grade 11</option>
-                    <option value={12}>Grade 12</option>
+                    <option value={9}>{t3('Kutaa 9', 'Grade 9', 'Grade 9')}</option>
+                    <option value={10}>{t3('Kutaa 10', 'Grade 10', 'Grade 10')}</option>
+                    <option value={11}>{t3('Kutaa 11', 'Grade 11', 'Grade 11')}</option>
+                    <option value={12}>{t3('Kutaa 12', 'Grade 12', 'Grade 12')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">ሴክሽን</label>
+                  <label className="font-bold text-slate-700 block mb-1">{t3('Garee', 'Section', 'ሴክሽን')}</label>
                   <input
                     type="text"
                     value={newPeriodSection}
@@ -1347,32 +1394,32 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">የትምህርት አይነት</label>
+                <label className="font-bold text-slate-700 block mb-1">{t3('Gosa Barnootaa', 'Subject', 'የትምህርት አይነት')}</label>
                 <input
                   type="text"
                   required
                   value={newPeriodSubject}
                   onChange={(e) => setNewPeriodSubject(e.target.value)}
-                  placeholder="ለምሳሌ፡ Mathematics"
+                  placeholder={t3('Fkn: Mathematics', 'e.g. Mathematics', 'ለምሳሌ፡ Mathematics')}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">ተረኛ መምህር</label>
+                <label className="font-bold text-slate-700 block mb-1">{t3('Barsiisaa Dabaree', 'Assigned Teacher', 'ተረኛ መምህር')}</label>
                 <input
                   type="text"
                   required
                   value={newPeriodTeacher}
                   onChange={(e) => setNewPeriodTeacher(e.target.value)}
-                  placeholder="ለምሳሌ፡ መ/ር በፈቃዱ ጥላሁን"
+                  placeholder={t3('Fkn: Barsiisaa Bafaqaaduu Xilaahun', 'e.g. Teacher Befekadu Tilahun', 'ለምሳሌ፡ መ/ር በፈቃዱ ጥላሁን')}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">የክፍል ቁጥር</label>
+                  <label className="font-bold text-slate-700 block mb-1">{t3('Lakkoofsa Kutaa', 'Room Number', 'የክፍል ቁጥር')}</label>
                   <input
                     type="text"
                     value={newPeriodRoom}
@@ -1381,7 +1428,7 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">የሚሰጥባቸው ቀናት</label>
+                  <label className="font-bold text-slate-700 block mb-1">{t3('Guyyoota Kennamu', 'Days of Week', 'የሚሰጥባቸው ቀናት')}</label>
                   <input
                     type="text"
                     value={newPeriodDays}
@@ -1397,13 +1444,13 @@ export const NightSchoolDesk: React.FC<NightSchoolDeskProps> = ({
                   onClick={() => setShowAddScheduleModal(false)}
                   className="px-3 py-1.5 bg-slate-100 rounded-xl font-bold text-slate-700"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-1.5 bg-indigo-900 text-white rounded-xl font-bold"
                 >
-                  መዝግብ
+                  {t3('Galmeessi', 'Save', 'መዝግብ')}
                 </button>
               </div>
             </form>

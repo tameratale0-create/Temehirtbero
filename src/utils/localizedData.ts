@@ -12,7 +12,11 @@ import {
   StudentDisciplineReport,
   BureauStandardCriteria,
   SchoolBankAccount,
-  NightClassScheduleItem
+  NightClassScheduleItem,
+  TeacherEvaluationRecord,
+  TeacherEvaluationSummary,
+  AcademicGradeWorkflowBatch,
+  StudentReportNotification
 } from '../types';
 import { SchoolUserCode } from './storage';
 
@@ -968,6 +972,22 @@ const OROMO_SCHOOL_CODES: Record<
   'sc-8': {
     fullName: 'Obbo Daan\'el Nigusee (Reejistiraara Barattootaa)',
     assignedClassOrSubject: 'Simannaa fi Galmee Barattootaa'
+  },
+  'sc-night-1': {
+    fullName: 'Obbo Huseen Abdullaahii Umar (Barataa Galgalaa)',
+    assignedClassOrSubject: 'Kutaa 10ffaa Daree N1 (Galgala)'
+  },
+  'sc-night-2': {
+    fullName: 'Adde Faaxumaa Huseen (Wabii / Maatii Huseen)',
+    assignedClassOrSubject: 'Wabii Huseen Abdullaahii (10-N1)'
+  },
+  'sc-night-3': {
+    fullName: 'Aaddee Raddiyyet Tafarraa Mogas (Barattuu Galgalaa)',
+    assignedClassOrSubject: 'Kutaa 11ffaa Daree N1 Social (Galgala)'
+  },
+  'sc-night-4': {
+    fullName: 'Obbo Gamachuu Baqqalaa Diidaa (Barataa Galgalaa)',
+    assignedClassOrSubject: 'Kutaa 12ffaa Daree N1 Natural (Galgala)'
   }
 };
 
@@ -977,11 +997,12 @@ export const getLocalizedSchoolCode = (
 ): SchoolUserCode => {
   if (!isOromo(lang)) return code;
   const oromo = OROMO_SCHOOL_CODES[code.id];
-  if (!oromo) return code;
+  const locSchool = OROMO_SCHOOL_DATA[code.schoolId];
   return {
     ...code,
-    fullName: oromo.fullName,
-    assignedClassOrSubject: oromo.assignedClassOrSubject
+    schoolName: locSchool ? locSchool.name : code.schoolName,
+    fullName: oromo ? oromo.fullName : code.fullName,
+    assignedClassOrSubject: oromo ? oromo.assignedClassOrSubject : code.assignedClassOrSubject
   };
 };
 
@@ -1094,3 +1115,260 @@ export const getLocalizedNightScheduleList = (
 ): NightClassScheduleItem[] => {
   return list.map((item) => getLocalizedNightSchedule(item, lang));
 };
+
+// =========================================================================
+// 15. TEACHER EVALUATIONS & SUMMARIES LOCALIZATION
+// =========================================================================
+const OROMO_EVALUATIONS: Record<
+  string,
+  {
+    teacherName: string;
+    schoolName: string;
+    subject: string;
+    academicYear: string;
+    strengthsFeedback: string;
+    improvementAreas: string;
+    recommendations: string;
+    evaluatorName?: string;
+    evaluatorParentName?: string;
+    bureauDecisionNotes?: string;
+  }
+> = {
+  'te-1': {
+    teacherName: 'B/saa Bafqaaduu Xilahun (Befekadu Tilahun)',
+    schoolName: 'Mana Barumsa Sadarkaa 2ffaa Waliigalaa Shashamannee',
+    subject: 'Herrega (Mathematics)',
+    academicYear: 'Bara Barnootaa 2016/2017',
+    strengthsFeedback:
+      'Herrega kaalkulasii fi tirigoonoomeetirii fakkeenya ifaa fi salphaa ta\'een barsiisa; gaaffii barattootaaf obsa olaanaa qaba.',
+    improvementAreas: 'Hojii garee dabalataa yoo baay\'ise caalaatti fayyada.',
+    recommendations:
+      'Barsiisaan kun jaalala ogummaa olaanaa waan qabuuf badhaasa fi guddina sadarkaa Biiroo Barnootaatiif kaadhimamaa ta\'uu qaba.',
+    evaluatorName: 'Kiyaar Kadiir Alii',
+    bureauDecisionNotes: 'Kaadhimamaa badhaasa fi jajjabina barsiisota Biiroo Barnootaa keessatti qabameera.'
+  },
+  'te-2': {
+    teacherName: 'B/saa Bafqaaduu Xilahun (Befekadu Tilahun)',
+    schoolName: 'Mana Barumsa Sadarkaa 2ffaa Waliigalaa Shashamannee',
+    subject: 'Herrega (Mathematics)',
+    academicYear: 'Bara Barnootaa 2016/2017',
+    strengthsFeedback:
+      'Ilmi koo sodaa herregaaf qabu dhabamsiiseera; hojii manaa walirraa hin cinne kenna.',
+    improvementAreas: 'Hojii manaa qormaatatti osoo hin dhiyaatin dafee yoo deebise gaarii dha.',
+    recommendations: 'Barsiisaa cimaa fi hojii jaallatu dha.',
+    evaluatorParentName: 'Maatii Barataa',
+    bureauDecisionNotes: 'Faayila mirkaneessa haaromsa hayyama barsiisummaa keessatti hammatameera.'
+  },
+  'te-3': {
+    teacherName: 'B/ttii Salaamawit Taaddasaa (Selamawit Tadese)',
+    schoolName: 'Mana Barumsa Sadarkaa 2ffaa Waliigalaa Shashamannee',
+    subject: 'Afaan Oromoo',
+    academicYear: 'Bara Barnootaa 2016/2017',
+    strengthsFeedback:
+      'Barsiistuun kun ogummaa fi beekumsa Afaan Oromoo olaanaa qabdi. Barattoota hunda wal-qixa jajjabeessiti.',
+    improvementAreas: 'Barsiisa gaariidha, rakkoo hin qabdu.',
+    recommendations: 'Biiroon Barnootaa badhaasa barsiistuu fakkeenyaa akka kennuuf gaafanna.',
+    evaluatorName: 'Caaltuu Guutamaa',
+    bureauDecisionNotes: 'Kaadhimamaa barsiistuu ciccimoo waggaa ta\'uun galmoofteetti.'
+  },
+  'te-4': {
+    teacherName: 'B/saa Tolasaa Guutamaa (Tolosa Gutema)',
+    schoolName: 'Mana Barumsa Sadarkaa 2ffaa Kuyyaraa',
+    subject: 'Fiiziksii (Physics)',
+    academicYear: 'Bara Barnootaa 2016/2017',
+    strengthsFeedback:
+      'Shaakala laabiraatoorii fiiziksii qabatamaan agarsiisa; beekumsa gadi-fagoo qaba.',
+    improvementAreas: 'Barattoota suuta hubatan illee xiyyeeffannoo dabalataa kennuufii qaba.',
+    recommendations: 'Guddinni sadarkaa isaaf mala.',
+    evaluatorName: 'Gamachuu Taayyee',
+    bureauDecisionNotes: 'Yeroo mirkaneessa sadarkaa Biirootti tilmaama keessa akka galu taasifameera.'
+  }
+};
+
+export const getLocalizedTeacherEvaluation = (
+  ev: TeacherEvaluationRecord,
+  lang?: Language
+): TeacherEvaluationRecord => {
+  if (!isOromo(lang)) return ev;
+  const oromo = OROMO_EVALUATIONS[ev.id];
+  if (!oromo) {
+    const locSch = OROMO_SCHOOL_DATA[ev.schoolId];
+    return {
+      ...ev,
+      schoolName: locSch ? locSch.name : ev.schoolName,
+      subject: OROMO_SUBJECT_MAP[ev.subject] || ev.subject
+    };
+  }
+  return {
+    ...ev,
+    teacherName: oromo.teacherName,
+    schoolName: oromo.schoolName,
+    subject: oromo.subject,
+    academicYear: oromo.academicYear,
+    strengthsFeedback: oromo.strengthsFeedback,
+    improvementAreas: oromo.improvementAreas,
+    recommendations: oromo.recommendations,
+    evaluatorName: oromo.evaluatorName || ev.evaluatorName,
+    evaluatorParentName: oromo.evaluatorParentName || ev.evaluatorParentName,
+    bureauDecisionNotes: oromo.bureauDecisionNotes || ev.bureauDecisionNotes
+  };
+};
+
+export const getLocalizedTeacherEvaluations = (
+  list: TeacherEvaluationRecord[],
+  lang?: Language
+): TeacherEvaluationRecord[] => {
+  return list.map((ev) => getLocalizedTeacherEvaluation(ev, lang));
+};
+
+export const getLocalizedTeacherSummaries = (
+  summaries: TeacherEvaluationSummary[],
+  lang?: Language
+): TeacherEvaluationSummary[] => {
+  if (!isOromo(lang)) return summaries;
+  return summaries.map((sum) => {
+    const matchedEval = Object.values(OROMO_EVALUATIONS).find(
+      (o) =>
+        (sum.teacherId === 'tc-1' && o.teacherName.includes('Bafqaaduu')) ||
+        (sum.teacherId === 'tc-2' && o.teacherName.includes('Salaamawit')) ||
+        (sum.teacherId === 'tc-3' && o.teacherName.includes('Tolasaa'))
+    );
+    const localizedSchoolName =
+      matchedEval?.schoolName ||
+      (sum.schoolName.includes('ሻሸመኔ')
+        ? OROMO_SCHOOL_DATA['sch-1'].name
+        : sum.schoolName.includes('ቁዬራ')
+        ? OROMO_SCHOOL_DATA['sch-4'].name
+        : sum.schoolName);
+    return {
+      ...sum,
+      teacherName: matchedEval ? matchedEval.teacherName : sum.teacherName,
+      schoolName: localizedSchoolName,
+      subject: OROMO_SUBJECT_MAP[sum.subject] || (matchedEval ? matchedEval.subject : sum.subject)
+    };
+  });
+};
+
+// =========================================================================
+// 16. GRADE WORKFLOW BATCHES & REPORT NOTIFICATIONS LOCALIZATION
+// =========================================================================
+const OROMO_WORKFLOW_NAMES: Record<string, string> = {
+  'st-01': 'Kiyaar Kadiir Alii',
+  'st-04': 'Caaltuu Guutamaa Waaqoo',
+  'st-03': 'Hanaan Rashiid Umar',
+  'st-05': 'Tolasaa Guutamaa Baqqalaa',
+  'st-02': 'Yoonaas Xilahun Tashoomee',
+  'st-06': 'Amiinaa Nuurii Hasan',
+  'st-07': 'Gamachuu Taayyee Ayyalaa'
+};
+
+const OROMO_WORKFLOW_META: Record<
+  string,
+  {
+    periodLabel: string;
+    subject: string;
+    teacherName: string;
+    teacherNotes?: string;
+    homeroomTeacherName: string;
+    homeroomRemarks?: string;
+    directorName?: string;
+    directorFeedback?: string;
+    topStudentName: string;
+  }
+> = {
+  'gw-1': {
+    periodLabel: 'Semisteera 1ffaa (Semester 1)',
+    subject: 'Qabxii Waliigalaa Gosa Barnootaa Hundaa (All Subjects Compiled)',
+    teacherName: 'B/saa Bafqaaduu Xilahun (Herrega)',
+    teacherNotes: 'Qabxiin Herrega, Ingiliffaa fi Saayinsii Kutaa 10A hammatameera.',
+    homeroomTeacherName: 'B/ttii Salaamawit Taaddasaa (Itti-Gaafatamtuu Kutaa)',
+    homeroomRemarks:
+      'Qabxiin barattoota Kutaa 10A hundi qindaa\'ee naamusaafi argamuu barattootaa mirkaneesseera.',
+    directorName: 'Obbo Guutamaa Waaqoo (Daarektara)',
+    directorFeedback:
+      'Qabxiin Waajjira Daarektaraan of eeggannoon ilaalamee mirkanaa\'ee maatiif, barattootaa fi Biiroo Barnootaaf ifoomeera.',
+    topStudentName: 'Kiyaar Kadiir Alii'
+  },
+  'gw-2': {
+    periodLabel: 'Semisteera 1ffaa (Semester 1)',
+    subject: 'Qabxii Kutaa 10B Qindaa\'e (Compiled)',
+    teacherName: 'B/saa Tolasaa Guutamaa (Fiiziksii)',
+    homeroomTeacherName: 'B/saa Daarbee Galataa (Itti-Gaafatamaa Kutaa)',
+    homeroomRemarks:
+      'Qabxiin barattoota Kutaa 10B hundi sassaabamee qindaa\'ee Daarektarri akka mirkaneessu dhiyaateera.',
+    topStudentName: 'Yoonaas Xilahun'
+  },
+  'gw-3': {
+    periodLabel: 'Kurmaana 2ffaa (Quarter 2)',
+    subject: 'Herrega (Mathematics)',
+    teacherName: 'B/saa Bafqaaduu Xilahun',
+    teacherNotes: 'Quiz 1 (10%) fi Quiz 2 (10%) Kurmaana 2ffaa B/ttii Salaamawit Taaddasaaf ergameera.',
+    homeroomTeacherName: 'B/ttii Salaamawit Taaddasaa (Itti-Gaafatamtuu Kutaa)',
+    topStudentName: 'Kiyaar Kadiir Alii'
+  }
+};
+
+export const getLocalizedGradeWorkflows = (
+  batches: AcademicGradeWorkflowBatch[],
+  lang?: Language
+): AcademicGradeWorkflowBatch[] => {
+  if (!isOromo(lang)) return batches;
+  return batches.map((b) => {
+    const meta = OROMO_WORKFLOW_META[b.id];
+    const locSchool = OROMO_SCHOOL_DATA[b.schoolId];
+    return {
+      ...b,
+      schoolName: locSchool ? locSchool.name : b.schoolName,
+      academicYear: b.academicYear.replace('ዓ.ም', 'B.B.'),
+      periodLabel: meta ? meta.periodLabel : b.periodLabel,
+      subject: meta ? meta.subject : OROMO_SUBJECT_MAP[b.subject] || b.subject,
+      teacherName: meta ? meta.teacherName : b.teacherName,
+      teacherNotes: meta?.teacherNotes ?? b.teacherNotes,
+      homeroomTeacherName: meta ? meta.homeroomTeacherName : b.homeroomTeacherName,
+      homeroomRemarks: meta?.homeroomRemarks ?? b.homeroomRemarks,
+      directorName: meta?.directorName ?? b.directorName,
+      directorFeedback: meta?.directorFeedback ?? b.directorFeedback,
+      topStudentName: meta ? meta.topStudentName : b.topStudentName,
+      entries: b.entries.map((ent) => ({
+        ...ent,
+        studentName: OROMO_WORKFLOW_NAMES[ent.studentId] || ent.studentName,
+        remarks:
+          ent.remarks && ent.remarks.includes('እጅግ')
+            ? 'Gahumsa barnootaa fi naamusa olaanaa qaba.'
+            : ent.remarks && ent.remarks.includes('ንቁ')
+            ? 'Hirmaattuu cimaa fi barattuu fakkeenyaa dha.'
+            : ent.remarks && ent.remarks.includes('በጣም')
+            ? 'Qabxii baay\'ee gaarii galmeessisteetti.'
+            : ent.remarks && ent.remarks.includes('ጥሩ')
+            ? 'Hirmaannaa gaarii qaba.'
+            : ent.remarks
+      }))
+    };
+  });
+};
+
+export const getLocalizedStudentReportNotifications = (
+  notifs: StudentReportNotification[],
+  lang?: Language
+): StudentReportNotification[] => {
+  if (!isOromo(lang)) return notifs;
+  return notifs.map((n) => {
+    const locSch = OROMO_SCHOOL_DATA[n.schoolId];
+    if (n.id === 'notif-init-1') {
+      return {
+        ...n,
+        schoolName: locSch ? locSch.name : n.schoolName,
+        academicYear: '2016/2017 B.B.',
+        periodLabel: 'Semisteera 1ffaa (Semester 1)',
+        directorName: 'Obbo Guutamaa Waaqoo (Daarektara)',
+        message:
+          'Gabaasni qabxii barattootaa Seemisteera 1ffaa Kutaa 10A Daarektara Olaanaa Obbo Guutamaa Waaqootiin mirkanaa\'ee chaappaa dijitaalaa argateera! Amma poortaala keessaniin seenuun kaardii qabxii ilaaluu fi maxxansuun ni danda\'ama.'
+      };
+    }
+    return {
+      ...n,
+      schoolName: locSch ? locSch.name : n.schoolName
+    };
+  });
+};
+

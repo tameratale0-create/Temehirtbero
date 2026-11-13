@@ -28,9 +28,16 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
   currentLang,
   credentials,
   onCredentialsChange,
-  currentOfficerName = 'የቢሮ ኢንስፔክተር'
+  currentOfficerName
 }) => {
   const t = translations[currentLang];
+  const officerName =
+    currentOfficerName ||
+    (currentLang === 'om'
+      ? 'Inispeektara Biiroo'
+      : currentLang === 'en'
+      ? 'Bureau Inspector'
+      : 'የቢሮ ኢንስፔክተር');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'verified' | 'pending' | 'flagged'>('all');
@@ -41,7 +48,13 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
   // New credential registration state
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTeacherName, setNewTeacherName] = useState('');
-  const [newSchoolName, setNewSchoolName] = useState('ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት');
+  const [newSchoolName, setNewSchoolName] = useState(
+    currentLang === 'om'
+      ? 'Mana Barumsaa Sadarkaa 2ffaa Waliigalaa Shaashamannee'
+      : currentLang === 'en'
+      ? 'Shashemene Comprehensive Secondary School'
+      : 'ሻሸመኔ አጠቃላይ 2ኛ ደረጃ ትምህርት ቤት'
+  );
   const [newSubject, setNewSubject] = useState('');
   const [newQualification, setNewQualification] = useState<'Diploma' | 'Degree' | 'Masters' | 'PhD'>('Degree');
   const [newInstitution, setNewInstitution] = useState('');
@@ -64,7 +77,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
     const updated = StorageService.updateCredentialStatus(
       id,
       newStatus,
-      currentOfficerName,
+      officerName,
       auditNotes || undefined
     );
     onCredentialsChange(updated);
@@ -90,9 +103,14 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
       licenseNumber: generatedLicense,
       experienceYears: Number(newExperience),
       verificationStatus: 'verified',
-      verifiedBy: currentOfficerName,
+      verifiedBy: officerName,
       verificationDate: new Date().toISOString().split('T')[0],
-      notes: 'በትምህርት ቢሮ በቀጥታ ተረጋግጦ የተመዘገበ።'
+      notes:
+        currentLang === 'om'
+          ? 'Kallattiin Biiroo Barnootaatiin mirkanaa\'ee galmaa\'eera.'
+          : currentLang === 'en'
+          ? 'Directly verified and registered by the Education Bureau.'
+          : 'በትምህርት ቢሮ በቀጥታ ተረጋግጦ የተመዘገበ።'
     };
 
     const updated = StorageService.addCredential(newEntry);
@@ -120,7 +138,13 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
           }`}
         >
           <FileCheck className="w-4 h-4 text-sky-300" />
-          <span>የመምህራን ማስረጃና ፈቃድ ቁጥጥር (Credentials & Licenses)</span>
+          <span>
+            {currentLang === 'om'
+              ? 'To’annoo Ragaalee & Hayyama Barsiisotaa (Credentials)'
+              : currentLang === 'en'
+              ? 'Teacher Credentials & Licenses Audit'
+              : 'የመምህራን ማስረጃና ፈቃድ ቁጥጥር (Credentials & Licenses)'}
+          </span>
           <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeBureauDeskTab === 'credentials' ? 'bg-emerald-950 text-white' : 'bg-slate-200 text-slate-700'}`}>
             {credentials.length}
           </span>
@@ -136,9 +160,15 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
           }`}
         >
           <Star className="w-4 h-4 fill-slate-950 text-slate-950" />
-          <span>የተማሪና ወላጅ ግምገማዎች (Teacher Appraisal Desk)</span>
+          <span>
+            {currentLang === 'om'
+              ? 'Madaallii Barattootaa fi Maatii (Teacher Appraisal)'
+              : currentLang === 'en'
+              ? 'Student & Parent Teacher Appraisals'
+              : 'የተማሪና ወላጅ ግምገማዎች (Teacher Appraisal Desk)'}
+          </span>
           <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-200 text-slate-900 font-black">
-            60 ማርክ
+            {currentLang === 'om' ? 'Qabxii 60' : currentLang === 'en' ? '60 Pts' : '60 ማርክ'}
           </span>
         </button>
       </div>
@@ -146,14 +176,13 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
       {activeBureauDeskTab === 'appraisal' ? (
         <BureauTeacherAppraisalView
           currentLang={currentLang}
-          currentUser={{ role: 'bureau_admin', name: currentOfficerName, identifier: 'officer', accessCode: 'bureau_admin' }}
+          currentUser={{ role: 'bureau_admin', name: officerName, identifier: 'officer', accessCode: 'bureau_admin' }}
           schools={StorageService.getSchools()}
         />
       ) : (
         <>
           {/* =========================================================================
-              🌟 CREDENTIALS AUDIT TOP ACTION TOOLBAR: All actions unified at the top!
-              "ሁሉም በየራሱ ገፅ ላይ ያሉ በተን ሳይዘበራረቅ ከላይ እንዲቀመጥ"
+              🌟 CREDENTIALS AUDIT TOP ACTION TOOLBAR
              ========================================================================= */}
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
@@ -167,7 +196,8 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                   {t.cred_title} (Teacher Credentials Audit)
                 </h2>
                 <span className="text-xs text-sky-900 bg-sky-100 px-2.5 py-0.5 rounded-full border border-sky-300 font-bold">
-                  {filtered.length} / {credentials.length} መምህራን
+                  {filtered.length} / {credentials.length}{' '}
+                  {currentLang === 'om' ? 'Barsiisota' : currentLang === 'en' ? 'Teachers' : 'መምህራን'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">{t.cred_desc}</p>
@@ -179,14 +209,20 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
               type="button"
               onClick={() => window.print()}
               className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              title="የማስረጃዎች ኦዲት ዝርዝር አትም"
+              title={currentLang === 'om' ? 'Tarree Odiitii Ragaalee Maxxansi' : currentLang === 'en' ? 'Print Credentials Audit List' : 'የማስረጃዎች ኦዲት ዝርዝር አትም'}
             >
-              <span>ኦዲት አትም</span>
+              <span>{currentLang === 'om' ? 'Odiitii Maxxansi' : currentLang === 'en' ? 'Print Audit' : 'ኦዲት አትም'}</span>
             </button>
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-sky-900 border border-sky-300 rounded-xl text-xs font-bold">
               <ShieldCheck className="w-4 h-4 text-sky-700" />
-              <span>ከትምህርት ቤቶች የተላኩ (ማየትና ማረጋገጥ ብቻ)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Manneen Barnootaarraa Kan Ergame (Ilaaluu & Mirkaneessuu Qofa)'
+                  : currentLang === 'en'
+                  ? 'Submitted by Schools (Review & Verify Only)'
+                  : 'ከትምህርት ቤቶች የተላኩ (ማየትና ማረጋገጥ ብቻ)'}
+              </span>
             </div>
           </div>
         </div>
@@ -199,7 +235,13 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="የመምህሩ ስም፣ የትምህርት አይነት፣ ዩኒቨርሲቲ ወይም ፈቃድ ቁጥር ፈልግ..."
+              placeholder={
+                currentLang === 'om'
+                  ? 'Maqaa barsiisaa, gosa barnootaa, yuunivarsiitii ykn lakk. hayyamaa barbaadi...'
+                  : currentLang === 'en'
+                  ? 'Search teacher name, subject, university, or license number...'
+                  : 'የመምህሩ ስም፣ የትምህርት አይነት፣ ዩኒቨርሲቲ ወይም ፈቃድ ቁጥር ፈልግ...'
+              }
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-sky-600 focus:outline-hidden font-medium"
             />
             {searchTerm && (
@@ -223,7 +265,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
               }`}
             >
-              ሁሉም ({credentials.length})
+              {currentLang === 'om' ? 'Hunda' : currentLang === 'en' ? 'All' : 'ሁሉም'} ({credentials.length})
             </button>
             <button
               onClick={() => setStatusFilter('verified')}
@@ -233,7 +275,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                   : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800'
               }`}
             >
-              የተረጋገጡ ({credentials.filter((c) => c.verificationStatus === 'verified').length})
+              {currentLang === 'om' ? 'Mirkanaa’an' : currentLang === 'en' ? 'Verified' : 'የተረጋገጡ'} ({credentials.filter((c) => c.verificationStatus === 'verified').length})
             </button>
             <button
               onClick={() => setStatusFilter('pending')}
@@ -243,7 +285,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                   : 'bg-amber-50 hover:bg-amber-100 text-amber-800'
               }`}
             >
-              በመጠባበቅ ({credentials.filter((c) => c.verificationStatus === 'pending').length})
+              {currentLang === 'om' ? 'Eeggannoo Irra' : currentLang === 'en' ? 'Pending' : 'በመጠባበቅ'} ({credentials.filter((c) => c.verificationStatus === 'pending').length})
             </button>
             <button
               onClick={() => setStatusFilter('flagged')}
@@ -253,7 +295,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                   : 'bg-rose-50 hover:bg-rose-100 text-rose-800'
               }`}
             >
-              ጥያቄ ያለባቸው ({credentials.filter((c) => c.verificationStatus === 'flagged').length})
+              {currentLang === 'om' ? 'Gaaffii Qaban' : currentLang === 'en' ? 'Flagged' : 'ጥያቄ ያለባቸው'} ({credentials.filter((c) => c.verificationStatus === 'flagged').length})
             </button>
           </div>
         </div>
@@ -272,7 +314,9 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                 <th className="px-4 py-3.5">{t.cred_institution}</th>
                 <th className="px-4 py-3.5">{t.cred_license}</th>
                 <th className="px-4 py-3.5">{t.cred_status}</th>
-                <th className="px-4 py-3.5 text-right">ተግባር (Action)</th>
+                <th className="px-4 py-3.5 text-right">
+                  {currentLang === 'om' ? 'Gocha (Action)' : currentLang === 'en' ? 'Action' : 'ተግባር (Action)'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -286,14 +330,20 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                     <td className="px-4 py-3.5 font-semibold text-slate-900">
                       {cred.teacherName}
                       <span className="block text-[10px] text-slate-400 font-normal">
-                        ልምድ: {cred.experienceYears} ዓመት
+                        {currentLang === 'om'
+                          ? `Muuxannoo: Waggaa ${cred.experienceYears}`
+                          : currentLang === 'en'
+                          ? `Exp: ${cred.experienceYears} yrs`
+                          : `ልምድ: ${cred.experienceYears} ዓመት`}
                       </span>
                     </td>
                     <td className="px-4 py-3.5">{cred.schoolName}</td>
                     <td className="px-4 py-3.5 font-medium text-emerald-900">{cred.subject}</td>
                     <td className="px-4 py-3.5">
                       <span className="font-semibold text-slate-800">{cred.qualification}</span>
-                      <span className="text-[10px] text-slate-400 block">({cred.graduationYear} ዓ.ም)</span>
+                      <span className="text-[10px] text-slate-400 block">
+                        ({cred.graduationYear} {currentLang === 'om' ? 'A.L.I' : currentLang === 'en' ? 'E.C.' : 'ዓ.ም'})
+                      </span>
                     </td>
                     <td className="px-4 py-3.5">{cred.institution}</td>
                     <td className="px-4 py-3.5 font-mono text-[11px] text-slate-600 font-medium">
@@ -327,7 +377,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                         }}
                         className="px-2.5 py-1 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
                       >
-                        መርምር / ቀይር
+                        {currentLang === 'om' ? 'Qoradhu / Jijjiiri' : currentLang === 'en' ? 'Review / Update' : 'መርምር / ቀይር'}
                       </button>
                     </td>
                   </tr>
@@ -345,7 +395,11 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">
-                  የመምህር የትምህርት ማስረጃ ምርመራ (Credential Audit)
+                  {currentLang === 'om'
+                    ? 'Sakatta’insa Ragaa Barnoota Barsiisaa (Credential Audit)'
+                    : currentLang === 'en'
+                    ? 'Teacher Credential Audit'
+                    : 'የመምህር የትምህርት ማስረጃ ምርመራ (Credential Audit)'}
                 </h3>
                 <p className="text-xs text-slate-500">{selectedCred.teacherName} · {selectedCred.schoolName}</p>
               </div>
@@ -360,39 +414,58 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
             <div className="p-4 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-100">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">የትምህርት ደረጃ:</span>
+                  <span className="text-[10px] text-slate-400 block">
+                    {currentLang === 'om' ? 'Sadarkaa Barnootaa:' : currentLang === 'en' ? 'Qualification:' : 'የትምህርት ደረጃ:'}
+                  </span>
                   <span className="font-bold text-slate-800">{selectedCred.qualification}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">የተመረቁበት ተቋም:</span>
+                  <span className="text-[10px] text-slate-400 block">
+                    {currentLang === 'om' ? 'Dhaabbata Irraa Eebbifame:' : currentLang === 'en' ? 'Institution:' : 'የተመረቁበት ተቋም:'}
+                  </span>
                   <span className="font-bold text-slate-800">{selectedCred.institution}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">የማስተማር ፈቃድ ቁጥር:</span>
+                  <span className="text-[10px] text-slate-400 block">
+                    {currentLang === 'om' ? 'Lakk. Hayyama Barsiisummaa:' : currentLang === 'en' ? 'License No.:' : 'የማስተማር ፈቃድ ቁጥር:'}
+                  </span>
                   <span className="font-mono font-bold text-slate-800">{selectedCred.licenseNumber}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">የትምህርት አይነት:</span>
+                  <span className="text-[10px] text-slate-400 block">
+                    {currentLang === 'om' ? 'Gosa Barnootaa:' : currentLang === 'en' ? 'Subject:' : 'የትምህርት አይነት:'}
+                  </span>
                   <span className="font-bold text-emerald-900">{selectedCred.subject}</span>
                 </div>
               </div>
 
               {selectedCred.verifiedBy && (
                 <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-500">
-                  የፈተሸው ባለሙያ: <strong className="text-slate-700">{selectedCred.verifiedBy}</strong> ({selectedCred.verificationDate})
+                  {currentLang === 'om' ? 'Ogeessa Sakatta’e:' : currentLang === 'en' ? 'Audited by:' : 'የፈተሸው ባለሙያ:'}{' '}
+                  <strong className="text-slate-700">{selectedCred.verifiedBy}</strong> ({selectedCred.verificationDate})
                 </div>
               )}
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                የትምህርት ቢሮ የምርመራ ማስታወሻ (Audit Notes)
+                {currentLang === 'om'
+                  ? 'Yaadannoo Sakatta’insa Biiroo Barnootaa (Audit Notes)'
+                  : currentLang === 'en'
+                  ? 'Education Bureau Audit Notes'
+                  : 'የትምህርት ቢሮ የምርመራ ማስታወሻ (Audit Notes)'}
               </label>
               <textarea
                 rows={2}
                 value={auditNotes}
                 onChange={(e) => setAuditNotes(e.target.value)}
-                placeholder="ስለ ማስረጃው ትክክለኛነት ወይም የሚጎድል ነገር ካለ ይጻፉ..."
+                placeholder={
+                  currentLang === 'om'
+                    ? 'Sirrummaa ragichaa ykn wanta hir’ate yoo jiraate barreessi...'
+                    : currentLang === 'en'
+                    ? 'Write comments about document accuracy or missing items...'
+                    : 'ስለ ማስረጃው ትክክለኛነት ወይም የሚጎድል ነገር ካለ ይጻፉ...'
+                }
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
               />
             </div>
@@ -410,7 +483,7 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                 onClick={() => handleUpdateStatus(selectedCred.id, 'pending')}
                 className="px-3.5 py-2 text-xs font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-colors"
               >
-                በመጠባበቅ ላይ አድርግ
+                {currentLang === 'om' ? 'Eeggannoo Irra Godhi' : currentLang === 'en' ? 'Mark Pending' : 'በመጠባበቅ ላይ አድርግ'}
               </button>
               <button
                 type="button"
@@ -429,7 +502,13 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">አዲስ መምህር እና ማስረጃ መዝግብ</h3>
+              <h3 className="text-sm font-bold text-slate-900">
+                {currentLang === 'om'
+                  ? 'Barsiisaa Haaraa fi Ragaa Galmeessi'
+                  : currentLang === 'en'
+                  ? 'Register New Teacher & Credential'
+                  : 'አዲስ መምህር እና ማስረጃ መዝግብ'}
+              </h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-slate-600"
@@ -441,21 +520,21 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
             <form onSubmit={handleCreateCredential} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የመምህሩ ሙሉ ስም *
+                  {currentLang === 'om' ? 'Maqaa Guutuu Barsiisaa *' : currentLang === 'en' ? 'Teacher Full Name *' : 'የመምህሩ ሙሉ ስም *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newTeacherName}
                   onChange={(e) => setNewTeacherName(e.target.value)}
-                  placeholder="መ/ር ..."
+                  placeholder={currentLang === 'om' ? 'B/saa ...' : currentLang === 'en' ? 'Teacher ...' : 'መ/ር ...'}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የሚያስተምሩበት ትምህርት ቤት *
+                  {currentLang === 'om' ? 'Mana Barumsaa Itti Barsiisan *' : currentLang === 'en' ? 'School Name *' : 'የሚያስተምሩበት ትምህርት ቤት *'}
                 </label>
                 <input
                   type="text"
@@ -469,20 +548,20 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት አይነት *
+                    {currentLang === 'om' ? 'Gosa Barnootaa *' : currentLang === 'en' ? 'Subject *' : 'የትምህርት አይነት *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={newSubject}
                     onChange={(e) => setNewSubject(e.target.value)}
-                    placeholder="ምሳሌ፡ ኬሚስትሪ / ፊዚክስ"
+                    placeholder={currentLang === 'om' ? 'Fkn: Keemistirii / Fiiziksii' : currentLang === 'en' ? 'e.g., Chemistry / Physics' : 'ምሳሌ፡ ኬሚስትሪ / ፊዚክስ'}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት ደረጃ
+                    {currentLang === 'om' ? 'Sadarkaa Barnootaa' : currentLang === 'en' ? 'Qualification' : 'የትምህርት ደረጃ'}
                   </label>
                   <select
                     value={newQualification}
@@ -491,10 +570,10 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                     }
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden"
                   >
-                    <option value="Degree">Degree (የመጀመሪያ ዲግሪ)</option>
-                    <option value="Masters">Masters (ሁለተኛ ዲግሪ)</option>
-                    <option value="Diploma">Diploma (ዲፕሎማ)</option>
-                    <option value="PhD">PhD (ዶክትሬት)</option>
+                    <option value="Degree">{currentLang === 'om' ? 'Digrii Jalqabaa (Degree)' : currentLang === 'en' ? 'Bachelor Degree' : 'Degree (የመጀመሪያ ዲግሪ)'}</option>
+                    <option value="Masters">{currentLang === 'om' ? 'Digrii Lammaffaa (Masters)' : currentLang === 'en' ? 'Masters Degree' : 'Masters (ሁለተኛ ዲግሪ)'}</option>
+                    <option value="Diploma">{currentLang === 'om' ? 'Dippiloomaa (Diploma)' : currentLang === 'en' ? 'Diploma' : 'Diploma (ዲፕሎማ)'}</option>
+                    <option value="PhD">{currentLang === 'om' ? 'Doktireetii (PhD)' : currentLang === 'en' ? 'PhD' : 'PhD (ዶክትሬት)'}</option>
                   </select>
                 </div>
               </div>
@@ -502,20 +581,20 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የተመረቁበት ዩኒቨርሲቲ/ኮሌጅ *
+                    {currentLang === 'om' ? 'Yuunivarsiitii / Koollejii *' : currentLang === 'en' ? 'University / College *' : 'የተመረቁበት ዩኒቨርሲቲ/ኮሌጅ *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={newInstitution}
                     onChange={(e) => setNewInstitution(e.target.value)}
-                    placeholder="ሀዋሳ / አዲስ አበባ ዩኒቨርሲቲ"
+                    placeholder={currentLang === 'om' ? 'Yuunivarsiitii Hawaasaa / Finfinnee' : currentLang === 'en' ? 'Hawassa / Addis Ababa University' : 'ሀዋሳ / አዲስ አበባ ዩኒቨርሲቲ'}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የስራ ልምድ (በዓመት)
+                    {currentLang === 'om' ? 'Muuxannoo (Waggaadhaan)' : currentLang === 'en' ? 'Experience (Years)' : 'የስራ ልምድ (በዓመት)'}
                   </label>
                   <input
                     type="number"
@@ -533,13 +612,13 @@ export const TeacherCredentialsAudit: React.FC<TeacherCredentialsAuditProps> = (
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs"
                 >
-                  መዝግብ እና አረጋግጥ
+                  {currentLang === 'om' ? 'Galmeessi & Mirkaneessi' : currentLang === 'en' ? 'Register & Verify' : 'መዝግብ እና አረጋግጥ'}
                 </button>
               </div>
             </form>

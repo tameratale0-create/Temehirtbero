@@ -130,18 +130,29 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
-                  {t.tab_schools} (Schools Registry)
+                  {t.tab_schools}
                 </h2>
                 <span className="text-xs text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 font-bold">
-                  {filteredSchools.length} / {schools.length} ተቋማት
+                  {filteredSchools.length} / {schools.length}{' '}
+                  {currentLang === 'om' ? 'Dhaabbilee' : currentLang === 'en' ? 'Institutions' : 'ተቋማት'}
                 </span>
                 <span className="text-xs text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300 font-bold hidden sm:inline-flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-amber-600" />
-                  <span>ደረጃ 4 ሞዴል፡ {level4Count}</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? `Sadarkaa 4 Moodeela: ${level4Count}`
+                      : currentLang === 'en'
+                      ? `Level 4 Model: ${level4Count}`
+                      : `ደረጃ 4 ሞዴል፡ ${level4Count}`}
+                  </span>
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                በሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ እውቅና የተሰጣቸው የመንግስት፣ የግል እና የሚሽን ትምህርት ቤቶች
+                {currentLang === 'om'
+                  ? 'Manneen barnootaa mootummaa, dhuunfaa fi mishinii Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamanneetiin beekamtii argatan'
+                  : currentLang === 'en'
+                  ? 'Government, Private, and Mission schools accredited by Shashemene City Education Bureau'
+                  : 'በሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ እውቅና የተሰጣቸው የመንግስት፣ የግል እና የሚሽን ትምህርት ቤቶች'}
               </p>
             </div>
           </div>
@@ -149,17 +160,35 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
           <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold">
               <Eye className="w-4 h-4 text-emerald-700" />
-              <span>ከትምህርት ቤቶች የተላኩ (ማየት ብቻ - Read-Only)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Manneen barnootaa irraa kan ergame (Ilaaluu Qofa)'
+                  : currentLang === 'en'
+                  ? 'Submitted by Schools (Read-Only)'
+                  : 'ከትምህርት ቤቶች የተላኩ (ማየት ብቻ - Read-Only)'}
+              </span>
             </div>
 
             <button
               type="button"
               onClick={() => window.print()}
               className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              title="የትምህርት ቤቶችን ዝርዝር አትም"
+              title={
+                currentLang === 'om'
+                  ? 'Tarree manneen barnootaa maxxansi'
+                  : currentLang === 'en'
+                  ? 'Print schools registry'
+                  : 'የትምህርት ቤቶችን ዝርዝር አትም'
+              }
             >
               <Printer className="w-4 h-4 text-slate-600" />
-              <span>ዝርዝር አትም</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Tarree Maxxansi'
+                  : currentLang === 'en'
+                  ? 'Print List'
+                  : 'ዝርዝር አትም'}
+              </span>
             </button>
           </div>
         </div>
@@ -172,7 +201,13 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="የትምህርት ቤት ስም፣ ርዕሰ መምህር ወይም መለያ ኮድ ፈልግ..."
+              placeholder={
+                currentLang === 'om'
+                  ? 'Maqaa mana barumsaa, daarektaraa ykn koodii addaa barbaadi...'
+                  : currentLang === 'en'
+                  ? 'Search school name, principal or access code...'
+                  : 'የትምህርት ቤት ስም፣ ርዕሰ መምህር ወይም መለያ ኮድ ፈልግ...'
+              }
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden font-medium"
             />
             {searchTerm && (
@@ -192,13 +227,19 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
               onChange={(e) => setSelectedSubcity(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
             >
-              <option value="all">ሁሉም ክፍለ ከተሞች (All Subcities)</option>
-              <option value="አቦስቶ">አቦስቶ (Abosto)</option>
-              <option value="ቡልቻና">ቡልቻና (Bulchana)</option>
-              <option value="አዋሾ">አዋሾ (Awasho)</option>
-              <option value="ቁዬራ">ቁዬራ (Kuyera)</option>
-              <option value="አለሉ">አለሉ (Alelu)</option>
-              <option value="ዲዳ ቦቄ">ዲዳ ቦቄ (Dida Boke)</option>
+              <option value="all">
+                {currentLang === 'om'
+                  ? 'Kutaalee Magaalaa Hunda'
+                  : currentLang === 'en'
+                  ? 'All Subcities'
+                  : 'ሁሉም ክፍለ ከተሞች (All Subcities)'}
+              </option>
+              <option value="አቦስቶ">{currentLang === 'om' ? 'Abosto' : currentLang === 'en' ? 'Abosto' : 'አቦስቶ (Abosto)'}</option>
+              <option value="ቡልቻና">{currentLang === 'om' ? 'Bulchaanaa' : currentLang === 'en' ? 'Bulchana' : 'ቡልቻና (Bulchana)'}</option>
+              <option value="አዋሾ">{currentLang === 'om' ? 'Awaashoo' : currentLang === 'en' ? 'Awasho' : 'አዋሾ (Awasho)'}</option>
+              <option value="ቁዬራ">{currentLang === 'om' ? 'Kuyyeraa' : currentLang === 'en' ? 'Kuyera' : 'ቁዬራ (Kuyera)'}</option>
+              <option value="አለሉ">{currentLang === 'om' ? 'Aleeluu' : currentLang === 'en' ? 'Alelu' : 'አለሉ (Alelu)'}</option>
+              <option value="ዲዳ ቦቄ">{currentLang === 'om' ? 'Diida Boqee' : currentLang === 'en' ? 'Dida Boke' : 'ዲዳ ቦቄ (Dida Boke)'}</option>
             </select>
           </div>
 
@@ -208,10 +249,34 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
               onChange={(e) => setSelectedType(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-600"
             >
-              <option value="all">ሁሉም አይነት (All Types)</option>
-              <option value="government">የመንግስት (Government)</option>
-              <option value="private">የግል (Private)</option>
-              <option value="mission">የሚሽን / የህዝብ (Mission)</option>
+              <option value="all">
+                {currentLang === 'om'
+                  ? 'Gosa Hunda'
+                  : currentLang === 'en'
+                  ? 'All Types'
+                  : 'ሁሉም አይነት (All Types)'}
+              </option>
+              <option value="government">
+                {currentLang === 'om'
+                  ? 'Kan Mootummaa'
+                  : currentLang === 'en'
+                  ? 'Government'
+                  : 'የመንግስት (Government)'}
+              </option>
+              <option value="private">
+                {currentLang === 'om'
+                  ? 'Kan Dhuunfaa'
+                  : currentLang === 'en'
+                  ? 'Private'
+                  : 'የግል (Private)'}
+              </option>
+              <option value="mission">
+                {currentLang === 'om'
+                  ? 'Kan Mishinii / Hawaasaa'
+                  : currentLang === 'en'
+                  ? 'Mission / Public'
+                  : 'የሚሽን / የህዝብ (Mission)'}
+              </option>
             </select>
           </div>
         </div>
@@ -220,14 +285,54 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
         <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs">
           <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
             <Filter className="w-3.5 h-3.5 text-emerald-800" />
-            <span>ደረጃ፡</span>
+            <span>{currentLang === 'om' ? 'Sadarkaa:' : currentLang === 'en' ? 'Level:' : 'ደረጃ፡'}</span>
           </span>
           {[
-            { id: 'all', label: 'ሁሉም ደረጃዎች' },
-            { id: 'level_4', label: 'ደረጃ 4 (ሞዴል)' },
-            { id: 'level_3', label: 'ደረጃ 3 (ጥሩ)' },
-            { id: 'level_2', label: 'ደረጃ 2 (መካከለኛ)' },
-            { id: 'level_1', label: 'ደረጃ 1 (ማሻሻያ የሚሻ)' }
+            {
+              id: 'all',
+              label:
+                currentLang === 'om'
+                  ? 'Sadarkaa Hunda'
+                  : currentLang === 'en'
+                  ? 'All Levels'
+                  : 'ሁሉም ደረጃዎች'
+            },
+            {
+              id: 'level_4',
+              label:
+                currentLang === 'om'
+                  ? 'Sadarkaa 4 (Moodeela)'
+                  : currentLang === 'en'
+                  ? 'Level 4 (Model)'
+                  : 'ደረጃ 4 (ሞዴል)'
+            },
+            {
+              id: 'level_3',
+              label:
+                currentLang === 'om'
+                  ? 'Sadarkaa 3 (Gaarii)'
+                  : currentLang === 'en'
+                  ? 'Level 3 (Good)'
+                  : 'ደረጃ 3 (ጥሩ)'
+            },
+            {
+              id: 'level_2',
+              label:
+                currentLang === 'om'
+                  ? 'Sadarkaa 2 (Giddu-galeessa)'
+                  : currentLang === 'en'
+                  ? 'Level 2 (Average)'
+                  : 'ደረጃ 2 (መካከለኛ)'
+            },
+            {
+              id: 'level_1',
+              label:
+                currentLang === 'om'
+                  ? "Sadarkaa 1 (Fooyya'iinsa Barbaada)"
+                  : currentLang === 'en'
+                  ? 'Level 1 (Needs Improvement)'
+                  : 'ደረጃ 1 (ማሻሻያ የሚሻ)'
+            }
           ].map((lvl) => (
             <button
               key={lvl.id}
@@ -255,7 +360,13 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
               className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-3 h-3" />
-              <span>ማጣሪያ አጽዳ</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Gingilchaa Haqi'
+                  : currentLang === 'en'
+                  ? 'Clear Filters'
+                  : 'ማጣሪያ አጽዳ'}
+              </span>
             </button>
           )}
         </div>
@@ -370,7 +481,7 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
                   <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
                     <KeyRound className="w-3.5 h-3.5 text-slate-400" />
                     <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-1 rounded">
-                      ኮድ: {school.accessCode}
+                      {currentLang === 'om' ? 'Koodii:' : currentLang === 'en' ? 'Code:' : 'ኮድ:'} {school.accessCode}
                     </span>
                   </div>
                 </div>
@@ -378,14 +489,20 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
 
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-[11px] text-slate-400">
-                  ዓ.ም: {school.establishedYear}
+                  {currentLang === 'om' ? 'Bara Hundeeffamaa:' : currentLang === 'en' ? 'Est:' : 'ዓ.ም:'} {school.establishedYear}
                 </span>
                 <button
                   onClick={() => setSelectedSchool(school)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>ሙሉ ዝርዝር</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Bal’ina Guutuu'
+                      : currentLang === 'en'
+                      ? 'Full Details'
+                      : 'ሙሉ ዝርዝር'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -399,8 +516,12 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
           <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-base font-bold text-slate-900">{selectedSchool.name}</h3>
-                <p className="text-xs text-slate-500">{selectedSchool.nameOm || selectedSchool.subcity}</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  {currentLang === 'om' ? (selectedSchool.nameOm || selectedSchool.name) : selectedSchool.name}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {currentLang === 'om' ? selectedSchool.name : (selectedSchool.nameOm || selectedSchool.subcity)}
+                </p>
               </div>
               <span
                 className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
@@ -413,55 +534,105 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div>
-                <span className="text-slate-400 block text-[10px]">የት/ቤት መለያ ኮድ</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? 'Koodii Seensaa Mana Barumsaa'
+                    : currentLang === 'en'
+                    ? 'School Access Code'
+                    : 'የት/ቤት መለያ ኮድ'}
+                </span>
                 <span className="font-mono font-bold text-slate-900 text-sm">
                   {selectedSchool.accessCode}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">ተቋም አይነት</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? 'Gosa Dhaabbataa'
+                    : currentLang === 'en'
+                    ? 'Institution Type'
+                    : 'ተቋም አይነት'}
+                </span>
                 <span className="font-semibold text-slate-800 capitalize">
                   {selectedSchool.type}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">ደረጃ</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om' ? 'Sadarkaa' : currentLang === 'en' ? 'Level' : 'ደረጃ'}
+                </span>
                 <span className="font-semibold text-slate-800 capitalize">
                   {selectedSchool.level}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">አጠቃላይ ተማሪዎች</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? "Ida'ama Barattootaa"
+                    : currentLang === 'en'
+                    ? 'Total Students'
+                    : 'አጠቃላይ ተማሪዎች'}
+                </span>
                 <span className="font-bold text-slate-900 text-sm">
                   {selectedSchool.totalStudents.toLocaleString()}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">አጠቃላይ መምህራን</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? "Ida'ama Barsiisotaa"
+                    : currentLang === 'en'
+                    ? 'Total Teachers'
+                    : 'አጠቃላይ መምህራን'}
+                </span>
                 <span className="font-bold text-slate-900 text-sm">
                   {selectedSchool.totalTeachers}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">የክፍሎች ብዛት</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? 'Baay’ina Kutaalee'
+                    : currentLang === 'en'
+                    ? 'Classrooms'
+                    : 'የክፍሎች ብዛት'}
+                </span>
                 <span className="font-bold text-slate-900 text-sm">
-                  {selectedSchool.classroomsCount} ክፍሎች
+                  {selectedSchool.classroomsCount} {currentLang === 'om' ? 'Kutaalee' : currentLang === 'en' ? 'Rooms' : 'ክፍሎች'}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">የላብራቶሪ ብዛት</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? 'Baay’ina Laaboraatoorii'
+                    : currentLang === 'en'
+                    ? 'Laboratories'
+                    : 'የላብራቶሪ ብዛት'}
+                </span>
                 <span className="font-bold text-slate-900 text-sm">
-                  {selectedSchool.labsCount} ላቦራቶሪ
+                  {selectedSchool.labsCount} {currentLang === 'om' ? 'Laab' : currentLang === 'en' ? 'Labs' : 'ላቦራቶሪ'}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">የቤተ-መጽሐፍት አቅም</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? 'Dandeettii Mana Kitaabaa'
+                    : currentLang === 'en'
+                    ? 'Library Capacity'
+                    : 'የቤተ-መጽሐፍት አቅም'}
+                </span>
                 <span className="font-bold text-slate-900 text-sm">
-                  {selectedSchool.libraryCapacity} መቀመጫ
+                  {selectedSchool.libraryCapacity} {currentLang === 'om' ? 'Teessoo' : currentLang === 'en' ? 'Seats' : 'መቀመጫ'}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">የተመሰረተበት ዓ.ም</span>
+                <span className="text-slate-400 block text-[10px]">
+                  {currentLang === 'om'
+                    ? 'Bara Hundeeffamaa'
+                    : currentLang === 'en'
+                    ? 'Established Year'
+                    : 'የተመሰረተበት ዓ.ም'}
+                </span>
                 <span className="font-bold text-slate-900 text-sm">
                   {selectedSchool.establishedYear}
                 </span>
@@ -470,18 +641,37 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
 
             {/* Principal & Communication */}
             <div className="border border-slate-200 rounded-xl p-3.5 text-xs space-y-1.5">
-              <p className="font-bold text-slate-800">የርዕሰ መምህሩ / የዳይሬክተሩ መረጃ፡</p>
+              <p className="font-bold text-slate-800">
+                {currentLang === 'om'
+                  ? 'Odeeffannoo Daarektaraa:'
+                  : currentLang === 'en'
+                  ? 'Principal / Director Information:'
+                  : 'የርዕሰ መምህሩ / የዳይሬክተሩ መረጃ፡'}
+              </p>
               <div className="flex flex-wrap items-center gap-4 text-slate-600">
-                <span>ስም: <strong>{selectedSchool.principalName}</strong></span>
-                <span>ስልክ: <strong>{selectedSchool.phone}</strong></span>
-                <span>ኢሜይል: <strong>{selectedSchool.email}</strong></span>
+                <span>
+                  {currentLang === 'om' ? 'Maqaa:' : currentLang === 'en' ? 'Name:' : 'ስም:'}{' '}
+                  <strong>{selectedSchool.principalName}</strong>
+                </span>
+                <span>
+                  {currentLang === 'om' ? 'Bilbila:' : currentLang === 'en' ? 'Phone:' : 'ስልክ:'}{' '}
+                  <strong>{selectedSchool.phone}</strong>
+                </span>
+                <span>
+                  {currentLang === 'om' ? 'Imeeyilii:' : currentLang === 'en' ? 'Email:' : 'ኢሜይል:'}{' '}
+                  <strong>{selectedSchool.email}</strong>
+                </span>
               </div>
             </div>
 
             {/* Change Inspection Rating */}
             <div className="border border-slate-200 rounded-xl p-3.5 text-xs">
               <label className="block font-bold text-slate-800 mb-1.5">
-                የትምህርት ቢሮ የጥራት ደረጃ ምዘና ቀይር (Update Inspection Rating)፡
+                {currentLang === 'om'
+                  ? 'Madaallii Sadarkaa Qulqullinaa Biiroo Barnootaa Jijjiiri (Update Inspection Rating):'
+                  : currentLang === 'en'
+                  ? 'Update Bureau Inspection Quality Rating:'
+                  : 'የትምህርት ቢሮ የጥራት ደረጃ ምዘና ቀይር (Update Inspection Rating)፡'}
               </label>
               <div className="flex flex-wrap gap-2">
                 {(['level_1', 'level_2', 'level_3', 'level_4'] as InspectionLevel[]).map((lvl) => (
@@ -489,18 +679,34 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
                     key={lvl}
                     type="button"
                     onClick={() => updateSchoolInspection(selectedSchool.id, lvl)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border cursor-pointer ${
                       selectedSchool.inspectionLevel === lvl
                         ? 'bg-emerald-800 text-white border-emerald-900 shadow-xs'
                         : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-300'
                     }`}
                   >
                     {lvl === 'level_4'
-                      ? 'ደረጃ 4 (ሞዴል)'
+                      ? currentLang === 'om'
+                        ? 'Sadarkaa 4 (Moodeela)'
+                        : currentLang === 'en'
+                        ? 'Level 4 (Model)'
+                        : 'ደረጃ 4 (ሞዴል)'
                       : lvl === 'level_3'
-                      ? 'ደረጃ 3 (ጥሩ)'
+                      ? currentLang === 'om'
+                        ? 'Sadarkaa 3 (Gaarii)'
+                        : currentLang === 'en'
+                        ? 'Level 3 (Good)'
+                        : 'ደረጃ 3 (ጥሩ)'
                       : lvl === 'level_2'
-                      ? 'ደረጃ 2 (መካከለኛ)'
+                      ? currentLang === 'om'
+                        ? 'Sadarkaa 2 (Giddu-galeessa)'
+                        : currentLang === 'en'
+                        ? 'Level 2 (Average)'
+                        : 'ደረጃ 2 (መካከለኛ)'
+                      : currentLang === 'om'
+                      ? 'Sadarkaa 1'
+                      : currentLang === 'en'
+                      ? 'Level 1'
                       : 'ደረጃ 1'}
                   </button>
                 ))}
@@ -510,9 +716,9 @@ export const SchoolsRegistry: React.FC<SchoolsRegistryProps> = ({
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setSelectedSchool(null)}
-                className="px-5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               >
-                ዝጋ
+                {currentLang === 'om' ? 'Cufi' : currentLang === 'en' ? 'Close' : 'ዝጋ'}
               </button>
             </div>
           </div>

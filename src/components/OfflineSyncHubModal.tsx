@@ -30,8 +30,12 @@ interface OfflineSyncHubModalProps {
 export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
   isOpen,
   onClose,
-  currentLang = 'am'
+  currentLang = 'om'
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const {
     isOnline,
     isSyncing,
@@ -89,13 +93,13 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
   const getEntityLabel = (entity: string) => {
     switch (entity) {
       case 'student_performance':
-        return 'የተማሪዎች ውጤትና ብቃት';
+        return t3('Qabxii fi Gahumsa Barattootaa', 'Student Performance & Scores', 'የተማሪዎች ውጤትና ብቃት');
       case 'teacher_credential':
-        return 'የመምህራን ማስረጃና መታወቂያ';
+        return t3('Ragaa fi Eenyummaa Barsiisotaa', 'Teacher Credentials & ID', 'የመምህራን ማስረጃና መታወቂያ');
       case 'training_material':
-        return 'የስልጠና ሰነድና ሞጁል';
+        return t3('Sanada fi Moojula Leenjii', 'Training Materials & Modules', 'የስልጠና ሰነድና ሞጁል');
       default:
-        return 'መረጃ';
+        return t3('Odeeffannoo', 'Record', 'መረጃ');
     }
   };
 
@@ -111,16 +115,22 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  ኦፍላይን እና ኦንላይን አውቶማቲክ ማመሳሰያ
+                  {t3('Wal-simsiisa Of-laayinii fi Oonlaayinii Ofumaan', 'Automatic Offline & Online Sync', 'ኦፍላይን እና ኦንላይን አውቶማቲክ ማመሳሰያ')}
                 </span>
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                   isOnline ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'
                 }`}>
-                  {isOnline ? '🟢 ኦንላይን (መስመር ላይ)' : '🔴 ኦፍላይን (ከመስመር ውጭ)'}
+                  {isOnline
+                    ? t3('🟢 Oonlaayinii (Sarara Irra)', '🟢 Online (Connected)', '🟢 ኦንላይን (መስመር ላይ)')
+                    : t3('🔴 Of-laayinii (Sarara Alaa)', '🔴 Offline (Disconnected)', '🔴 ኦፍላይን (ከመስመር ውጭ)')}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-black text-slate-900 mt-1">
-                የሻሸመኔ ከተማ ትምህርት ቢሮ - የመረጃ ማመሳሰያ ማዕከል
+                {t3(
+                  'Biiroo Barnootaa Magaalaa Shaashamannee - Giddugala Wal-simsiisa Odeeffannoo',
+                  'Shashemene City Education Bureau - Data Sync Hub',
+                  'የሻሸመኔ ከተማ ትምህርት ቢሮ - የመረጃ ማመሳሰያ ማዕከል'
+                )}
               </h2>
             </div>
           </div>
@@ -145,36 +155,52 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
         {/* Status & Simulation Banner */}
         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/90 grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
           <div>
-            <span className="text-[10px] text-slate-400 block font-semibold">የግንኙነት ሁኔታ (Network)</span>
+            <span className="text-[10px] text-slate-400 block font-semibold">
+              {t3('Haala Quunnamtii (Network)', 'Network Status', 'የግንኙነት ሁኔታ (Network)')}
+            </span>
             <div className="flex items-center gap-2 mt-1">
               <strong className={`text-xs font-black ${isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
-                {isOnline ? 'መስመር ላይ (Connected)' : 'ከመስመር ውጭ (Offline Mode)'}
+                {isOnline
+                  ? t3('Sarara Irra (Connected)', 'Online (Connected)', 'መስመር ላይ (Connected)')
+                  : t3('Sarara Alaa (Offline Mode)', 'Offline Mode', 'ከመስመር ውጭ (Offline Mode)')}
               </strong>
             </div>
             <span className="text-[10px] text-slate-500 block mt-0.5">
-              {simulatedOffline ? '⚙️ በሙከራ ኦፍላይን ሞድ ላይ ነዎት' : 'የእውነተኛ ኔትዎርክ ሁኔታ'}
+              {simulatedOffline
+                ? t3('⚙️ Haala yaalii of-laayinii irra jirtu', '⚙️ In simulated offline test mode', '⚙️ በሙከራ ኦፍላይን ሞድ ላይ ነዎት')
+                : t3('Haala neetworkii dhugaa', 'Real network connection status', 'የእውነተኛ ኔትዎርክ ሁኔታ')}
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] text-slate-400 block font-semibold">ያልተመሳሰሉ መረጃዎች (Pending)</span>
+            <span className="text-[10px] text-slate-400 block font-semibold">
+              {t3('Odeeffannoo Hin Wal-simne (Pending)', 'Pending Sync Items', 'ያልተመሳሰሉ መረጃዎች (Pending)')}
+            </span>
             <div className="flex items-center gap-2 mt-1">
               <strong className={`text-base font-black font-mono ${pendingCount > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                {pendingCount} መዝገቦች
+                {pendingCount} {t3('galmeewwan', 'records', 'መዝገቦች')}
               </strong>
             </div>
             <span className="text-[10px] text-slate-500 block mt-0.5">
-              {pendingCount > 0 ? 'ኢንተርኔት ሲገኝ በራስ-ሰር ይላካሉ' : 'ሁሉም መረጃዎች ከመካከለኛው ሰርቨር ጋር ተመሳስለዋል'}
+              {pendingCount > 0
+                ? t3('Yeroo intarneetiin argamu ofumaan ergamu', 'Will auto-sync when online', 'ኢንተርኔት ሲገኝ በራስ-ሰር ይላካሉ')
+                : t3('Odeeffannoon hundi sarvara giddugaleessaa waliin wal-simeera', 'All records synced with central server', 'ሁሉም መረጃዎች ከመካከለኛው ሰርቨር ጋር ተመሳስለዋል')}
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] text-slate-400 block font-semibold">የመጨረሻ ማመሳሰል (Last Sync)</span>
+            <span className="text-[10px] text-slate-400 block font-semibold">
+              {t3('Wal-simsiisa Dhumaa (Last Sync)', 'Last Sync', 'የመጨረሻ ማመሳሰል (Last Sync)')}
+            </span>
             <strong className="text-xs text-slate-800 block mt-1 truncate">
-              {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'እስካሁን አልተመሳሰለም'}
+              {lastSyncTime
+                ? new Date(lastSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                : t3('Hanga ammaatti hin wal-simne', 'Not synced yet', 'እስካሁን አልተመሳሰለም')}
             </strong>
             <span className="text-[10px] text-slate-500 block mt-0.5">
-              {lastSyncTime ? new Date(lastSyncTime).toLocaleDateString() : 'መጀመሪያ ሲገናኝ ይመሳሰላል'}
+              {lastSyncTime
+                ? new Date(lastSyncTime).toLocaleDateString()
+                : t3('Yeroo jalqaba wal-argitu wal-sima', 'Will sync upon first connection', 'መጀመሪያ ሲገናኝ ይመሳሰላል')}
             </span>
           </div>
         </div>
@@ -187,10 +213,14 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
             </div>
             <div>
               <strong className="text-xs font-black text-indigo-950 block">
-                የኦፍላይን ሞድ ሞካሪ (Offline Simulation Toggle)
+                {t3('Yaalii Haala Of-laayinii (Offline Simulation Toggle)', 'Offline Simulation Toggle', 'የኦፍላይን ሞድ ሞካሪ (Offline Simulation Toggle)')}
               </strong>
               <p className="text-[10px] text-indigo-700 leading-tight">
-                ኢንተርኔቱን ሳያቋርጡ መተግበሪያው ያለ ኔትዎርክ እንዴት እንደሚሰራ ለመሞከር ይህን ያብሩት፤ መልሰው ሲያጠፉት በራስ-ሰር ይመሳሰላል!
+                {t3(
+                  'Intarneetii osoo hin kutin appichi akkamitti neetworkii malee akka hojjetu yaaluuf kana banaa; yeroo deebistanii cufan ofumaan wal-sima!',
+                  'Enable this to test offline mode without disconnecting internet; disabling it auto-syncs queued records!',
+                  'ኢንተርኔቱን ሳያቋርጡ መተግበሪያው ያለ ኔትዎርክ እንዴት እንደሚሰራ ለመሞከር ይህን ያብሩት፤ መልሰው ሲያጠፉት በራስ-ሰር ይመሳሰላል!'
+                )}
               </p>
             </div>
           </div>
@@ -204,7 +234,9 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
                 : 'bg-indigo-700 hover:bg-indigo-800 text-white'
             }`}
           >
-            {simulatedOffline ? '🔴 ኦፍላይን ሞድን አጥፋ (Go Online)' : '🧪 ኦፍላይን ሞድን አብራ (Test Offline)'}
+            {simulatedOffline
+              ? t3('🔴 Of-laayinii Cufi (Go Online)', '🔴 Disable Offline Mode (Go Online)', '🔴 ኦፍላይን ሞድን አጥፋ (Go Online)')
+              : t3('🧪 Of-laayinii Bani (Test Offline)', '🧪 Enable Offline Mode (Test Offline)', '🧪 ኦፍላይን ሞድን አብራ (Test Offline)')}
           </button>
         </div>
 
@@ -213,24 +245,36 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
           <div className="p-2.5 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-emerald-800 shrink-0" />
             <div className="min-w-0">
-              <strong className="text-[11px] font-bold text-emerald-950 block truncate">1. የተማሪዎች ውጤት</strong>
-              <span className="text-[10px] text-slate-500 block truncate">ምዘና፣ ፈተናና መገኘት</span>
+              <strong className="text-[11px] font-bold text-emerald-950 block truncate">
+                {t3('1. Qabxii Barattootaa', '1. Student Results', '1. የተማሪዎች ውጤት')}
+              </strong>
+              <span className="text-[10px] text-slate-500 block truncate">
+                {t3('Madaallii, qormaataa fi hirmaannaa', 'Grading, exams & attendance', 'ምዘና፣ ፈተናና መገኘት')}
+              </span>
             </div>
           </div>
 
           <div className="p-2.5 bg-amber-50/60 border border-amber-200 rounded-xl flex items-center gap-2">
             <Award className="w-4 h-4 text-amber-800 shrink-0" />
             <div className="min-w-0">
-              <strong className="text-[11px] font-bold text-amber-950 block truncate">2. የመምህራን ማስረጃ</strong>
-              <span className="text-[10px] text-slate-500 block truncate">ዲግሪ፣ ፈቃድና ፋይዳ ID</span>
+              <strong className="text-[11px] font-bold text-amber-950 block truncate">
+                {t3('2. Ragaa Barsiisotaa', '2. Teacher Credentials', '2. የመምህራን ማስረጃ')}
+              </strong>
+              <span className="text-[10px] text-slate-500 block truncate">
+                {t3('Digirii, hayyamaa fi Fayda ID', 'Degrees, licenses & Fayda ID', 'ዲግሪ፣ ፈቃድና ፋይዳ ID')}
+              </span>
             </div>
           </div>
 
           <div className="p-2.5 bg-indigo-50/60 border border-indigo-200 rounded-xl flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-indigo-800 shrink-0" />
             <div className="min-w-0">
-              <strong className="text-[11px] font-bold text-indigo-950 block truncate">3. የስልጠና ሰነዶች</strong>
-              <span className="text-[10px] text-slate-500 block truncate">CPD ሞጁሎችና ንባብ</span>
+              <strong className="text-[11px] font-bold text-indigo-950 block truncate">
+                {t3('3. Sanadoota Leenjii', '3. Training Documents', '3. የስልጠና ሰነዶች')}
+              </strong>
+              <span className="text-[10px] text-slate-500 block truncate">
+                {t3('Moojuloota CPD fi dubbisa', 'CPD modules & study guides', 'CPD ሞጁሎችና ንባብ')}
+              </span>
             </div>
           </div>
         </div>
@@ -246,7 +290,7 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            የሚላኩ መረጃዎች ({pendingItems.length})
+            {t3('Odeeffannoo Ergaman', 'Pending Queue', 'የሚላኩ መረጃዎች')} ({pendingItems.length})
           </button>
           <button
             type="button"
@@ -257,7 +301,7 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            የተመሳሰሉ መዝገቦች ({historyItems.length})
+            {t3('Galmeewwan Wal-siman', 'Synced History', 'የተመሳሰሉ መዝገቦች')} ({historyItems.length})
           </button>
         </div>
 
@@ -268,10 +312,14 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
               <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
                 <h4 className="text-xs font-black text-slate-800">
-                  ሁሉም መረጃዎች ከመካከለኛው ሰርቨር ጋር ተመሳስለዋል!
+                  {t3('Odeeffannoon hundi sarvara giddugaleessaa waliin wal-simeera!', 'All records are synced with the central server!', 'ሁሉም መረጃዎች ከመካከለኛው ሰርቨር ጋር ተመሳስለዋል!')}
                 </h4>
                 <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-                  ያለ ኢንተርኔት የሚያስገቧቸው አዳዲስ የተማሪዎች ውጤቶች፣ የመምህራን ማስረጃዎች እና የስልጠና መረጃዎች እዚህ ተሰብስበው ኢንተርኔት ሲገኝ በራስ-ሰር ይላካሉ።
+                  {t3(
+                    'Qabxiin barattootaa, ragaawwan barsiisotaa fi odeeffannoon leenjii intarneetii malee galchan hundi asitti walitti qabamuun yeroo intarneetiin argamu ofumaan ergamu.',
+                    'New student scores, teacher credentials, and training records entered offline are queued here and sent automatically when online.',
+                    'ያለ ኢንተርኔት የሚያስገቧቸው አዳዲስ የተማሪዎች ውጤቶች፣ የመምህራን ማስረጃዎች እና የስልጠና መረጃዎች እዚህ ተሰብስበው ኢንተርኔት ሲገኝ በራስ-ሰር ይላካሉ።'
+                  )}
                 </p>
               </div>
             ) : (
@@ -290,18 +338,20 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
                           {item.clientMeta?.description || getEntityLabel(item.entity)}
                         </span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
-                          {item.action === 'create' ? 'አዲስ' : 'ማሻሻያ'}
+                          {item.action === 'create'
+                            ? t3('Haaraa', 'New', 'አዲስ')
+                            : t3('Fooyya\'iinsa', 'Update', 'ማሻሻያ')}
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-400 block truncate">
-                        {item.clientMeta?.schoolName || 'ሻሸመኔ ትምህርት ቤት'} · {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {item.clientMeta?.schoolName || t3('Mana Barumsaa Shaashamannee', 'Shashemene School', 'ሻሸመኔ ትምህርት ቤት')} · {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </div>
 
                   <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 shrink-0 flex items-center gap-1">
                     <Clock className="w-3 h-3 animate-spin" />
-                    <span>ማመሳሰል ይጠብቃል</span>
+                    <span>{t3('Wal-simuu eegaa jira', 'Pending sync', 'ማመሳሰል ይጠብቃል')}</span>
                   </span>
                 </div>
               ))
@@ -310,7 +360,9 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
             historyItems.length === 0 ? (
               <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
                 <FileCheck2 className="w-8 h-8 text-slate-400 mx-auto" />
-                <p className="text-xs font-bold text-slate-600">እስካሁን የተመዘገበ ታሪክ የለም።</p>
+                <p className="text-xs font-bold text-slate-600">
+                  {t3('Seenaan galmaa\'e hanga ammaatti hin jiru.', 'No sync history recorded yet.', 'እስካሁን የተመዘገበ ታሪክ የለም።')}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -320,7 +372,7 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
                     onClick={clearSyncedHistory}
                     className="text-[10px] text-slate-500 hover:text-slate-700 underline"
                   >
-                    ታሪክ አጽዳ
+                    {t3('Seenaa qulqulleessi', 'Clear history', 'ታሪክ አጽዳ')}
                   </button>
                 </div>
                 {historyItems.map((item) => (
@@ -344,7 +396,7 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
 
                     <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      <span>ተመሳስሏል (Synced)</span>
+                      <span>{t3('Wal-simeera (Synced)', 'Synced', 'ተመሳስሏል (Synced)')}</span>
                     </span>
                   </div>
                 ))}
@@ -360,10 +412,10 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
               type="button"
               onClick={handleExport}
               className="px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 w-full sm:w-auto"
-              title="በፍላሽ/USB ወደ ትምህርት ቢሮ ለመውሰድ ፓኬጁን አውርድ"
+              title={t3('Paakeejii USBn gara Biiroo Barnootaatti geessuuf buusi', 'Download sync package to transfer via USB', 'በፍላሽ/USB ወደ ትምህርት ቢሮ ለመውሰድ ፓኬጁን አውርድ')}
             >
               <Download className="w-3.5 h-3.5" />
-              <span>የኦፍላይን ፓኬጅ አውርድ</span>
+              <span>{t3('Paakeejii Of-laayinii Buusi', 'Download Offline Bundle', 'የኦፍላይን ፓኬጅ አውርድ')}</span>
             </button>
           </div>
 
@@ -373,7 +425,7 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer w-full sm:w-auto text-center"
             >
-              ዝጋ
+              {t3('Cufi', 'Close', 'ዝጋ')}
             </button>
 
             <button
@@ -387,7 +439,11 @@ export const OfflineSyncHubModal: React.FC<OfflineSyncHubModalProps> = ({
               }`}
             >
               <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'በማመሳሰል ላይ...' : '🚀 አሁን አመሳስል (Sync Now)'}</span>
+              <span>
+                {isSyncing
+                  ? t3('Wal-simsiisaa jira...', 'Syncing...', 'በማመሳሰል ላይ...')
+                  : t3('🚀 Amma Wal-simsiisi (Sync Now)', '🚀 Sync Now', '🚀 አሁን አመሳስል (Sync Now)')}
+              </span>
             </button>
           </div>
         </div>

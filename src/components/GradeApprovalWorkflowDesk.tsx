@@ -36,6 +36,7 @@ import {
 } from '../types';
 import { translations } from '../data/translations';
 import { StorageService } from '../utils/storage';
+import { getLocalizedGradeWorkflows } from '../utils/localizedData';
 import { SchoolLogo } from './SchoolLogo';
 
 interface GradeApprovalWorkflowDeskProps {
@@ -74,11 +75,31 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
   const [selectedSectionFilter, setSelectedSectionFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
+  const getSubjectDisplay = (subj: string) => {
+    const s = subj.toLowerCase();
+    if (s.includes('all subjects') || subj.includes('የተጠናቀረ')) {
+      return t3('Qabxii Kutaa Walitti Qabame (Gosa Barnootaa Hunda)', 'Compiled Class Grades (All Subjects)', 'የተጠናቀረ የክፍሉ ውጤት (All Subjects)');
+    }
+    if (s.includes('math')) return t3('Herrega (Mathematics)', 'Mathematics', 'Mathematics (ሒሳብ)');
+    if (s.includes('eng')) return t3('Afaan Ingilizii (English)', 'English', 'English (እንግሊዝኛ)');
+    if (s.includes('phys')) return t3('Fiiziksii (Physics)', 'Physics', 'Physics (ፊዚክስ)');
+    if (s.includes('chem')) return t3('Keemistirii (Chemistry)', 'Chemistry', 'Chemistry (ኬሚስትሪ)');
+    if (s.includes('bio')) return t3('Baayoloojii (Biology)', 'Biology', 'Biology (ባዮሎጂ)');
+    if (s.includes('orom')) return t3('Afaan Oromoo', 'Afaan Oromoo', 'Afaan Oromoo (ኦሮሚኛ)');
+    if (s.includes('citizen')) return t3('Lammummaa (Citizenship)', 'Citizenship', 'Citizenship (ስነ-ዜጋ)');
+    return subj;
+  };
+
   // Selected batch for detailed inspection or approval modal
   const [selectedBatch, setSelectedBatch] = useState<AcademicGradeWorkflowBatch | null>(null);
   const [feedbackInput, setFeedbackInput] = useState('');
   const [directorNotesInput, setDirectorNotesInput] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Modal: Create New Grade Submission
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -87,10 +108,10 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
   const [newPeriod, setNewPeriod] = useState<AcademicPeriodType>('semester_1');
   const [newSubject, setNewSubject] = useState<string>('Mathematics (ሒሳብ)');
   const [newTeacherName, setNewTeacherName] = useState<string>(
-    currentUser?.name || 'መ/ር በፈቃዱ ጥላሁን'
+    currentUser?.name || t3('Barsiisaa Bafaqaaduu Xilaahun', 'Teacher Befekadu Tilahun', 'መ/ር በፈቃዱ ጥላሁን')
   );
-  const [newHomeroomTeacherName, setNewHomeroomTeacherName] = useState<string>(
-    'መ/ርት ሰላማዊት ታደሰ (የክፍል ተጠሪ)'
+  const [newHomeroomTeacherName, setNewHomeroomTeacherName] = useState<string>(() =>
+    t3('Barsiistuu Salaamaawit Taaddasaa (Itti Gaafatamtuu Kutaa)', 'Teacher Selamawit Tadesse (Homeroom)', 'መ/ርት ሰላማዊት ታደሰ (የክፍል ተጠሪ)')
   );
   const [newTeacherNotes, setNewTeacherNotes] = useState<string>('');
 
@@ -105,25 +126,30 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
   const getPeriodLabel = (period: AcademicPeriodType): string => {
     switch (period) {
       case 'quarter_1':
-        return '1ኛ ሩብ ዓመት (Quarter 1)';
+        return t3('Kurmaana 1ffaa (Quarter 1)', 'Quarter 1', '1ኛ ሩብ ዓመት (Quarter 1)');
       case 'quarter_2':
-        return '2ኛ ሩብ ዓመት (Quarter 2)';
+        return t3('Kurmaana 2ffaa (Quarter 2)', 'Quarter 2', '2ኛ ሩብ ዓመት (Quarter 2)');
       case 'semester_1':
-        return '1ኛ ግማሽ ዓመት (Semester 1)';
+        return t3('Semisteera 1ffaa (Semester 1)', 'Semester 1', '1ኛ ግማሽ ዓመት (Semester 1)');
       case 'quarter_3':
-        return '3ኛ ሩብ ዓመት (Quarter 3)';
+        return t3('Kurmaana 3ffaa (Quarter 3)', 'Quarter 3', '3ኛ ሩብ ዓመት (Quarter 3)');
       case 'quarter_4':
-        return '4ኛ ሩብ ዓመት (Quarter 4)';
+        return t3('Kurmaana 4ffaa (Quarter 4)', 'Quarter 4', '4ኛ ሩብ ዓመት (Quarter 4)');
       case 'semester_2':
-        return '2ኛ ግማሽ ዓመት (Semester 2)';
+        return t3('Semisteera 2ffaa (Semester 2)', 'Semester 2', '2ኛ ግማሽ ዓመት (Semester 2)');
       case 'annual':
-        return 'የሙሉ ዓመት ጠቅላላ (Annual Summary)';
+        return t3('Waliigala Waggaa (Annual Summary)', 'Annual Summary', 'የሙሉ ዓመት ጠቅላላ (Annual Summary)');
     }
   };
 
+  const localizedBatches = useMemo(
+    () => getLocalizedGradeWorkflows(batches, currentLang),
+    [batches, currentLang]
+  );
+
   // Filtered batches
   const filteredBatches = useMemo(() => {
-    return batches.filter((b) => {
+    return localizedBatches.filter((b) => {
       // Role Perspective
       if (activeRolePerspective === 'teacher') {
         if (b.status !== 'draft' && b.status !== 'submitted_to_homeroom') return false;
@@ -149,26 +175,41 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
         const q = searchQuery.toLowerCase();
         const matchTitle =
           b.subject.toLowerCase().includes(q) ||
+          getSubjectDisplay(b.subject).toLowerCase().includes(q) ||
           b.teacherName.toLowerCase().includes(q) ||
           b.homeroomTeacherName.toLowerCase().includes(q) ||
           b.periodLabel.toLowerCase().includes(q) ||
           `grade ${b.grade}`.includes(q) ||
-          `ሴክሽን ${b.section}`.includes(q);
+          `kutaa ${b.grade}`.includes(q) ||
+          `ሴክሽን ${b.section}`.toLowerCase().includes(q);
         if (!matchTitle) return false;
       }
 
       return true;
     });
-  }, [batches, activeRolePerspective, selectedPeriodFilter, selectedGradeFilter, selectedSectionFilter, searchQuery]);
+  }, [localizedBatches, activeRolePerspective, selectedPeriodFilter, selectedGradeFilter, selectedSectionFilter, searchQuery, currentLang]);
 
   // Handle Stage 1 Submission: Teacher -> Homeroom Teacher
   const handleTeacherSubmitToHomeroom = (batch: AcademicGradeWorkflowBatch) => {
+    setErrorMessage(null);
     StorageService.submitGradeWorkflowToHomeroom(
       batch.id,
-      newTeacherNotes || batch.teacherNotes || 'የተማሪዎች ውጤቶች ተረጋግጠው ለክፍል ተጠሪ ተልከዋል።'
+      newTeacherNotes ||
+        batch.teacherNotes ||
+        t3(
+          'Qabxiin barattootaa mirkanaa\'ee itti gaafatamaa kutaatiif ergameera.',
+          'Student grades verified and submitted to homeroom teacher.',
+          'የተማሪዎች ውጤቶች ተረጋግጠው ለክፍል ተጠሪ ተልከዋል።'
+        )
     );
     reloadBatches();
-    setSuccessMessage('ውጤቱ ለክፍል ተጠሪው መምህር በስኬት ተልኳል! (Submitted to Homeroom Teacher)');
+    setSuccessMessage(
+      t3(
+        'Qabxiin gara barsiisaa itti gaafatamaa kutaatti milkaa\'inaan ergameera!',
+        'Grades successfully submitted to the Homeroom Teacher!',
+        'ውጤቱ ለክፍል ተጠሪው መምህር በስኬት ተልኳል! (Submitted to Homeroom Teacher)'
+      )
+    );
     setTimeout(() => setSuccessMessage(null), 4000);
     if (selectedBatch?.id === batch.id) {
       setSelectedBatch({
@@ -181,12 +222,25 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
 
   // Handle Stage 2 Submission: Homeroom Teacher -> Director
   const handleHomeroomSubmitToDirector = (batch: AcademicGradeWorkflowBatch) => {
+    setErrorMessage(null);
     StorageService.submitGradeWorkflowToDirector(
       batch.id,
-      feedbackInput || batch.homeroomRemarks || 'የክፍሉ የሁሉም የትምህርት አይነቶች ውጤት፣ ስነ-ምግባርና መገኘት ተጠናቅሮ ለዳይሬክተር ተልኳል።'
+      feedbackInput ||
+        batch.homeroomRemarks ||
+        t3(
+          'Qabxiin gosa barnootaa hundaa, naamusa fi argamuun kutaa qindaa\'ee daayirektaraaf ergameera.',
+          'All subjects, conduct, and attendance compiled and forwarded to Director.',
+          'የክፍሉ የሁሉም የትምህርት አይነቶች ውጤት፣ ስነ-ምግባርና መገኘት ተጠናቅሮ ለዳይሬክተር ተልኳል።'
+        )
     );
     reloadBatches();
-    setSuccessMessage('የክፍሉ የተጠናቀረ ውጤት ለዳይሬክተሩ በስኬት ተልኳል! (Submitted to Director)');
+    setSuccessMessage(
+      t3(
+        'Qabxiin kutaa walitti qabame gara Daayirektaraatti milkaa\'inaan ergameera!',
+        'Compiled class grades successfully forwarded to the Director!',
+        'የክፍሉ የተጠናቀረ ውጤት ለዳይሬክተሩ በስኬት ተልኳል! (Submitted to Director)'
+      )
+    );
     setTimeout(() => setSuccessMessage(null), 4000);
     if (selectedBatch?.id === batch.id) {
       setSelectedBatch({
@@ -201,16 +255,26 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
 
   // Handle Stage 3 Approval: School Director -> Dispatches to Students, Parents, Education Bureau!
   const handleDirectorApprove = (batch: AcademicGradeWorkflowBatch) => {
-    const directorName = currentUser?.name || school.principalName || 'አቶ ጉተማ ዋቆ (ዳይሬክተር)';
+    setErrorMessage(null);
+    const directorName = currentUser?.name || school.principalName || t3('Obbo Guttamaa Waaqoo (Daayirektara)', 'Mr. Gutema Wako (Director)', 'አቶ ጉተማ ዋቆ (ዳይሬክተር)');
     const result = StorageService.approveGradeWorkflowByDirector(
       batch.id,
       directorName,
-      directorNotesInput || 'ውጤቱ በዳይሬክተር ጽሕፈት ቤት በጥንቃቄ ተገምግሞ ጸድቋል፤ ለወላጆች፣ ለተማሪዎች እና ለከተማው ትምህርት ቢሮ ይፋ ሆኗል።'
+      directorNotesInput ||
+        t3(
+          'Qabxiin waajjira daayirektaraatiin sakatta\'amee mirkanaa\'eera; maatiif, barattootaaf fi Biiroo Barnootaatiif ifoomera.',
+          'Reviewed and approved by Director Office; published to parents, students, and Education Bureau.',
+          'ውጤቱ በዳይሬክተር ጽሕፈት ቤት በጥንቃቄ ተገምግሞ ጸድቋል፤ ለወላጆች፣ ለተማሪዎች እና ለከተማው ትምህርት ቢሮ ይፋ ሆኗል።'
+        )
     );
 
     reloadBatches();
     setSuccessMessage(
-      `✓ ውጤቱ በዳይሬክተር ጸደቀ! በተማሪ/ወላጅ መግቢያ በር ላይ የእይታ ማሳወቂያ ባጅና የቶስት መልእክት በቅጽበት ተቀስቅሷል፤ ለሻሸመኔ ትምህርት ቢሮም ይፋ ተደርጓል!`
+      t3(
+        '✓ Qabxiin Daayirektaraan mirkanaa\'eera! Poortaala barataa/maatii irratti beeksisni bahee Biiroo Barnootaa Shaashamanneetiif ergameera!',
+        '✓ Approved by Director! Student/Parent portal alerts triggered and dispatched to Shashemene Education Bureau!',
+        '✓ ውጤቱ በዳይሬክተር ጸደቀ! በተማሪ/ወላጅ መግቢያ በር ላይ የእይታ ማሳወቂያ ባጅና የቶስት መልእክት በቅጽበት ተቀስቅሷል፤ ለሻሸመኔ ትምህርት ቢሮም ይፋ ተደርጓል!'
+      )
     );
     setTimeout(() => setSuccessMessage(null), 5000);
 
@@ -223,13 +287,26 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
   // Handle Revision Request
   const handleRequestRevision = (batch: AcademicGradeWorkflowBatch) => {
     if (!feedbackInput.trim()) {
-      alert('እባክዎ የማሻሻያ ምክንያት ይጻፉ (Please provide revision feedback)');
+      setErrorMessage(
+        t3(
+          'Maaloo sababa sirreeffamaa barreessaa.',
+          'Please provide revision feedback.',
+          'እባክዎ የማሻሻያ ምክንያት ይጻፉ።'
+        )
+      );
       return;
     }
-    const requester = currentUser?.name || 'ዳይሬክተር / ክፍል ተጠሪ';
+    setErrorMessage(null);
+    const requester = currentUser?.name || t3('Daayirektara / Itti Gaafatamaa Kutaa', 'Director / Homeroom Teacher', 'ዳይሬክተር / ክፍል ተጠሪ');
     StorageService.requestGradeWorkflowRevision(batch.id, requester, feedbackInput);
     reloadBatches();
-    setSuccessMessage('ማሻሻያ እንዲደረግበት ጥያቄው ተልኳል (Revision requested)');
+    setSuccessMessage(
+      t3(
+        'Gaaffiin sirreeffamaa ergameera.',
+        'Revision request sent.',
+        'ማሻሻያ እንዲደረግበት ጥያቄው ተልኳል (Revision requested)'
+      )
+    );
     setTimeout(() => setSuccessMessage(null), 4000);
     setSelectedBatch(null);
     setFeedbackInput('');
@@ -285,14 +362,14 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
       schoolName: school.name,
       grade: newGrade,
       section: newSection.toUpperCase(),
-      academicYear: '2016/2017 ዓ.ም',
+      academicYear: t3('2016/2017 A.L.I', '2024/2025 AY', '2016/2017 ዓ.ም'),
       period: newPeriod,
       periodLabel: getPeriodLabel(newPeriod),
       subject: newSubject,
       isCompiledSectionRoster: false,
       teacherName: newTeacherName,
       teacherSubmittedAt: new Date().toISOString(),
-      teacherNotes: newTeacherNotes || 'አዲስ የተመዘገበ ውጤት',
+      teacherNotes: newTeacherNotes || t3('Qabxii haaraa galmaa\'e', 'Newly recorded grades', 'አዲስ የተመዘገበ ውጤት'),
       homeroomTeacherName: newHomeroomTeacherName,
       status: 'submitted_to_homeroom', // Directly send to homeroom as per user workflow
       dispatchedToBureau: false,
@@ -301,7 +378,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
       passCount,
       failCount,
       passRate,
-      topStudentName: topEntry?.studentName || 'ተማሪ',
+      topStudentName: topEntry?.studentName || t3('Barataa', 'Student', 'ተማሪ'),
       topStudentScore: topEntry?.total || 95,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -312,7 +389,13 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
     reloadBatches();
     setShowCreateModal(false);
     setSelectedBatch(newBatch);
-    setSuccessMessage(`የክፍል ${newGrade}${newSection} የ${newSubject} ውጤት ለክፍል ተጠሪው መምህር በስኬት ተልኳል!`);
+    setSuccessMessage(
+      t3(
+        `Qabxiin ${getSubjectDisplay(newSubject)} Kutaa ${newGrade}${newSection} gara barsiisaa itti gaafatamaa kutaatti milkaa'inaan ergameera!`,
+        `Grade ${newGrade}${newSection} ${getSubjectDisplay(newSubject)} grades submitted to Homeroom Teacher!`,
+        `የክፍል ${newGrade}${newSection} የ${newSubject} ውጤት ለክፍል ተጠሪው መምህር በስኬት ተልኳል!`
+      )
+    );
     setTimeout(() => setSuccessMessage(null), 5000);
   };
 
@@ -335,13 +418,17 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[11px] font-bold text-emerald-200">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>ይፋዊ የትምህርት ውጤት መሰብሰብና ማፅደቂያ ስርዓት</span>
+                  <span>{t3('Sirna Walitti Qabuu fi Mirkaneessa Qabxii Seeraa', 'Official Grade Collection & Approval System', 'ይፋዊ የትምህርት ውጤት መሰብሰብና ማፅደቂያ ስርዓት')}</span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black tracking-tight mt-1">
-                  የተማሪዎች ውጤት መሰብሰብና ባለ 3-ደረጃ ማፅደቂያ ዴስክ
+                  {t3('Deeskii Walitti Qabuu fi Mirkaneessa Qabxii Sadarkaa-3', '3-Stage Student Grade Approval Desk', 'የተማሪዎች ውጤት መሰብሰብና ባለ 3-ደረጃ ማፅደቂያ ዴስክ')}
                 </h2>
                 <p className="text-xs text-emerald-100/90 mt-0.5">
-                  የሩብ ዓመት (Q1/Q2/Q3/Q4)፣ የግማሽ ዓመት (Sem 1/2) እና ዓመታዊ ጠቅላላ ውጤቶች ከትምህርት መምህር → ወደ ክፍል ተጠሪ → ወደ ዳይሬክተር → ለተማሪ/ወላጅ እና ለትምህርት ቢሮ
+                  {t3(
+                    'Qabxiin Kurmaanaa (Q1-Q4), Semisteeraa (Sem 1/2) fi Waliigala Waggaa: Barsiisaa → Itti Gaafatamaa Kutaa → Daayirektara → Barataa/Maatii fi Biiroo Barnootaa',
+                    'Quarter (Q1-Q4), Semester (Sem 1/2), and Annual grades flow: Subject Teacher → Homeroom Teacher → Director → Student/Parent & Education Bureau',
+                    'የሩብ ዓመት (Q1/Q2/Q3/Q4)፣ የግማሽ ዓመት (Sem 1/2) እና ዓመታዊ ጠቅላላ ውጤቶች ከትምህርት መምህር → ወደ ክፍል ተጠሪ → ወደ ዳይሬክተር → ለተማሪ/ወላጅ እና ለትምህርት ቢሮ'
+                  )}
                 </p>
               </div>
             </div>
@@ -353,12 +440,12 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-lg hover:scale-102 cursor-pointer flex items-center gap-2 shrink-0"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>አዲስ ውጤት አስገባና ላክ (New Grade Submission)</span>
+                <span>{t3('Qabxii Haaraa Galmeessi & Ergi', 'New Grade Submission', 'አዲስ ውጤት አስገባና ላክ (New Grade Submission)')}</span>
               </button>
             ) : (
               <div className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold shrink-0">
                 <Lock className="w-4 h-4 text-amber-300" />
-                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+                <span>{t3('Ilaalcha Biiroo Barnootaa (Ilaaluu Qofa)', 'Bureau View (Read-Only)', 'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)')}</span>
               </div>
             )}
           </div>
@@ -371,10 +458,14 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 1
               </div>
               <div className="text-xs min-w-0">
-                <span className="text-[10px] uppercase font-bold text-amber-300 block">ደረጃ 1፡ መምህር</span>
-                <strong className="text-white block truncate">የውጤት ምዝገባና መላክ</strong>
+                <span className="text-[10px] uppercase font-bold text-amber-300 block">{t3('Sadarkaa 1: Barsiisaa', 'Stage 1: Teacher', 'ደረጃ 1፡ መምህር')}</span>
+                <strong className="text-white block truncate">{t3('Galmee Qabxii fi Erguu', 'Record & Submit Grades', 'የውጤት ምዝገባና መላክ')}</strong>
                 <p className="text-[11px] text-slate-300 leading-snug mt-0.5">
-                  የየትምህርቱ መምህራን የተማሪዎችን ውጤት መዝግበው ለክፍል ተጠሪው ይልካሉ።
+                  {t3(
+                    'Barsiisonni gosa barnootaa qabxii barattootaa galmeessanii itti gaafatamaa kutaatiif ergu.',
+                    'Subject teachers record student scores and submit to the homeroom teacher.',
+                    'የየትምህርቱ መምህራን የተማሪዎችን ውጤት መዝግበው ለክፍል ተጠሪው ይልካሉ።'
+                  )}
                 </p>
               </div>
             </div>
@@ -385,10 +476,14 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 2
               </div>
               <div className="text-xs min-w-0">
-                <span className="text-[10px] uppercase font-bold text-sky-300 block">ደረጃ 2፡ የክፍል ተጠሪ</span>
-                <strong className="text-white block truncate">ማጠናቀርና ለዳይሬክተር መላክ</strong>
+                <span className="text-[10px] uppercase font-bold text-sky-300 block">{t3('Sadarkaa 2: Itti Gaafatamaa Kutaa', 'Stage 2: Homeroom', 'ደረጃ 2፡ የክፍል ተጠሪ')}</span>
+                <strong className="text-white block truncate">{t3('Qindeessuu fi Daayirektaraaf Erguu', 'Compile & Forward', 'ማጠናቀርና ለዳይሬክተር መላክ')}</strong>
                 <p className="text-[11px] text-slate-300 leading-snug mt-0.5">
-                  የክፍል ተጠሪው ሁሉንም ትምህርቶች፣ ስነ-ምግባርና መገኘት አጠናቅሮ ለዳይሬክተር ያቀርባል።
+                  {t3(
+                    'Itti gaafatamaan kutaa barnoota hunda, naamusa fi argamuu qindeessee daayirektaraaf dhiyeessa.',
+                    'Homeroom teacher compiles all subjects, conduct, and attendance for the Director.',
+                    'የክፍል ተጠሪው ሁሉንም ትምህርቶች፣ ስነ-ምግባርና መገኘት አጠናቅሮ ለዳይሬክተር ያቀርባል።'
+                  )}
                 </p>
               </div>
             </div>
@@ -399,10 +494,16 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 3
               </div>
               <div className="text-xs min-w-0">
-                <span className="text-[10px] uppercase font-bold text-emerald-300 block">ደረጃ 3፡ ዳይሬክተር (ይፋ ማድረጊያ)</span>
-                <strong className="text-white block truncate">ማፅደቅና ማሰራጨት</strong>
+                <span className="text-[10px] uppercase font-bold text-emerald-300 block">{t3('Sadarkaa 3: Daayirektara (Ifoomsa)', 'Stage 3: Director (Release)', 'ደረጃ 3፡ ዳይሬክተር (ይፋ ማድረጊያ)')}</span>
+                <strong className="text-white block truncate">{t3('Mirkaneessuu fi Raabsuu', 'Approve & Dispatch', 'ማፅደቅና ማሰራጨት')}</strong>
                 <p className="text-[11px] text-slate-300 leading-snug mt-0.5">
-                  ዳይሬክተሩ ሲያጸድቅ በቅጽበት <strong>ለወላጅ፣ ለተማሪ እና ለትምህርት ቢሮ</strong> ይደርሳል!
+                  {isOm ? (
+                    <>Daayirektarri yoo mirkaneessu battalumatti <strong>Maatii, Barataa fi Biiroo Barnootaa</strong> qaqqaba!</>
+                  ) : isEn ? (
+                    <>Once approved by Director, results instantly reach <strong>Parents, Students & Education Bureau</strong>!</>
+                  ) : (
+                    <>ዳይሬክተሩ ሲያጸድቅ በቅጽበት <strong>ለወላጅ፣ ለተማሪ እና ለትምህርት ቢሮ</strong> ይደርሳል!</>
+                  )}
                 </p>
               </div>
             </div>
@@ -425,6 +526,21 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
         </div>
       )}
 
+      {/* Error Notification Bar */}
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl flex items-center gap-3 text-rose-950 text-xs font-bold animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+          <span className="flex-1">{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-700 hover:text-rose-900"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* =========================================================================
           2. WORKFLOW ROLE PERSPECTIVE & SEARCH CONTROLS
          ========================================================================= */}
@@ -433,7 +549,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3">
           <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1.5">
             <Users className="w-4 h-4 text-emerald-700" />
-            <span>የእይታ ድርሻ፡</span>
+            <span>{t3('Gahee Ilaalchaa:', 'Role View:', 'የእይታ ድርሻ፡')}</span>
           </span>
 
           <button
@@ -445,7 +561,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            ሁሉም ሂደቶች ({batches.length})
+            {t3('Adeemsaalee Hunda', 'All Workflows', 'ሁሉም ሂደቶች')} ({batches.length})
           </button>
 
           <button
@@ -457,7 +573,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
             }`}
           >
-            <span>1. የመምህር ምዝገባ</span>
+            <span>{t3('1. Galmee Barsiisaa', '1. Teacher Submission', '1. የመምህር ምዝገባ')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/80 text-slate-900 font-black">
               {batches.filter((b) => b.status === 'draft' || b.status === 'submitted_to_homeroom').length}
             </span>
@@ -472,7 +588,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 : 'bg-sky-50 text-sky-900 hover:bg-sky-100 border border-sky-200'
             }`}
           >
-            <span>2. የክፍል ተጠሪ ማጠቃለያ</span>
+            <span>{t3('2. Cuunfaa Itti Gaafatamaa Kutaa', '2. Homeroom Summary', '2. የክፍል ተጠሪ ማጠቃለያ')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white text-sky-950 font-black">
               {batches.filter((b) => b.status === 'submitted_to_homeroom' || b.status === 'submitted_to_director').length}
             </span>
@@ -487,9 +603,9 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 : 'bg-teal-50 text-teal-900 hover:bg-teal-100 border border-teal-200'
             }`}
           >
-            <span>3. የዳይሬክተር ማፅደቂያ ዴስክ</span>
+            <span>{t3('3. Deeskii Mirkaneessa Daayirektaraa', '3. Director Approval Desk', '3. የዳይሬክተር ማፅደቂያ ዴስክ')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white text-teal-950 font-black">
-              {batches.filter((b) => b.status === 'submitted_to_director').length} በመጠባበቅ ላይ
+              {batches.filter((b) => b.status === 'submitted_to_director').length} {t3('Eegaa jiru', 'Pending', 'በመጠባበቅ ላይ')}
             </span>
           </button>
 
@@ -503,7 +619,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>የጸደቁና ለቢሮ/ወላጅ የተላኩ ({batches.filter((b) => b.status === 'director_approved').length})</span>
+            <span>{t3('Kan Mirkanaa\'anii fi Biiroo/Maatiif Ergaman', 'Approved & Dispatched', 'የጸደቁና ለቢሮ/ወላጅ የተላኩ')} ({batches.filter((b) => b.status === 'director_approved').length})</span>
           </button>
         </div>
 
@@ -516,7 +632,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="በትምህርት አይነት፣ መምህር ወይም ክፍል ፈልግ..."
+              placeholder={t3('Gosa barnootaa, barsiisaa ykn kutaan barbaadi...', 'Search by subject, teacher, or grade...', 'በትምህርት አይነት፣ መምህር ወይም ክፍል ፈልግ...')}
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
             />
           </div>
@@ -528,14 +644,14 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               onChange={(e) => setSelectedPeriodFilter(e.target.value as any)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white font-semibold text-slate-800 focus:outline-hidden"
             >
-              <option value="all">ሁሉም የውጤት ወቅቶች (All Periods)</option>
-              <option value="quarter_1">1ኛ ሩብ ዓመት (Quarter 1)</option>
-              <option value="quarter_2">2ኛ ሩብ ዓመት (Quarter 2)</option>
-              <option value="semester_1">1ኛ ግማሽ ዓመት (Semester 1)</option>
-              <option value="quarter_3">3ኛ ሩብ ዓመት (Quarter 3)</option>
-              <option value="quarter_4">4ኛ ሩብ ዓመት (Quarter 4)</option>
-              <option value="semester_2">2ኛ ግማሽ ዓመት (Semester 2)</option>
-              <option value="annual">የሙሉ ዓመት ጠቅላላ (Annual)</option>
+              <option value="all">{t3('Yeroo Qabxii Hunda (All Periods)', 'All Assessment Periods', 'ሁሉም የውጤት ወቅቶች (All Periods)')}</option>
+              <option value="quarter_1">{getPeriodLabel('quarter_1')}</option>
+              <option value="quarter_2">{getPeriodLabel('quarter_2')}</option>
+              <option value="semester_1">{getPeriodLabel('semester_1')}</option>
+              <option value="quarter_3">{getPeriodLabel('quarter_3')}</option>
+              <option value="quarter_4">{getPeriodLabel('quarter_4')}</option>
+              <option value="semester_2">{getPeriodLabel('semester_2')}</option>
+              <option value="annual">{getPeriodLabel('annual')}</option>
             </select>
           </div>
 
@@ -546,11 +662,11 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               onChange={(e) => setSelectedGradeFilter(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white font-semibold text-slate-800 focus:outline-hidden"
             >
-              <option value="all">ሁሉም የክፍል ደረጃዎች</option>
-              <option value="9">Grade 9</option>
-              <option value="10">Grade 10</option>
-              <option value="11">Grade 11</option>
-              <option value="12">Grade 12</option>
+              <option value="all">{t3('Sadarkaa Kutaa Hunda', 'All Grade Levels', 'ሁሉም የክፍል ደረጃዎች')}</option>
+              <option value="9">{t3('Kutaa 9', 'Grade 9', 'Grade 9')}</option>
+              <option value="10">{t3('Kutaa 10', 'Grade 10', 'Grade 10')}</option>
+              <option value="11">{t3('Kutaa 11', 'Grade 11', 'Grade 11')}</option>
+              <option value="12">{t3('Kutaa 12', 'Grade 12', 'Grade 12')}</option>
             </select>
           </div>
 
@@ -561,10 +677,10 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               onChange={(e) => setSelectedSectionFilter(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white font-semibold text-slate-800 focus:outline-hidden"
             >
-              <option value="all">ሁሉም ክፍልፋዮች / Sections</option>
-              <option value="A">Section A</option>
-              <option value="B">Section B</option>
-              <option value="C">Section C</option>
+              <option value="all">{t3('Gareewwan Hunda / Sections', 'All Sections', 'ሁሉም ክፍልፋዮች / Sections')}</option>
+              <option value="A">{t3('Garee A (Section A)', 'Section A', 'Section A')}</option>
+              <option value="B">{t3('Garee B (Section B)', 'Section B', 'Section B')}</option>
+              <option value="C">{t3('Garee C (Section C)', 'Section C', 'Section C')}</option>
             </select>
           </div>
         </div>
@@ -582,21 +698,21 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
           const statusBadge = isApproved ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-950 border border-emerald-300">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-              <span>በዳይሬክተር የጸደቀ (Approved & Released)</span>
+              <span>{t3('Daayirektaraan Mirkanaa\'e (Released)', 'Approved & Released', 'በዳይሬክተር የጸደቀ (Approved & Released)')}</span>
             </span>
           ) : isPendingDirector ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-950 border border-amber-300">
               <Clock className="w-3.5 h-3.5 text-amber-700" />
-              <span>ለዳይሬክተር ማፅደቂያ የቀረበ (Pending Director)</span>
+              <span>{t3('Mirkaneessa Daayirektaraa Eegaa jira', 'Pending Director Approval', 'ለዳይሬክተር ማፅደቂያ የቀረበ (Pending Director)')}</span>
             </span>
           ) : isPendingHomeroom ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-sky-100 text-sky-950 border border-sky-300">
               <UserCheck className="w-3.5 h-3.5 text-sky-700" />
-              <span>ለክፍል ተጠሪ የተላከ (Pending Homeroom)</span>
+              <span>{t3('Itti Gaafatamaa Kutaaf Ergame', 'Pending Homeroom', 'ለክፍል ተጠሪ የተላከ (Pending Homeroom)')}</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-slate-100 text-slate-800 border border-slate-300">
-              <span>ረቂቅ (Draft)</span>
+              <span>{t3('Wixinee (Draft)', 'Draft', 'ረቂቅ (Draft)')}</span>
             </span>
           );
 
@@ -616,15 +732,15 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      {batch.academicYear} · {batch.periodLabel}
+                      {batch.academicYear} · {getPeriodLabel(batch.period)}
                     </span>
                     <h3 className="text-sm font-black text-slate-900 leading-snug">
-                      {batch.subject}
+                      {getSubjectDisplay(batch.subject)}
                     </h3>
                   </div>
 
                   <span className="px-2.5 py-1 rounded-xl bg-slate-900 text-white text-xs font-black shrink-0">
-                    Grade {batch.grade}-{batch.section}
+                    {t3('Kutaa', 'Grade', 'Grade')} {batch.grade}-{batch.section}
                   </span>
                 </div>
 
@@ -633,16 +749,16 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 {/* Workflow Roles & Signatures Metadata */}
                 <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 space-y-1.5 text-xs text-slate-700">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500 text-[11px]">መምህር፡</span>
+                    <span className="text-slate-500 text-[11px]">{t3('Barsiisaa:', 'Teacher:', 'መምህር፡')}</span>
                     <strong className="text-slate-900 text-[11px]">{batch.teacherName}</strong>
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
-                    <span className="text-slate-500 text-[11px]">የክፍል ተጠሪ፡</span>
+                    <span className="text-slate-500 text-[11px]">{t3('Itti Gaafatamaa Kutaa:', 'Homeroom:', 'የክፍል ተጠሪ፡')}</span>
                     <strong className="text-slate-900 text-[11px]">{batch.homeroomTeacherName}</strong>
                   </div>
                   {batch.directorName && (
                     <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
-                      <span className="text-slate-500 text-[11px]">ዳይሬክተር፡</span>
+                      <span className="text-slate-500 text-[11px]">{t3('Daayirektara:', 'Director:', 'ዳይሬክተር፡')}</span>
                       <strong className="text-emerald-950 font-bold text-[11px]">{batch.directorName}</strong>
                     </div>
                   )}
@@ -651,15 +767,15 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 {/* Metrics Pill Grid */}
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
-                    <span className="text-[10px] text-slate-400 block">ተማሪዎች</span>
+                    <span className="text-[10px] text-slate-400 block">{t3('Barattoota', 'Students', 'ተማሪዎች')}</span>
                     <strong className="text-slate-900">{batch.totalStudents}</strong>
                   </div>
                   <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <span className="text-[10px] text-emerald-800 block">አማካይ</span>
+                    <span className="text-[10px] text-emerald-800 block">{t3('Giddugaleessa', 'Average', 'አማካይ')}</span>
                     <strong className="text-emerald-950">{batch.averageScore}%</strong>
                   </div>
                   <div className="p-2 rounded-xl bg-teal-50 border border-teal-200">
-                    <span className="text-[10px] text-teal-800 block">የማለፍ ምጣኔ</span>
+                    <span className="text-[10px] text-teal-800 block">{t3('Reetii Darbuu', 'Pass Rate', 'የማለፍ ምጣኔ')}</span>
                     <strong className="text-teal-950">{batch.passRate}%</strong>
                   </div>
                 </div>
@@ -672,7 +788,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                       <span className="font-mono font-bold text-[10px]">{batch.directorApprovalSealNumber}</span>
                     </div>
                     <span className="text-[9px] font-bold bg-emerald-200/80 px-2 py-0.5 rounded text-emerald-950">
-                      ለቢሮ ደርሷል ✓
+                      {t3('Biiroo Qaqqabeera ✓', 'Sent to Bureau ✓', 'ለቢሮ ደርሷል ✓')}
                     </span>
                   </div>
                 )}
@@ -686,19 +802,19 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                   className="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>ውጤት ዝርዝር እይ (View)</span>
+                  <span>{t3('Bal\'ina Qabxii Ilaali', 'View Details', 'ውጤት ዝርዝር እይ (View)')}</span>
                 </button>
 
                 {/* Quick Director Approve */}
-                {isPendingDirector && (
+                {!isBureauRole && isPendingDirector && (
                   <button
                     type="button"
                     onClick={() => handleDirectorApprove(batch)}
                     className="py-2 px-3 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
-                    title="ዳይሬክተር ሆኖ አጽድቅና ይፋ አድርግ"
+                    title={t3('Akka Daayirektaraatti Mirkaneessii Ifoomsi', 'Approve & Release as Director', 'ዳይሬክተር ሆኖ አጽድቅና ይፋ አድርግ')}
                   >
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>አጽድቅ</span>
+                    <span>{t3('Mirkaneessi', 'Approve', 'አጽድቅ')}</span>
                   </button>
                 )}
               </div>
@@ -709,9 +825,13 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
         {filteredBatches.length === 0 && (
           <div className="col-span-full bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-3">
             <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-            <h4 className="text-sm font-bold text-slate-800">ምንም የውጤት ማፅደቂያ ሂደት አልተገኘም</h4>
+            <h4 className="text-sm font-bold text-slate-800">{t3('Adeemsi mirkaneessa qabxii homtuu hin argamne', 'No Grade Approval Workflows Found', 'ምንም የውጤት ማፅደቂያ ሂደት አልተገኘም')}</h4>
             <p className="text-xs text-slate-500">
-              የተመረጠውን ማጣሪያ ይቀይሩ ወይም አዲስ የውጤት ምዝገባ ይጀምሩ።
+              {t3(
+                'Calaltuu filatame jijjiiraa ykn galmee qabxii haaraa jalqabaa.',
+                'Adjust your filters or start a new grade submission.',
+                'የተመረጠውን ማጣሪያ ይቀይሩ ወይም አዲስ የውጤት ምዝገባ ይጀምሩ።'
+              )}
             </p>
             <button
               type="button"
@@ -725,7 +845,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-900 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>ሁሉንም አሳይ (Reset)</span>
+              <span>{t3('Hunda Agarsiisi (Reset)', 'Show All (Reset)', 'ሁሉንም አሳይ (Reset)')}</span>
             </button>
           </div>
         )}
@@ -748,13 +868,13 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 />
                 <div>
                   <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    {selectedBatch.academicYear} · {selectedBatch.periodLabel}
+                    {selectedBatch.academicYear} · {getPeriodLabel(selectedBatch.period)}
                   </span>
                   <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1">
-                    Grade {selectedBatch.grade}-{selectedBatch.section} · {selectedBatch.subject}
+                    {t3('Kutaa', 'Grade', 'Grade')} {selectedBatch.grade}-{selectedBatch.section} · {getSubjectDisplay(selectedBatch.subject)}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {school.name} · ሻሸመኔ ከተማ አስተዳደር
+                    {school.name} · {t3('Bulchiinsa Magaalaa Shaashamannee', 'Shashemene City Administration', 'ሻሸመኔ ከተማ አስተዳደር')}
                   </p>
                 </div>
               </div>
@@ -771,25 +891,25 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
             {/* Workflow Stage Progress Status Card */}
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-xs font-bold text-slate-700">የውጤት ማፅደቅ ሂደት ደረጃ፡</span>
+                <span className="text-xs font-bold text-slate-700">{t3('Sadarkaa Adeemsa Mirkaneessa Qabxii:', 'Grade Approval Stage:', 'የውጤት ማፅደቅ ሂደት ደረጃ፡')}</span>
                 {selectedBatch.status === 'director_approved' ? (
                   <span className="px-3 py-1 bg-emerald-100 text-emerald-950 font-black text-xs rounded-full border border-emerald-300 inline-flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                    <span>በዳይሬክተር ጸድቋል · ለተማሪ/ወላጅ እና ለትምህርት ቢሮ ይፋ ሆኗል</span>
+                    <span>{t3('Daayirektaraan Mirkanaa\'eera · Barataa/Maatii fi Biiroof Ifoomera', 'Approved by Director · Released to Student/Parent & Bureau', 'በዳይሬክተር ጸድቋል · ለተማሪ/ወላጅ እና ለትምህርት ቢሮ ይፋ ሆኗል')}</span>
                   </span>
                 ) : selectedBatch.status === 'submitted_to_director' ? (
                   <span className="px-3 py-1 bg-amber-100 text-amber-950 font-black text-xs rounded-full border border-amber-300 inline-flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-amber-700" />
-                    <span>በክፍል ተጠሪ ተጠናቅሮ ለዳይሬክተር ቀርቧል (የዳይሬክተር ማፅደቂያ በመጠባበቅ ላይ)</span>
+                    <span>{t3('Itti Gaafatamaa Kutaan Qindaa\'ee Daayirektaraaf Dhiyaate (Mirkaneessa Eegaa jira)', 'Compiled & Submitted to Director (Pending Approval)', 'በክፍል ተጠሪ ተጠናቅሮ ለዳይሬክተር ቀርቧል (የዳይሬክተር ማፅደቂያ በመጠባበቅ ላይ)')}</span>
                   </span>
                 ) : selectedBatch.status === 'submitted_to_homeroom' ? (
                   <span className="px-3 py-1 bg-sky-100 text-sky-950 font-black text-xs rounded-full border border-sky-300 inline-flex items-center gap-1.5">
                     <UserCheck className="w-4 h-4 text-sky-700" />
-                    <span>በመምህሩ ተመዝግቦ ለክፍል ተጠሪ ተልኳል (የክፍል ተጠሪ ማጠቃለያ በመጠባበቅ ላይ)</span>
+                    <span>{t3('Barsiisaan Galmaa\'ee Itti Gaafatamaa Kutaaf Ergame (Cuunfaa Eegaa jira)', 'Submitted to Homeroom Teacher (Pending Summary)', 'በመምህሩ ተመዝግቦ ለክፍል ተጠሪ ተልኳል (የክፍል ተጠሪ ማጠቃለያ በመጠባበቅ ላይ)')}</span>
                   </span>
                 ) : (
                   <span className="px-3 py-1 bg-slate-200 text-slate-800 font-bold text-xs rounded-full">
-                    ረቂቅ ውጤት
+                    {t3('Qabxii Wixinee', 'Draft Grades', 'ረቂቅ ውጤት')}
                   </span>
                 )}
               </div>
@@ -804,10 +924,10 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 }`}>
                   <div className="flex items-center gap-1.5 font-bold mb-1">
                     <Check className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>1. መምህር፡ {selectedBatch.teacherName}</span>
+                    <span>{t3('1. Barsiisaa:', '1. Teacher:', '1. መምህር፡')} {selectedBatch.teacherName}</span>
                   </div>
                   <p className="text-[11px] text-slate-600">
-                    {selectedBatch.teacherNotes || 'የክፍል ስራና ፈተና ውጤት ተልኳል።'}
+                    {selectedBatch.teacherNotes || t3('Qabxiin hojii daree fi qormaataa ergameera.', 'Classwork and exam scores submitted.', 'የክፍል ስራና ፈተና ውጤት ተልኳል።')}
                   </p>
                 </div>
 
@@ -825,10 +945,10 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                     ) : (
                       <Clock className="w-3.5 h-3.5 text-sky-700" />
                     )}
-                    <span>2. ክፍል ተጠሪ፡ {selectedBatch.homeroomTeacherName}</span>
+                    <span>{t3('2. Itti Gaafatamaa Kutaa:', '2. Homeroom:', '2. ክፍል ተጠሪ፡')} {selectedBatch.homeroomTeacherName}</span>
                   </div>
                   <p className="text-[11px] text-slate-600">
-                    {selectedBatch.homeroomRemarks || 'ውጤት ማጠቃለያና ስነ-ምግባር ምዘና'}
+                    {selectedBatch.homeroomRemarks || t3('Cuunfaa qabxii fi madaallii naamusaa', 'Grade compilation & conduct review', 'ውጤት ማጠቃለያና ስነ-ምግባር ምዘና')}
                   </p>
                 </div>
 
@@ -844,12 +964,12 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                     ) : (
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                     )}
-                    <span>3. ዳይሬክተር ማፅደቂያ</span>
+                    <span>{t3('3. Mirkaneessa Daayirektaraa', '3. Director Approval', '3. ዳይሬክተር ማፅደቂያ')}</span>
                   </div>
                   <p className="text-[11px] text-slate-600">
                     {selectedBatch.status === 'director_approved'
-                      ? `ጸድቋል፡ ${selectedBatch.directorApprovalSealNumber || 'ይፋ ሆነ'}`
-                      : 'የዳይሬክተር ይፋዊ ማፅደቂያ በመጠባበቅ ላይ'}
+                      ? `${t3('Mirkanaa\'e:', 'Approved:', 'ጸድቋል፡')} ${selectedBatch.directorApprovalSealNumber || t3('Ifoomeera', 'Released', 'ይፋ ሆነ')}`
+                      : t3('Mirkaneessa seeraa daayirektaraa eegaa jira', 'Awaiting official Director approval', 'የዳይሬክተር ይፋዊ ማፅደቂያ በመጠባበቅ ላይ')}
                   </p>
                 </div>
               </div>
@@ -859,10 +979,10 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
             <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
               <div className="p-3 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-800">
-                  የተማሪዎች ውጤት ዝርዝር ({selectedBatch.entries.length} ተማሪዎች)
+                  {t3('Tarree Qabxii Barattootaa', 'Student Grades Breakdown', 'የተማሪዎች ውጤት ዝርዝር')} ({selectedBatch.entries.length} {t3('Barattoota', 'Students', 'ተማሪዎች')})
                 </span>
                 <span className="text-slate-500">
-                  አማካይ፡ <strong>{selectedBatch.averageScore}%</strong> · የማለፍ ምጣኔ፡ <strong>{selectedBatch.passRate}%</strong>
+                  {t3('Giddugaleessa:', 'Average:', 'አማካይ፡')} <strong>{selectedBatch.averageScore}%</strong> · {t3('Reetii Darbuu:', 'Pass Rate:', 'የማለፍ ምጣኔ፡')} <strong>{selectedBatch.passRate}%</strong>
                 </span>
               </div>
 
@@ -870,16 +990,16 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 <table className="w-full text-xs text-left min-w-[700px]">
                   <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 sticky top-0">
                     <tr>
-                      <th className="py-2.5 px-3">ደረጃ</th>
-                      <th className="py-2.5 px-3">የተማሪ ስም</th>
-                      <th className="py-2.5 px-3">መለያ</th>
+                      <th className="py-2.5 px-3">{t3('Sadarkaa', 'Rank', 'ደረጃ')}</th>
+                      <th className="py-2.5 px-3">{t3('Maqaa Barataa', 'Student Name', 'የተማሪ ስም')}</th>
+                      <th className="py-2.5 px-3">{t3('Eenyummaa', 'ID', 'መለያ')}</th>
                       <th className="py-2.5 px-2">Quiz 1 (10%)</th>
                       <th className="py-2.5 px-2">Quiz 2 (10%)</th>
                       <th className="py-2.5 px-2">Mid (30%)</th>
                       <th className="py-2.5 px-2">Final (50%)</th>
-                      <th className="py-2.5 px-2">ድምር (100%)</th>
-                      <th className="py-2.5 px-2 text-center">ደረጃ</th>
-                      <th className="py-2.5 px-2 text-center">ስነ-ምግባር</th>
+                      <th className="py-2.5 px-2">{t3('Waliigala (100%)', 'Total (100%)', 'ድምር (100%)')}</th>
+                      <th className="py-2.5 px-2 text-center">{t3('Qabxii', 'Grade', 'ደረጃ')}</th>
+                      <th className="py-2.5 px-2 text-center">{t3('Naamusa', 'Conduct', 'ስነ-ምግባር')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -915,14 +1035,18 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
             {/* Workflow Actions Section: Depending on Current Stage */}
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
               <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                የማፅደቅና የማስተላለፍ ተግባራት (Workflow Actions)
+                {t3('Tarkaanfilee Mirkaneessaa fi Dabarsuu (Workflow Actions)', 'Workflow Actions', 'የማፅደቅና የማስተላለፍ ተግባራት (Workflow Actions)')}
               </h4>
 
               {isBureauRole && (
                 <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-2">
                   <Lock className="w-4 h-4 text-amber-800 shrink-0" />
                   <span>
-                    የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)፡ የውጤት ምዝገባ፣ ማጠናቀርና ማፅደቅ የትምህርት ቤቱ መምህራንና ዳይሬክተር ስልጣን ብቻ ነው። ቢሮው የተላከውን ውጤት ለማየትና ለመገምገም ብቻ ፍቃድ አለው፤ ውጤት መቀየር ወይም ማሻሻል አይቻልም።
+                    {t3(
+                      'Ilaalcha Biiroo Barnootaa (Ilaaluu Qofa): Qabxii galmeessuun, qindeessuun fi mirkaneessuun aangoo barsiisotaa fi daayirektara mana barumsaa qofa. Biiroon qabxii ergame ilaaluu fi madaaluu qofaaf hayyama qaba.',
+                      'Education Bureau View (Read-Only): Recording, compiling, and approving grades belongs exclusively to school teachers and the director. The Bureau has view-only audit access.',
+                      'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)፡ የውጤት ምዝገባ፣ ማጠናቀርና ማፅደቅ የትምህርት ቤቱ መምህራንና ዳይሬክተር ስልጣን ብቻ ነው። ቢሮው የተላከውን ውጤት ለማየትና ለመገምገም ብቻ ፍቃድ አለው፤ ውጤት መቀየር ወይም ማሻሻል አይቻልም።'
+                    )}
                   </span>
                 </div>
               )}
@@ -931,7 +1055,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               {!isBureauRole && selectedBatch.status === 'draft' && (
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-slate-600">
-                    ውጤቱ ለመምህሩ ዝግጁ ሆኗል። ለክፍል ተጠሪው መምህር ይላኩ፡
+                    {t3('Qabxiin barsiisaaf qophaa\'eera. Gara barsiisaa itti gaafatamaa kutaatti ergaa:', 'Grades are ready. Submit to Homeroom Teacher:', 'ውጤቱ ለመምህሩ ዝግጁ ሆኗል። ለክፍል ተጠሪው መምህር ይላኩ፡')}
                   </p>
                   <button
                     type="button"
@@ -939,7 +1063,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                     className="px-4 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>ለክፍል ተጠሪ መምህር ላክ</span>
+                    <span>{t3('Itti Gaafatamaa Kutaaf Ergi', 'Submit to Homeroom', 'ለክፍል ተጠሪ መምህር ላክ')}</span>
                   </button>
                 </div>
               )}
@@ -948,13 +1072,17 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               {!isBureauRole && selectedBatch.status === 'submitted_to_homeroom' && (
                 <div className="space-y-3">
                   <p className="text-xs text-slate-600">
-                    ይህ ውጤት ለክፍል ተጠሪው ቀርቧል። የክፍሉን ማጠቃለያ አስተያየት በማከል ለት/ቤቱ ዳይሬክተር ያስተላልፉ፡
+                    {t3(
+                      'Qabxiin kun itti gaafatamaa kutaatiif dhiyaateera. Yaada cuunfaa kutaa dabaluun gara Daayirektara mana barumsaatti dabarsaa:',
+                      'Submitted to Homeroom Teacher. Add class summary remarks and forward to the School Director:',
+                      'ይህ ውጤት ለክፍል ተጠሪው ቀርቧል። የክፍሉን ማጠቃለያ አስተያየት በማከል ለት/ቤቱ ዳይሬክተር ያስተላልፉ፡'
+                    )}
                   </p>
                   <input
                     type="text"
                     value={feedbackInput}
                     onChange={(e) => setFeedbackInput(e.target.value)}
-                    placeholder="የክፍል ተጠሪ ማጠቃለያ አስተያየት (ለምሳሌ፡ የተማሪዎች መገኘትና ስነ-ምግባር ተረጋግጧል)..."
+                    placeholder={t3('Yaada cuunfaa itti gaafatamaa kutaa (Fkn: Argamuu fi naamusi barattootaa mirkanaa\'eera)...', 'Homeroom summary remarks (e.g. Attendance & conduct verified)...', 'የክፍል ተጠሪ ማጠቃለያ አስተያየት (ለምሳሌ፡ የተማሪዎች መገኘትና ስነ-ምግባር ተረጋግጧል)...')}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-hidden"
                   />
                   <div className="flex items-center justify-end gap-2">
@@ -963,7 +1091,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                       onClick={() => handleRequestRevision(selectedBatch)}
                       className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-xl text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
                     >
-                      ማሻሻያ ለመምህሩ መልስ
+                      {t3('Sirreeffamaaf Barsiisaaf Deebisi', 'Return for Revision', 'ማሻሻያ ለመምህሩ መልስ')}
                     </button>
                     <button
                       type="button"
@@ -971,7 +1099,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                       className="px-4 py-2 bg-gradient-to-r from-sky-600 to-teal-700 hover:from-sky-500 hover:to-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
                     >
                       <Send className="w-4 h-4" />
-                      <span>ለዳይሬክተር ማፅደቂያ ላክ (Forward to Director)</span>
+                      <span>{t3('Mirkaneessaaf Daayirektaraaf Ergi', 'Forward to Director', 'ለዳይሬክተር ማፅደቂያ ላክ (Forward to Director)')}</span>
                     </button>
                   </div>
                 </div>
@@ -982,16 +1110,22 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 <div className="space-y-3 p-3 bg-amber-50 rounded-xl border border-amber-200">
                   <div className="flex items-center gap-2 text-amber-950 font-bold text-xs">
                     <ShieldCheck className="w-4 h-4 text-amber-800" />
-                    <span>የዳይሬክተር ይፋዊ ማፅደቂያ (Executive Approval Desk)</span>
+                    <span>{t3('Mirkaneessa Seeraa Daayirektaraa (Executive Approval Desk)', 'Director Executive Approval Desk', 'የዳይሬክተር ይፋዊ ማፅደቂያ (Executive Approval Desk)')}</span>
                   </div>
                   <p className="text-xs text-amber-900 leading-relaxed">
-                    ዳይሬክተሩ ይህንን ውጤት ሲያፀድቁ፡ <strong>ለተማሪዎች እና ለወላጆች</strong> በፖርታላቸው ይፋ ይሆናል፤ እንዲሁም ለ<strong>ሻሸመኔ ከተማ ትምህርት ቢሮ</strong> በራስ-ሰር ይላካል።
+                    {isOm ? (
+                      <>Daayirektarri qabxii kana yoo mirkaneessu: <strong>Barattootaa fi Maatiif</strong> poortaala isaanii irratti ifa ta\'a; akkasumas ofumaan gara <strong>Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee</strong> ergama.</>
+                    ) : isEn ? (
+                      <>Once approved by the Director, grades become visible to <strong>Students & Parents</strong> in their portals and are automatically dispatched to the <strong>Shashemene Education Bureau</strong>.</>
+                    ) : (
+                      <>ዳይሬክተሩ ይህንን ውጤት ሲያፀድቁ፡ <strong>ለተማሪዎች እና ለወላጆች</strong> በፖርታላቸው ይፋ ይሆናል፤ እንዲሁም ለ<strong>ሻሸመኔ ከተማ ትምህርት ቢሮ</strong> በራስ-ሰር ይላካል።</>
+                    )}
                   </p>
                   <input
                     type="text"
                     value={directorNotesInput}
                     onChange={(e) => setDirectorNotesInput(e.target.value)}
-                    placeholder="የዳይሬክተር ይፋዊ የይሁንታ አስተያየት..."
+                    placeholder={t3('Yaada mirkaneessaa seeraa daayirektaraa...', 'Official Director approval remarks...', 'የዳይሬክተር ይፋዊ የይሁንታ አስተያየት...')}
                     className="w-full px-3 py-2 text-xs border border-amber-300 rounded-xl bg-white focus:outline-hidden"
                   />
                   <div className="flex items-center justify-end gap-2 pt-1">
@@ -1000,7 +1134,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                       onClick={() => handleRequestRevision(selectedBatch)}
                       className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-xl text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
                     >
-                      ማሻሻያ ጠይቅ (Request Revision)
+                      {t3('Sirreeffama Gaafadhu', 'Request Revision', 'ማሻሻያ ጠይቅ (Request Revision)')}
                     </button>
                     <button
                       type="button"
@@ -1008,7 +1142,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                       className="px-5 py-2.5 bg-gradient-to-r from-emerald-800 to-teal-900 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black transition-all shadow-lg flex items-center gap-2 cursor-pointer hover:scale-102"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                      <span>አጽድቅና ይፋ አድርግ (Approve & Officially Release)</span>
+                      <span>{t3('Mirkaneessii Ifoomsi (Approve & Release)', 'Approve & Officially Release', 'አጽድቅና ይፋ አድርግ (Approve & Officially Release)')}</span>
                     </button>
                   </div>
                 </div>
@@ -1019,14 +1153,14 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 <div className="p-3 bg-emerald-100/70 border border-emerald-300 rounded-xl space-y-2 text-xs">
                   <div className="flex items-center gap-2 text-emerald-950 font-black">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                    <span>ውጤቱ በዳይሬክተሩ ጸድቆ ህጋዊ ማህተም አግኝቷል!</span>
+                    <span>{t3('Qabxiin Daayirektaraan mirkanaa\'ee chaappaa seeraa argateera!', 'Approved by Director with official digital seal!', 'ውጤቱ በዳይሬክተሩ ጸድቆ ህጋዊ ማህተም አግኝቷል!')}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-emerald-900 pt-1">
                     <div>
-                      ✓ <strong>ለወላጅና ተማሪ፡</strong> በፖርታል የውጤት ካርድ ላይ ይፋ ሆኗል።
+                      ✓ <strong>{t3('Maatii & Barataaf:', 'For Parents & Students:', 'ለወላጅና ተማሪ፡')}</strong> {t3('Kaardii qabxii poortaala irratti ifoomeera.', 'Published on portal report cards.', 'በፖርታል የውጤት ካርድ ላይ ይፋ ሆኗል።')}
                     </div>
                     <div>
-                      ✓ <strong>ለትምህርት ቢሮ፡</strong> በማዕከላዊ ሰርቨር ተመዝግቧል (ማህተም: {selectedBatch.directorApprovalSealNumber})።
+                      ✓ <strong>{t3('Biiroo Barnootaaf:', 'For Education Bureau:', 'ለትምህርት ቢሮ፡')}</strong> {t3('Sarvara giddugaleessaa irratti galmaa\'eera', 'Synced to central server', 'በማዕከላዊ ሰርቨር ተመዝግቧል')} ({t3('Chaappaa:', 'Seal:', 'ማህተም:')} {selectedBatch.directorApprovalSealNumber}).
                     </div>
                   </div>
                 </div>
@@ -1041,7 +1175,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>ይፋዊ የክፍል ሰነድ አትም (Print Roster)</span>
+                <span>{t3('Sanada Kutaa Seeraa Maxxansi', 'Print Official Roster', 'ይፋዊ የክፍል ሰነድ አትም (Print Roster)')}</span>
               </button>
 
               <button
@@ -1049,7 +1183,7 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 onClick={() => setSelectedBatch(null)}
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold cursor-pointer"
               >
-                ዝጋ (Close)
+                {t3('Cufi', 'Close', 'ዝጋ (Close)')}
               </button>
             </div>
           </div>
@@ -1069,10 +1203,10 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-slate-900">
-                    አዲስ የተማሪዎች ውጤት መመዝገቢያ
+                    {t3('Galmee Qabxii Barattootaa Haaraa', 'New Student Grade Submission', 'አዲስ የተማሪዎች ውጤት መመዝገቢያ')}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    ደረጃ 1፡ መምህሩ ውጤቱን ለክፍል ተጠሪ መምህር የሚያስተላልፍበት
+                    {t3('Sadarkaa 1: Barsiisaan qabxii gara itti gaafatamaa kutaatti dabarsuu', 'Stage 1: Teacher submits grades to Homeroom Teacher', 'ደረጃ 1፡ መምህሩ ውጤቱን ለክፍል ተጠሪ መምህር የሚያስተላልፍበት')}
                   </p>
                 </div>
               </div>
@@ -1088,70 +1222,70 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
             <form onSubmit={handleCreateNewBatch} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">ክፍል (Grade) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">{t3('Kutaa (Grade) *', 'Grade *', 'ክፍል (Grade) *')}</label>
                   <select
                     value={newGrade}
                     onChange={(e) => setNewGrade(Number(e.target.value))}
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-bold text-slate-800"
                   >
-                    <option value={9}>Grade 9</option>
-                    <option value={10}>Grade 10</option>
-                    <option value={11}>Grade 11</option>
-                    <option value={12}>Grade 12</option>
+                    <option value={9}>{t3('Kutaa 9', 'Grade 9', 'Grade 9')}</option>
+                    <option value={10}>{t3('Kutaa 10', 'Grade 10', 'Grade 10')}</option>
+                    <option value={11}>{t3('Kutaa 11', 'Grade 11', 'Grade 11')}</option>
+                    <option value={12}>{t3('Kutaa 12', 'Grade 12', 'Grade 12')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">ክፍልፋይ (Section) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">{t3('Garee (Section) *', 'Section *', 'ክፍልፋይ (Section) *')}</label>
                   <select
                     value={newSection}
                     onChange={(e) => setNewSection(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-bold text-slate-800"
                   >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
+                    <option value="A">{t3('Garee A', 'Section A', 'Section A')}</option>
+                    <option value="B">{t3('Garee B', 'Section B', 'Section B')}</option>
+                    <option value="C">{t3('Garee C', 'Section C', 'Section C')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">የትምህርት አይነት (Subject) *</label>
+                <label className="block font-bold text-slate-700 mb-1">{t3('Gosa Barnootaa (Subject) *', 'Subject *', 'የትምህርት አይነት (Subject) *')}</label>
                 <select
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-bold text-slate-800"
                 >
-                  <option value="Mathematics (ሒሳብ)">Mathematics (ሒሳብ)</option>
-                  <option value="English (እንግሊዝኛ)">English (እንግሊዝኛ)</option>
-                  <option value="Physics (ፊዚክስ)">Physics (ፊዚክስ)</option>
-                  <option value="Chemistry (ኬሚስትሪ)">Chemistry (ኬሚስትሪ)</option>
-                  <option value="Biology (ባዮሎጂ)">Biology (ባዮሎጂ)</option>
-                  <option value="Afaan Oromoo (ኦሮሚኛ)">Afaan Oromoo (ኦሮሚኛ)</option>
-                  <option value="Citizenship (ስነ-ዜጋ)">Citizenship (ስነ-ዜጋ)</option>
-                  <option value="የተጠናቀረ የክፍሉ ውጤት (All Subjects)">የተጠናቀረ የክፍሉ ውጤት (All Subjects)</option>
+                  <option value="Mathematics (ሒሳብ)">{getSubjectDisplay('Mathematics (ሒሳብ)')}</option>
+                  <option value="English (እንግሊዝኛ)">{getSubjectDisplay('English (እንግሊዝኛ)')}</option>
+                  <option value="Physics (ፊዚክስ)">{getSubjectDisplay('Physics (ፊዚክስ)')}</option>
+                  <option value="Chemistry (ኬሚስትሪ)">{getSubjectDisplay('Chemistry (ኬሚስትሪ)')}</option>
+                  <option value="Biology (ባዮሎጂ)">{getSubjectDisplay('Biology (ባዮሎጂ)')}</option>
+                  <option value="Afaan Oromoo (ኦሮሚኛ)">{getSubjectDisplay('Afaan Oromoo (ኦሮሚኛ)')}</option>
+                  <option value="Citizenship (ስነ-ዜጋ)">{getSubjectDisplay('Citizenship (ስነ-ዜጋ)')}</option>
+                  <option value="የተጠናቀረ የክፍሉ ውጤት (All Subjects)">{getSubjectDisplay('የተጠናቀረ የክፍሉ ውጤት (All Subjects)')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">የውጤት ወቅት (Assessment Period) *</label>
+                <label className="block font-bold text-slate-700 mb-1">{t3('Yeroo Qabxii (Assessment Period) *', 'Assessment Period *', 'የውጤት ወቅት (Assessment Period) *')}</label>
                 <select
                   value={newPeriod}
                   onChange={(e) => setNewPeriod(e.target.value as AcademicPeriodType)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-bold text-slate-800"
                 >
-                  <option value="quarter_1">1ኛ ሩብ ዓመት (Quarter 1)</option>
-                  <option value="quarter_2">2ኛ ሩብ ዓመት (Quarter 2)</option>
-                  <option value="semester_1">1ኛ ግማሽ ዓመት (Semester 1)</option>
-                  <option value="quarter_3">3ኛ ሩብ ዓመት (Quarter 3)</option>
-                  <option value="quarter_4">4ኛ ሩብ ዓመት (Quarter 4)</option>
-                  <option value="semester_2">2ኛ ግማሽ ዓመት (Semester 2)</option>
-                  <option value="annual">የሙሉ ዓመት ጠቅላላ (Annual Summary)</option>
+                  <option value="quarter_1">{getPeriodLabel('quarter_1')}</option>
+                  <option value="quarter_2">{getPeriodLabel('quarter_2')}</option>
+                  <option value="semester_1">{getPeriodLabel('semester_1')}</option>
+                  <option value="quarter_3">{getPeriodLabel('quarter_3')}</option>
+                  <option value="quarter_4">{getPeriodLabel('quarter_4')}</option>
+                  <option value="semester_2">{getPeriodLabel('semester_2')}</option>
+                  <option value="annual">{getPeriodLabel('annual')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">የመምህሩ ሙሉ ስም *</label>
+                <label className="block font-bold text-slate-700 mb-1">{t3('Maqaa Guutuu Barsiisaa *', 'Teacher Full Name *', 'የመምህሩ ሙሉ ስም *')}</label>
                 <input
                   type="text"
                   required
@@ -1162,30 +1296,36 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">ውጤቱን የሚረከበው የክፍል ተጠሪ መምህር *</label>
+                <label className="block font-bold text-slate-700 mb-1">{t3('Barsiisaa Itti Gaafatamaa Kutaa Qabxii Fudhatu *', 'Receiving Homeroom Teacher *', 'ውጤቱን የሚረከበው የክፍል ተጠሪ መምህር *')}</label>
                 <input
                   type="text"
                   required
                   value={newHomeroomTeacherName}
                   onChange={(e) => setNewHomeroomTeacherName(e.target.value)}
-                  placeholder="የክፍል ተጠሪ መምህር ስም..."
+                  placeholder={t3('Maqaa barsiisaa itti gaafatamaa kutaa...', 'Homeroom teacher name...', 'የክፍል ተጠሪ መምህር ስም...')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">የመምህሩ አስተያየት / ማስታወሻ</label>
+                <label className="block font-bold text-slate-700 mb-1">{t3('Yaada / Yaadannoo Barsiisaa', 'Teacher Notes', 'የመምህሩ አስተያየት / ማስታወሻ')}</label>
                 <textarea
                   rows={2}
                   value={newTeacherNotes}
                   onChange={(e) => setNewTeacherNotes(e.target.value)}
-                  placeholder="ስለ ውጤቱ ማጠቃለያ ማስታወሻ..."
+                  placeholder={t3('Yaadannoo cuunfaa waa\'ee qabxii...', 'Summary remarks on scores...', 'ስለ ውጤቱ ማጠቃለያ ማስታወሻ...')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium"
                 />
               </div>
 
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-snug">
-                ውጤቱ ሲላክ በቀጥታ ወደ <strong>ደረጃ 2 (የክፍል ተጠሪ መምህር)</strong> ይተላለፋል፤ ክፍል ተጠሪው አረጋግጦ ለ<strong>ዳይሬክተር</strong> ያስተላልፋል፤ ዳይሬክተሩ ሲያፀድቅ ለተማሪ/ወላጅ እና ለትምህርት ቢሮ ይደርሳል።
+                {isOm ? (
+                  <>Qabxiin yoo ergamu kallattiin gara <strong>Sadarkaa 2 (Barsiisaa Itti Gaafatamaa Kutaa)</strong> darba; itti gaafatamaan kutaa mirkaneessee gara <strong>Daayirektaraa</strong> erga; daayirektarri yoo mirkaneessu barataa/maatii fi Biiroo Barnootaa qaqqaba.</>
+                ) : isEn ? (
+                  <>Once submitted, grades flow to <strong>Stage 2 (Homeroom Teacher)</strong>, then to the <strong>Director</strong>, and upon approval to Students/Parents and the Bureau.</>
+                ) : (
+                  <>ውጤቱ ሲላክ በቀጥታ ወደ <strong>ደረጃ 2 (የክፍል ተጠሪ መምህር)</strong> ይተላለፋል፤ ክፍል ተጠሪው አረጋግጦ ለ<strong>ዳይሬክተር</strong> ያስተላልፋል፤ ዳይሬክተሩ ሲያፀድቅ ለተማሪ/ወላጅ እና ለትምህርት ቢሮ ይደርሳል።</>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -1194,14 +1334,14 @@ export const GradeApprovalWorkflowDesk: React.FC<GradeApprovalWorkflowDeskProps>
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-gradient-to-r from-emerald-800 to-teal-900 hover:from-emerald-700 hover:to-teal-800 text-white font-black rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>ውጤቱን ለክፍል ተጠሪ ላክ</span>
+                  <span>{t3('Qabxii Itti Gaafatamaa Kutaaf Ergi', 'Submit to Homeroom Teacher', 'ውጤቱን ለክፍል ተጠሪ ላክ')}</span>
                 </button>
               </div>
             </form>

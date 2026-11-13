@@ -30,6 +30,35 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
   currentUser,
   currentLang
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
+  const getCategoryDisplay = (cat: string) => {
+    if (cat === 'Mathematics (ሂሳብ)' || cat.includes('Mathematics')) {
+      return t3('Herrega (Mathematics)', 'Mathematics', 'ሂሳብ (Mathematics)');
+    }
+    if (cat === 'Physics (ፊዚክስ)' || cat.includes('Physics')) {
+      return t3('Fiiziksii (Physics)', 'Physics', 'ፊዚክስ (Physics)');
+    }
+    if (cat === 'Chemistry (ኬሚስትሪ)' || cat.includes('Chemistry')) {
+      return t3('Keemistirii (Chemistry)', 'Chemistry', 'ኬሚስትሪ (Chemistry)');
+    }
+    if (cat === 'Biology (ባዮሎጂ)' || cat.includes('Biology')) {
+      return t3('Baayoloojii (Biology)', 'Biology', 'ባዮሎጂ (Biology)');
+    }
+    if (cat === 'Language & Literature') {
+      return t3('Afaanota fi Ogbarruu', 'Language & Literature', 'ቋንቋና ስነ-ጽሑፍ');
+    }
+    if (cat === 'History & Social Science') {
+      return t3('Seenaa fi Saayinsii Hawaasaa', 'History & Social Science', 'ማህበራዊ ሳይንስ');
+    }
+    if (cat === 'ICT & Technology') {
+      return t3('ICT fi Teeknooloojii', 'ICT & Technology', 'ኮምፒውተርና አይቲ');
+    }
+    return cat;
+  };
+
   const [books, setBooks] = useState<LibraryBookRecord[]>(() =>
     StorageService.getLibraryBooks(school.id)
   );
@@ -79,7 +108,7 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
       id: `bk-${Date.now()}`,
       schoolId: school.id,
       title: newTitle,
-      author: newAuthor || 'የደራሲ ስም',
+      author: newAuthor || t3('Barreessaa', 'Unknown Author', 'የደራሲ ስም'),
       category: newCategory,
       shelfCode: newShelfCode,
       totalCopies: Number(newCopies),
@@ -125,15 +154,27 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base sm:text-lg font-bold">
-                የትምህርት ቤተ-መጻሕፍት እና የመረጃ ማዕከል ጽ/ቤት (Library Desk)
+                {t3(
+                  'Waajjira Mana Kitaabaa fi Giddugala Odeeffannoo (Library Desk)',
+                  'School Library & Information Center Desk',
+                  'የትምህርት ቤተ-መጻሕፍት እና የመረጃ ማዕከል ጽ/ቤት (Library Desk)'
+                )}
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-400 text-blue-950">
-                የተለየ የስራ ክፍል (Isolated Workspace)
+                {t3('Kutaa Hojii Adda Bahe', 'Isolated Workspace', 'የተለየ የስራ ክፍል (Isolated Workspace)')}
               </span>
             </div>
             <p className="text-xs text-blue-200/90 mt-0.5">
-              ኃላፊ፡ <strong className="text-white">{currentUser?.name || 'የት/ቤት ቤተ-መጻሕፍት ባለሙያ'}</strong> ·
-              የመጻሕፍት ካታሎግ፣ የተማሪዎች ንባብ አገልግሎትና የተውሶ መጽሐፍ ቁጥጥር
+              {t3('Itti Gaafatamaa:', 'Head:', 'ኃላፊ፡')}{' '}
+              <strong className="text-white">
+                {currentUser?.name || t3('Ogeessa Mana Kitaabaa M/B', 'School Librarian', 'የት/ቤት ቤተ-መጻሕፍት ባለሙያ')}
+              </strong>{' '}
+              ·{' '}
+              {t3(
+                'Kaataaloogii kitaabotaa, tajaajila dubbisaa barattootaa fi to\'annoo ergisa kitaabaa',
+                'Book catalog, student reading services, and book lending control',
+                'የመጻሕፍት ካታሎግ፣ የተማሪዎች ንባብ አገልግሎትና የተውሶ መጽሐፍ ቁጥጥር'
+              )}
             </p>
           </div>
         </div>
@@ -144,62 +185,78 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-xs shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>አዲስ መጽሐፍ መዝግብ</span>
+          <span>{t3('Kitaaba Haaraa Galmeessi', 'Register New Book', 'አዲስ መጽሐፍ መዝግብ')}</span>
         </button>
       </div>
 
       {/* 2. Statistical Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 block">አጠቃላይ የመጽሐፍ ቅጾች</span>
+          <span className="text-[11px] font-semibold text-slate-500 block">
+            {t3('Baay\'ina Kitaabota Waliigalaa', 'Total Book Copies', 'አጠቃላይ የመጽሐፍ ቅጾች')}
+          </span>
           <div className="flex items-baseline justify-between">
             <span className="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono">
               {totalCopies}
             </span>
             <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full font-bold">
-              {books.length} አርዕስት
+              {books.length} {t3('Mata-duree', 'Titles', 'አርዕስት')}
             </span>
           </div>
-          <span className="text-[10px] text-slate-400 block truncate">በተቋሙ ካታሎግ ውስጥ</span>
+          <span className="text-[10px] text-slate-400 block truncate">
+            {t3('Kaataaloogii mana barumsaa keessatti', 'In school catalog', 'በተቋሙ ካታሎግ ውስጥ')}
+          </span>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 block">ለተማሪ የተዋሱ መጻሕፍት</span>
+          <span className="text-[11px] font-semibold text-slate-500 block">
+            {t3('Kitaabota Barattootaaf Ergifaman', 'Books Borrowed by Students', 'ለተማሪ የተዋሱ መጻሕፍት')}
+          </span>
           <div className="flex items-baseline justify-between">
             <span className="text-xl sm:text-2xl font-extrabold text-amber-700 font-mono">
               {borrowedCount}
             </span>
             <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-bold">
-              በተማሪ እጅ ላይ
+              {t3('Harka Barattootaa', 'Checked Out', 'በተማሪ እጅ ላይ')}
             </span>
           </div>
-          <span className="text-[10px] text-slate-400 block truncate">መመለሻ ጊዜያቸው የተወሰነ</span>
+          <span className="text-[10px] text-slate-400 block truncate">
+            {t3('Yeroon deebii murtaa\'e', 'With return due dates', 'መመለሻ ጊዜያቸው የተወሰነ')}
+          </span>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 block">በመደርደሪያ ላይ ዝግጁ</span>
+          <span className="text-[11px] font-semibold text-slate-500 block">
+            {t3('Shalafii Irra Qophii Kan Jiran', 'Available on Shelves', 'በመደርደሪያ ላይ ዝግጁ')}
+          </span>
           <div className="flex items-baseline justify-between">
             <span className="text-xl sm:text-2xl font-extrabold text-emerald-800 font-mono">
               {availableCount}
             </span>
             <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
-              አሁኑኑ የሚሰጡ
+              {t3('Amma Kan Kennaman', 'Ready Now', 'አሁኑኑ የሚሰጡ')}
             </span>
           </div>
-          <span className="text-[10px] text-slate-400 block truncate">ለንባብ የተዘጋጁ</span>
+          <span className="text-[10px] text-slate-400 block truncate">
+            {t3('Dubbisuuf qophaa\'an', 'Ready for reading', 'ለንባብ የተዘጋጁ')}
+          </span>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500 block">የንባብ አዳራሽ ወንበሮች</span>
+          <span className="text-[11px] font-semibold text-slate-500 block">
+            {t3('Teessoo Galma Dubbisaa', 'Reading Hall Seats', 'የንባብ አዳራሽ ወንበሮች')}
+          </span>
           <div className="flex items-baseline justify-between">
             <span className="text-xl sm:text-2xl font-extrabold text-indigo-900 font-mono">
               {school.libraryCapacity || 80}
             </span>
             <span className="text-[10px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full font-bold">
-              ወንበር
+              {t3('Teessoo', 'Seats', 'ወንበር')}
             </span>
           </div>
-          <span className="text-[10px] text-slate-400 block truncate">የተማሪዎች ንባብ ማዕከል</span>
+          <span className="text-[10px] text-slate-400 block truncate">
+            {t3('Giddugala dubbisaa barattootaa', 'Student reading center', 'የተማሪዎች ንባብ ማዕከል')}
+          </span>
         </div>
       </div>
 
@@ -211,7 +268,11 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="መጽሐፍ በርዕስ፣ በደራሲ፣ በመደርደሪያ ኮድ ወይም በተዋሰው ተማሪ ፈልግ..."
+            placeholder={t3(
+              'Kitaaba mata-dureedhaan, barreessaan, koodii shalafiitiin ykn barataa ergifateen barbaadi...',
+              'Search book by title, author, shelf code, or borrower...',
+              'መጽሐፍ በርዕስ፣ በደራሲ፣ በመደርደሪያ ኮድ ወይም በተዋሰው ተማሪ ፈልግ...'
+            )}
             className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
           />
         </div>
@@ -222,9 +283,9 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white text-slate-700 font-medium focus:outline-hidden"
           >
-            <option value="all">ሁሉም ሁኔታ (All Status)</option>
-            <option value="available">ዝግጁ (Available)</option>
-            <option value="borrowed">የተዋሱ (Borrowed)</option>
+            <option value="all">{t3('Haala Hundaa (All Status)', 'All Status', 'ሁሉም ሁኔታ (All Status)')}</option>
+            <option value="available">{t3('Qophii (Available)', 'Available', 'ዝግጁ (Available)')}</option>
+            <option value="borrowed">{t3('Kan Ergifaman (Borrowed)', 'Borrowed', 'የተዋሱ (Borrowed)')}</option>
           </select>
         </div>
       </div>
@@ -234,10 +295,16 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
             <BookMarked className="w-4 h-4 text-blue-700" />
-            <span>የትምህርት ቤቱ የመጻሕፍት ዝርዝር እና የተውሶ መዝገብ</span>
+            <span>
+              {t3(
+                'Tarree Kitaabota Mana Barumsaa fi Galmee Ergisaa',
+                'School Book Inventory & Lending Register',
+                'የትምህርት ቤቱ የመጻሕፍት ዝርዝር እና የተውሶ መዝገብ'
+              )}
+            </span>
           </h3>
           <span className="text-xs text-slate-500 font-medium">
-            ድምር፡ <strong>{filteredBooks.length}</strong> መጻሕፍት
+            {t3('Waliigala:', 'Total:', 'ድምር፡')} <strong>{filteredBooks.length}</strong> {t3('kitaabota', 'books', 'መጻሕፍት')}
           </span>
         </div>
 
@@ -251,7 +318,7 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-slate-900 text-sm">{book.title}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                    {book.category}
+                    {getCategoryDisplay(book.category)}
                   </span>
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-blue-50 text-blue-800 border border-blue-200">
                     {book.shelfCode}
@@ -259,29 +326,41 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
                   {book.status === 'borrowed' ? (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      <span>የተዋሰ</span>
+                      <span>{t3('Ergifameera', 'Borrowed', 'የተዋሰ')}</span>
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
                       <Check className="w-3 h-3" />
-                      <span>ዝግጁ ({book.availableCopies}/{book.totalCopies})</span>
+                      <span>
+                        {t3('Qophii', 'Available', 'ዝግጁ')} ({book.availableCopies}/{book.totalCopies})
+                      </span>
                     </span>
                   )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500">
-                  <span>ደራሲ/አዘጋጅ፡ <strong>{book.author}</strong></span>
+                  <span>
+                    {t3('Barreessaa:', 'Author:', 'ደራሲ/አዘጋጅ፡')} <strong>{book.author}</strong>
+                  </span>
                   <span>·</span>
-                  <span>ጠቅላላ ኮፒ፡ <strong>{book.totalCopies} ቅጾች</strong></span>
+                  <span>
+                    {t3('Koppii Waliigalaa:', 'Total Copies:', 'ጠቅላላ ኮፒ፡')}{' '}
+                    <strong>
+                      {book.totalCopies} {t3('koppii', 'copies', 'ቅጾች')}
+                    </strong>
+                  </span>
                   {book.borrowerName && (
                     <>
                       <span>·</span>
                       <span className="text-amber-800 font-medium">
-                        የተዋሰው ተማሪ፡ <strong>{book.borrowerName} ({book.borrowerGrade})</strong>
+                        {t3('Barataa Ergifate:', 'Borrower:', 'የተዋሰው ተማሪ፡')}{' '}
+                        <strong>
+                          {book.borrowerName} ({book.borrowerGrade})
+                        </strong>
                       </span>
                       <span>·</span>
                       <span className="text-slate-600">
-                        የመመለሻ ቀን፡ <strong>{book.returnDueDate}</strong>
+                        {t3('Guyyaa Deebii:', 'Due Date:', 'የመመለሻ ቀን፡')} <strong>{book.returnDueDate}</strong>
                       </span>
                     </>
                   )}
@@ -297,7 +376,7 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>ተመልሷል (Return)</span>
+                    <span>{t3('Deebi\'eera (Return)', 'Mark Returned', 'ተመልሷል (Return)')}</span>
                   </button>
                 ) : (
                   <button
@@ -306,7 +385,7 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
                     <User className="w-3.5 h-3.5" />
-                    <span>ለተማሪ አውርስ (Lend)</span>
+                    <span>{t3('Barataaf Ergisi (Lend)', 'Lend to Student', 'ለተማሪ አውርስ (Lend)')}</span>
                   </button>
                 )}
               </div>
@@ -315,7 +394,7 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
 
           {filteredBooks.length === 0 && (
             <div className="py-12 text-center text-slate-400 text-xs">
-              ምንም የተገኘ መጽሐፍ የለም።
+              {t3('Kitaabni argame hin jiru.', 'No books found.', 'ምንም የተገኘ መጽሐፍ የለም።')}
             </div>
           )}
         </div>
@@ -328,7 +407,9 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-blue-700" />
-                <span>መጽሐፍ ለተማሪ ማዋሻ ቅጽ</span>
+                <span>
+                  {t3('Unka Kitaaba Barataaf Ergisuu', 'Lend Book to Student Form', 'መጽሐፍ ለተማሪ ማዋሻ ቅጽ')}
+                </span>
               </h3>
               <button
                 type="button"
@@ -340,52 +421,55 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
             </div>
 
             <div className="p-3 bg-blue-50 rounded-xl text-xs text-blue-900">
-              የተመረጠ መጽሐፍ፡ <strong>{selectedBookForBorrow.title}</strong>
-              <div className="text-[11px] text-blue-700">መደርደሪያ፡ {selectedBookForBorrow.shelfCode}</div>
+              {t3('Kitaaba Filatame:', 'Selected Book:', 'የተመረጠ መጽሐፍ፡')}{' '}
+              <strong>{selectedBookForBorrow.title}</strong>
+              <div className="text-[11px] text-blue-700">
+                {t3('Shalafii:', 'Shelf:', 'መደርደሪያ፡')} {selectedBookForBorrow.shelfCode}
+              </div>
             </div>
 
             <form onSubmit={handleBorrow} className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የተማሪው ሙሉ ስም *
+                  {t3('Maqaa Guutuu Barataa *', 'Student Full Name *', 'የተማሪው ሙሉ ስም *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={borrowerName}
                   onChange={(e) => setBorrowerName(e.target.value)}
-                  placeholder="ምሳሌ፡ ኪያር ከድር አሊ"
+                  placeholder={t3('Fkn: Kiyaar Kadir Alii', 'e.g., Kiyar Kedir Ali', 'ምሳሌ፡ ኪያር ከድር አሊ')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ክፍል እና ክፍልፋይ *
+                  {t3('Kutaa fi Daree *', 'Grade & Section *', 'ክፍል እና ክፍልፋይ *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={borrowerGrade}
                   onChange={(e) => setBorrowerGrade(e.target.value)}
-                  placeholder="ምሳሌ፡ Grade 10A"
+                  placeholder={t3('Fkn: Grade 10A', 'e.g., Grade 10A', 'ምሳሌ፡ Grade 10A')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የተውሶ ጊዜ ቆይታ (ቀናት)
+                  {t3('Turtii Yeroo Ergisaa (Guyyoota)', 'Loan Duration (Days)', 'የተውሶ ጊዜ ቆይታ (ቀናት)')}
                 </label>
                 <select
                   value={returnDays}
                   onChange={(e) => setReturnDays(Number(e.target.value))}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-hidden"
                 >
-                  <option value={7}>1 ሳምንት (7 ቀናት)</option>
-                  <option value={14}>2 ሳምንት (14 ቀናት)</option>
-                  <option value={21}>3 ሳምንት (21 ቀናት)</option>
-                  <option value={30}>1 ወር (30 ቀናት)</option>
+                  <option value={7}>{t3('Torban 1 (Guyyaa 7)', '1 Week (7 Days)', '1 ሳምንት (7 ቀናት)')}</option>
+                  <option value={14}>{t3('Torban 2 (Guyyaa 14)', '2 Weeks (14 Days)', '2 ሳምንት (14 ቀናት)')}</option>
+                  <option value={21}>{t3('Torban 3 (Guyyaa 21)', '3 Weeks (21 Days)', '3 ሳምንት (21 ቀናት)')}</option>
+                  <option value={30}>{t3('Ji\'a 1 (Guyyaa 30)', '1 Month (30 Days)', '1 ወር (30 ቀናት)')}</option>
                 </select>
               </div>
 
@@ -395,13 +479,13 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
                   onClick={() => setSelectedBookForBorrow(null)}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-medium"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
                 >
-                  አውርስ (Confirm Loan)
+                  {t3('Ergisuu Mirkaneessi', 'Confirm Loan', 'አውርስ (Confirm Loan)')}
                 </button>
               </div>
             </form>
@@ -416,7 +500,9 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-blue-700" />
-                <span>አዲስ መጽሐፍ ወደ ካታሎግ መጨመሪያ</span>
+                <span>
+                  {t3('Kitaaba Haaraa Kaataaloogiitti Dabaluu', 'Add New Book to Catalog', 'አዲስ መጽሐፍ ወደ ካታሎግ መጨመሪያ')}
+                </span>
               </h3>
               <button
                 type="button"
@@ -430,27 +516,27 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
             <form onSubmit={handleAddBook} className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የመጽሐፉ ርዕስ *
+                  {t3('Mata-duree Kitaabaa *', 'Book Title *', 'የመጽሐፉ ርዕስ *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="ምሳሌ፡ የ12ኛ ክፍል ባዮሎጂ"
+                  placeholder={t3('Fkn: Baayoloojii Kutaa 12ffaa', 'e.g., Grade 12 Biology', 'ምሳሌ፡ የ12ኛ ክፍል ባዮሎጂ')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ደራሲ / አዘጋጅ
+                  {t3('Barreessaa / Qopheessaa', 'Author / Publisher', 'ደራሲ / አዘጋጅ')}
                 </label>
                 <input
                   type="text"
                   value={newAuthor}
                   onChange={(e) => setNewAuthor(e.target.value)}
-                  placeholder="ምሳሌ፡ ትምህርት ሚኒስቴር"
+                  placeholder={t3('Fkn: Ministeera Barnootaa', 'e.g., Ministry of Education', 'ምሳሌ፡ ትምህርት ሚኒስቴር')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
@@ -458,33 +544,33 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት ዘርፍ
+                    {t3('Damee Barnootaa', 'Subject Category', 'የትምህርት ዘርፍ')}
                   </label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:outline-hidden"
                   >
-                    <option value="Mathematics (ሂሳብ)">ሂሳብ (Mathematics)</option>
-                    <option value="Physics (ፊዚክስ)">ፊዚክስ (Physics)</option>
-                    <option value="Chemistry (ኬሚስትሪ)">ኬሚስትሪ (Chemistry)</option>
-                    <option value="Biology (ባዮሎጂ)">ባዮሎጂ (Biology)</option>
-                    <option value="Language & Literature">ቋንቋና ስነ-ጽሑፍ</option>
-                    <option value="History & Social Science">ማህበራዊ ሳይንስ</option>
-                    <option value="ICT & Technology">ኮምፒውተርና አይቲ</option>
+                    <option value="Mathematics (ሂሳብ)">{t3('Herrega (Mathematics)', 'Mathematics', 'ሂሳብ (Mathematics)')}</option>
+                    <option value="Physics (ፊዚክስ)">{t3('Fiiziksii (Physics)', 'Physics', 'ፊዚክስ (Physics)')}</option>
+                    <option value="Chemistry (ኬሚስትሪ)">{t3('Keemistirii (Chemistry)', 'Chemistry', 'ኬሚስትሪ (Chemistry)')}</option>
+                    <option value="Biology (ባዮሎጂ)">{t3('Baayoloojii (Biology)', 'Biology', 'ባዮሎጂ (Biology)')}</option>
+                    <option value="Language & Literature">{t3('Afaanota fi Ogbarruu', 'Language & Literature', 'ቋንቋና ስነ-ጽሑፍ')}</option>
+                    <option value="History & Social Science">{t3('Seenaa fi Saayinsii Hawaasaa', 'History & Social Science', 'ማህበራዊ ሳይንስ')}</option>
+                    <option value="ICT & Technology">{t3('ICT fi Teeknooloojii', 'ICT & Technology', 'ኮምፒውተርና አይቲ')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የመደርደሪያ ኮድ
+                    {t3('Koodii Shalafii', 'Shelf Code', 'የመደርደሪያ ኮድ')}
                   </label>
                   <input
                     type="text"
                     required
                     value={newShelfCode}
                     onChange={(e) => setNewShelfCode(e.target.value)}
-                    placeholder="ምሳሌ፡ SH-BIO-05"
+                    placeholder={t3('Fkn: SH-BIO-05', 'e.g., SH-BIO-05', 'ምሳሌ፡ SH-BIO-05')}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
                   />
                 </div>
@@ -492,7 +578,7 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የቅጾች (Copies) ብዛት
+                  {t3('Baay\'ina Koppii (Copies)', 'Number of Copies', 'የቅጾች (Copies) ብዛት')}
                 </label>
                 <input
                   type="number"
@@ -510,13 +596,13 @@ export const SchoolLibraryDesk: React.FC<SchoolLibraryDeskProps> = ({
                   onClick={() => setShowAddBookModal(false)}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-medium"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
                 >
-                  መዝግብ (Save Book)
+                  {t3('Galmeessi (Save Book)', 'Save Book', 'መዝግብ (Save Book)')}
                 </button>
               </div>
             </form>

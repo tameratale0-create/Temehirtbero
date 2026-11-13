@@ -508,20 +508,32 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       item.id,
       item,
       {
-        authorName: currentUser?.name || 'የትምህርት ቤት አስተዳዳሪ',
+        authorName:
+          currentUser?.name ||
+          (currentLang === 'om'
+            ? 'Bulchaa Mana Barumsaa'
+            : currentLang === 'en'
+            ? 'School Administrator'
+            : 'የትምህርት ቤት አስተዳዳሪ'),
         schoolName: currentSchool.name,
         role: item.role,
-        description: `የ${item.fullName} (${item.role}) የማስረጃና ፋይዳ ID መረጃ`
+        description:
+          currentLang === 'om'
+            ? `Ragaa fi Eenyummaa Fayda kan ${item.fullName} (${item.role})`
+            : currentLang === 'en'
+            ? `Credentials & Fayda ID record for ${item.fullName} (${item.role})`
+            : `የ${item.fullName} (${item.role}) የማስረጃና ፋይዳ ID መረጃ`
       }
     );
   };
 
+  const [confirmDeleteStakeholderId, setConfirmDeleteStakeholderId] = useState<string | null>(null);
+
   const handleDeleteStakeholder = (id: string) => {
-    if (confirm('ይህን ባለድርሻ አካል መረጃ መሰረዝ ይፈልጋሉ? (Are you sure you want to delete this stakeholder?)')) {
-      StorageService.deleteStakeholder(id);
-      const updated = StorageService.getStakeholders(currentSchool.id, currentSchool.name);
-      setStakeholders(updated);
-    }
+    StorageService.deleteStakeholder(id);
+    const updated = StorageService.getStakeholders(currentSchool.id, currentSchool.name);
+    setStakeholders(updated);
+    setConfirmDeleteStakeholderId(null);
   };
 
   // User Codes state
@@ -674,9 +686,29 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       rank: students.length + 1,
       shift: newStudentShift,
       nightProgramType: isNight ? 'secondary_night' : undefined,
-      occupation: isNight ? (newStudentOccupation.trim() || 'የግል ስራ (Self-Employed)') : undefined,
-      workplace: isNight ? (newStudentWorkplace.trim() || 'ሻሸመኔ') : undefined,
-      shiftSchedule: isNight ? 'ሰኞ - አርብ | 11:30 - 3:00 ማታ' : 'ሰኞ - አርብ | 2:00 - 9:00 ቀን',
+      occupation: isNight
+        ? newStudentOccupation.trim() ||
+          (currentLang === 'om'
+            ? 'Hojii Dhuunfaa (Self-Employed)'
+            : currentLang === 'en'
+            ? 'Self-Employed'
+            : 'የግል ስራ (Self-Employed)')
+        : undefined,
+      workplace: isNight
+        ? newStudentWorkplace.trim() ||
+          (currentLang === 'om' || currentLang === 'en' ? 'Shashemene' : 'ሻሸመኔ')
+        : undefined,
+      shiftSchedule: isNight
+        ? currentLang === 'om'
+          ? 'Wiixata - Jimaata | 11:30 - 3:00 Galgala'
+          : currentLang === 'en'
+          ? 'Mon - Fri | 5:30 - 9:00 PM (Night)'
+          : 'ሰኞ - አርብ | 11:30 - 3:00 ማታ'
+        : currentLang === 'om'
+        ? 'Wiixata - Jimaata | 2:00 - 9:00 Guyyaa'
+        : currentLang === 'en'
+        ? 'Mon - Fri | 8:00 AM - 3:00 PM (Day)'
+        : 'ሰኞ - አርብ | 2:00 - 9:00 ቀን',
       emergencyContact: newParentPhone.trim(),
       scores: defaultScores
     };
@@ -696,9 +728,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       newRec.id,
       newRec,
       {
-        authorName: currentUser?.name || 'የትምህርት ቤት አስተዳዳሪ',
+        authorName:
+          currentUser?.name ||
+          (currentLang === 'om'
+            ? 'Bulchaa Mana Barumsaa'
+            : currentLang === 'en'
+            ? 'School Administrator'
+            : 'የትምህርት ቤት አስተዳዳሪ'),
         schoolName: currentSchool.name,
-        description: `የተማሪ ${newRec.fullName} (ክፍል ${newRec.grade}${newRec.section}) የውጤትና ምዝገባ መረጃ`
+        description:
+          currentLang === 'om'
+            ? `Odeeffannoo galmee fi qabxii barataa ${newRec.fullName} (Kutaa ${newRec.grade}${newRec.section})`
+            : currentLang === 'en'
+            ? `Enrollment and grade record for ${newRec.fullName} (Grade ${newRec.grade}${newRec.section})`
+            : `የተማሪ ${newRec.fullName} (ክፍል ${newRec.grade}${newRec.section}) የውጤትና ምዝገባ መረጃ`
       }
     );
 
@@ -762,7 +805,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
       femalePassed: Math.round((totalStudents || currentSchool.totalStudents) * 0.46),
       promotedPercentage: 94.2,
       averageScore: avgScore,
-      topStudentName: students[0]?.fullName || 'ኪያር ከድር አሊ',
+      topStudentName:
+        students[0]?.fullName ||
+        (currentLang === 'om'
+          ? 'Kiyaar Kadir Alii'
+          : currentLang === 'en'
+          ? 'Kiyar Kedir Ali'
+          : 'ኪያር ከድር አሊ'),
       topStudentScore: 98.4,
       submittedDate: new Date().toISOString().split('T')[0],
       status: 'submitted'
@@ -1050,20 +1099,46 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm sm:text-base font-black text-amber-950 tracking-tight">
-                  🏛️ የሻሸመኔ ከተማ ትምህርት ቢሮ የቁጥጥር እይታ (Bureau Read-Only Mode)
+                  {currentLang === 'om'
+                    ? '🏛️ Mul’ata To’annoo Biiroo Barnootaa Shaashamannee (Bureau Read-Only Mode)'
+                    : currentLang === 'en'
+                    ? '🏛️ Shashemene Education Bureau Supervisory View (Read-Only Mode)'
+                    : '🏛️ የሻሸመኔ ከተማ ትምህርት ቢሮ የቁጥጥር እይታ (Bureau Read-Only Mode)'}
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-amber-300 text-amber-950 border border-amber-500 font-black uppercase tracking-wider">
-                  ማየት ብቻ · Read-Only
+                  {currentLang === 'om'
+                    ? 'Ilaaluu Qofa · Read-Only'
+                    : currentLang === 'en'
+                    ? 'Read-Only View'
+                    : 'ማየት ብቻ · Read-Only'}
                 </span>
               </div>
               <p className="text-xs text-amber-900 mt-1 leading-relaxed">
-                የትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውንም መረጃዎች (የተማሪዎች፣ የሰራተኞች፣ የውጤት፣ የፋይናንስና አስተዳደራዊ መረጃዎች) <strong>ማየት ብቻ</strong> ይችላል። መረጃዎችን ማሻሻል፣ ማስተካከል፣ መመዝገብ ወይም መሰረዝ በጥብቅ የተከለከለ ሲሆን ስልጣኑ የትምህርት ቤቱ አስተዳዳሪዎች ብቻ ነው።
+                {currentLang === 'om' ? (
+                  <>
+                    Biiroon Barnootaa odeeffannoo manneen barnootaa irraa ergamu (barattoota, hojjettoota, qabxii, faayinaansii fi bulchiinsa) <strong>ilaaluu qofa</strong> danda’a. Odeeffannoo jijjiiruun, sirreessuun, galmeessuun ykn haquun dhorkaa dha; aangoon sun bulchitoota mana barumsaa qofaaf kennameera.
+                  </>
+                ) : currentLang === 'en' ? (
+                  <>
+                    The Education Bureau has <strong>read-only access</strong> to all school records (students, staff, grades, finance, and administration). Modifying, editing, registering, or deleting records is restricted exclusively to authorized school administrators.
+                  </>
+                ) : (
+                  <>
+                    የትምህርት ቢሮ ከትምህርት ቤት የሚላኩ ማንኛውንም መረጃዎች (የተማሪዎች፣ የሰራተኞች፣ የውጤት፣ የፋይናንስና አስተዳደራዊ መረጃዎች) <strong>ማየት ብቻ</strong> ይችላል። መረጃዎችን ማሻሻል፣ ማስተካከል፣ መመዝገብ ወይም መሰረዝ በጥብቅ የተከለከለ ሲሆን ስልጣኑ የትምህርት ቤቱ አስተዳዳሪዎች ብቻ ነው።
+                  </>
+                )}
               </p>
             </div>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-200/90 rounded-xl text-xs font-black text-amber-950 border border-amber-400/80 shrink-0 self-start md:self-auto shadow-2xs">
             <Lock className="w-4 h-4 text-amber-900" />
-            <span>መረጃ መቀየር አይቻልም</span>
+            <span>
+              {currentLang === 'om'
+                ? 'Odeeffannoo Jijjiiruun Hin Danda’amu'
+                : currentLang === 'en'
+                ? 'Editing Restricted'
+                : 'መረጃ መቀየር አይቻልም'}
+            </span>
           </div>
         </div>
       )}
@@ -1178,7 +1253,19 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               type="button"
               onClick={() => setIsDeskOnly(!isDeskOnly)}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 cursor-pointer"
-              title={isDeskOnly ? 'መደበኛ እይታ' : 'ክፍሉን አጉላ'}
+              title={
+                isDeskOnly
+                  ? currentLang === 'om'
+                    ? 'Mul’ata Idilee'
+                    : currentLang === 'en'
+                    ? 'Standard View'
+                    : 'መደበኛ እይታ'
+                  : currentLang === 'om'
+                  ? 'Kutaa Guddisi'
+                  : currentLang === 'en'
+                  ? 'Expand Desk'
+                  : 'ክፍሉን አጉላ'
+              }
             >
               {isDeskOnly ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4 text-emerald-400" />}
             </button>
@@ -1210,10 +1297,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   type="button"
                   onClick={() => setShowLogoModal(true)}
                   className="absolute inset-0 bg-black/60 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-bold cursor-pointer"
-                  title="አርማ ቀይር / ጫን"
+                  title={currentLang === 'om' ? 'Asxaa Jijjiiri / Fe\'i' : currentLang === 'en' ? 'Change / Upload Logo' : 'አርማ ቀይር / ጫን'}
                 >
                   <Camera className="w-4 h-4 mb-0.5" />
-                  <span>ቀይር</span>
+                  <span>{currentLang === 'om' ? 'Jijjiiri' : currentLang === 'en' ? 'Change' : 'ቀይር'}</span>
                 </button>
               )}
             </div>
@@ -1247,20 +1334,22 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               {/* School Details Bar */}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-emerald-100 mt-2">
                 <span>
-                  ርዕሰ መምህር፡ <strong className="text-white">{currentSchool.principalName}</strong>
+                  {currentLang === 'om' ? 'Daarektara:' : currentLang === 'en' ? 'Principal:' : 'ርዕሰ መምህር፡'}{' '}
+                  <strong className="text-white">{currentSchool.principalName}</strong>
                 </span>
                 <span>·</span>
                 <span>
-                  ስልክ፡ <strong className="text-white font-mono">{currentSchool.phone}</strong>
+                  {currentLang === 'om' ? 'Bilbila:' : currentLang === 'en' ? 'Phone:' : 'ስልክ፡'}{' '}
+                  <strong className="text-white font-mono">{currentSchool.phone}</strong>
                 </span>
                 <span>·</span>
                 <div className="inline-flex items-center gap-1">
-                  <span>ኮድ፡</span>
+                  <span>{currentLang === 'om' ? 'Koodii:' : currentLang === 'en' ? 'Code:' : 'ኮድ፡'}</span>
                   <button
                     type="button"
                     onClick={() => copyCode(currentSchool.accessCode, 'school-access-code')}
                     className="font-mono bg-black/40 hover:bg-black/60 px-2 py-0.5 rounded font-bold text-amber-300 border border-amber-400/40 inline-flex items-center gap-1 transition-colors cursor-pointer"
-                    title="ኮድ ቅዳ"
+                    title={currentLang === 'om' ? 'Koodii waraabi' : currentLang === 'en' ? 'Copy code' : 'ኮድ ቅዳ'}
                   >
                     <span>{currentSchool.accessCode}</span>
                     {copiedCodeId === 'school-access-code' ? (
@@ -1281,10 +1370,12 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowLogoModal(true)}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold rounded-xl border border-amber-400/40 transition-colors shadow-xs"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold rounded-xl border border-amber-400/40 transition-colors shadow-xs cursor-pointer"
               >
                 <Camera className="w-3.5 h-3.5" />
-                <span>አርማ ጫን</span>
+                <span>
+                  {currentLang === 'om' ? 'Asxaa Fe\'i' : currentLang === 'en' ? 'Upload Logo' : 'አርማ ጫን'}
+                </span>
               </button>
             )}
 
@@ -1292,10 +1383,16 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <button
                 type="button"
                 onClick={onNavigateToBureauExams}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-emerald-700/70 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl border border-emerald-500/40 transition-colors"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-emerald-700/70 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl border border-emerald-500/40 transition-colors cursor-pointer"
               >
                 <Award className="w-3.5 h-3.5" />
-                <span>የመምህራን ፈተና</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Qormaata Barsiisotaa'
+                    : currentLang === 'en'
+                    ? 'Teacher Exams'
+                    : 'የመምህራን ፈተና'}
+                </span>
               </button>
             )}
 
@@ -1303,9 +1400,15 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <button
                 type="button"
                 onClick={onNavigateToTraining}
-                className="hidden xs:inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-teal-800/80 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl border border-teal-600/30 transition-colors"
+                className="hidden xs:inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-teal-800/80 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl border border-teal-600/30 transition-colors cursor-pointer"
               >
-                <span>የስልጠና ሰነዶች</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Sanadoota Leenjii'
+                    : currentLang === 'en'
+                    ? 'Training Docs'
+                    : 'የስልጠና ሰነዶች'}
+                </span>
               </button>
             )}
           </div>
@@ -1347,11 +1450,27 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs sm:text-sm font-bold text-white">
                   {isBureauConnected
-                    ? '✅ ከሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ጋር የተገናኘ (ኦፊሴላዊ ፈቃድ)'
+                    ? currentLang === 'om'
+                      ? '✅ Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee wajjin walqabateera (Eeyyama Seera-qabeessa)'
+                      : currentLang === 'en'
+                      ? '✅ Connected to Shashemene City Education Bureau (Official License)'
+                      : '✅ ከሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ጋር የተገናኘ (ኦፊሴላዊ ፈቃድ)'
                     : currentSchool.developerPaymentStatus === 'receipt_submitted'
-                    ? '📩 የክፍያ ደረሰኝ ቀርቧል (የአበልፃጊ ማረጋገጫ በመጠባበቅ ላይ)'
+                    ? currentLang === 'om'
+                      ? '📩 Nagaheen kaffaltii dhiyaateera (Mirkaneessa Misoosituu eeggataa jira)'
+                      : currentLang === 'en'
+                      ? '📩 Payment Receipt Submitted (Pending Developer Verification)'
+                      : '📩 የክፍያ ደረሰኝ ቀርቧል (የአበልፃጊ ማረጋገጫ በመጠባበቅ ላይ)'
                     : currentSchool.developerPaymentStatus === 'rejected'
-                    ? '❌ የባንክ ደረሰኝ ውድቅ ተደርጓል (እባክዎ ደግመው ይላኩ)'
+                    ? currentLang === 'om'
+                      ? '❌ Nagaheen baankii fudhatama hin arganne (Maaloo irra-deebi\'aa ergaa)'
+                      : currentLang === 'en'
+                      ? '❌ Bank Receipt Rejected (Please Resubmit)'
+                      : '❌ የባንክ ደረሰኝ ውድቅ ተደርጓል (እባክዎ ደግመው ይላኩ)'
+                    : currentLang === 'om'
+                    ? '🔒 Walitti-dhufeenyi Biiroo Barnootaa hin banamne (Eeyyama hin mirkanoofne)'
+                    : currentLang === 'en'
+                    ? '🔒 Bureau Connection Locked (Unverified License)'
                     : '🔒 የትምህርት ቢሮ ግንኙነት አልተከፈተም (ያልተረጋገጠ ፈቃድ)'}
                 </span>
                 <span
@@ -1370,7 +1489,15 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               </div>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                 {isBureauConnected
-                  ? 'ትምህርት ቤቱ የሲስተም አበልፃጊውን ፈቃድ በማሟላቱ ወደ ሻሸመኔ ትምህርት ቢሮ የተማሪዎች ሪፖርት፣ የውጤት ይሁንታና ኦፊሴላዊ መረጃዎችን በቀጥታ መለዋወጥ ይችላል።'
+                  ? currentLang === 'om'
+                    ? 'Manni barnootaa eeyyama misoosituu sirnichaa waan guuteef gabaasa barattootaa, mirkaneessa qabxii fi ragaalee seera-qabeessa gara Biiroo Barnootaa Shaashamanneetti kallattiin erguu danda\'a.'
+                    : currentLang === 'en'
+                    ? 'School is fully licensed; official report dispatch and exam synchronizations to City Education Bureau are fully active.'
+                    : 'ትምህርት ቤቱ የሲስተም አበልፃጊውን ፈቃድ በማሟላቱ ወደ ሻሸመኔ ትምህርት ቢሮ የተማሪዎች ሪፖርት፣ የውጤት ይሁንታና ኦፊሴላዊ መረጃዎችን በቀጥታ መለዋወጥ ይችላል።'
+                  : currentLang === 'om'
+                  ? 'Manni barnootaa galmee barattootaa fi qooda-fudhattootaa erga xumuree booda beekamtii argachuuf baankii kaffaltee nagahee ergaa.'
+                  : currentLang === 'en'
+                  ? 'After completing registrations, submit banking payment receipt for developer license activation to connect with the City Education Bureau.'
                   : 'ትምህርት ቤቱ የተማሪዎችን እና የባለድርሻ አካላትን ምዝገባ ካጠናቀቀ በኋላ ለእውቅና ወደ ትምህርት ቢሮ መረጃ ለመላክ ለሲስተም አበልፃጊ (ታምራት ዓለ) በባንክ ፈጽመው ደረሰኝ ይላኩ። በአበልፃጊው ሲረጋገጥ ግንኙነቱ በራስ-ሰር ይከፈታል።'}
               </p>
             </div>
@@ -1379,7 +1506,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           <button
             type="button"
             onClick={() => setShowDeveloperPaymentModal(true)}
-            className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm ${
+            className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer ${
               isBureauConnected
                 ? 'bg-emerald-800 hover:bg-emerald-700 text-white border border-emerald-600/40'
                 : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950'
@@ -1387,7 +1514,17 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           >
             <CreditCard className="w-4 h-4" />
             <span>
-              {isBureauConnected ? 'የፈቃድ እና ክፍያ ደረሰኝ' : '💳 ክፍያ ፈፅመው ደረሰኝ ይላኩ'}
+              {isBureauConnected
+                ? currentLang === 'om'
+                  ? 'Nagahee Eeyyamaa fi Kaffaltii'
+                  : currentLang === 'en'
+                  ? 'License & Payment Receipt'
+                  : 'የፈቃድ እና ክፍያ ደረሰኝ'
+                : currentLang === 'om'
+                ? '💳 Kaffaltii Raawwadhaatii Nagahee Ergaa'
+                : currentLang === 'en'
+                ? '💳 Pay & Submit Receipt'
+                : '💳 ክፍያ ፈፅመው ደረሰኝ ይላኩ'}
             </span>
           </button>
         </div>
@@ -1418,43 +1555,114 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-white truncate">
-                {currentUser?.name || 'የትምህርት ቤት አስተዳዳሪ (School Admin)'}
+                {currentUser?.name ||
+                  (currentLang === 'om'
+                    ? 'Bulchaa M/Barnootaa (School Admin)'
+                    : currentLang === 'en'
+                    ? 'School Admin'
+                    : 'የትምህርት ቤት አስተዳዳሪ (School Admin)')}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">
                 {isLibrarian
-                  ? '📚 የቤተ-መጻሕፍት ኃላፊ'
+                  ? currentLang === 'om'
+                    ? '📚 Mana Kitaabaa'
+                    : currentLang === 'en'
+                    ? '📚 Librarian'
+                    : '📚 የቤተ-መጻሕፍት ኃላፊ'
                   : currentUser?.role === 'school_owner'
-                  ? '👑 ባለቤት / የቦርድ ሰብሳቢ'
+                  ? currentLang === 'om'
+                    ? '👑 Abbaa Qabeenyaa / Boordii'
+                    : currentLang === 'en'
+                    ? '👑 Owner / Board'
+                    : '👑 ባለቤት / የቦርድ ሰብሳቢ'
                   : currentUser?.role === 'school_director'
-                  ? '🏫 ዋና ዳይሬክተር'
+                  ? currentLang === 'om'
+                    ? '🏫 Daarektara Olaanaa'
+                    : currentLang === 'en'
+                    ? '🏫 Principal'
+                    : '🏫 ዋና ዳይሬክተር'
                   : currentUser?.role === 'teacher'
-                  ? '👨‍🏫 መምህር'
+                  ? currentLang === 'om'
+                    ? '👨‍🏫 Barsiisaa'
+                    : currentLang === 'en'
+                    ? '👨‍🏫 Teacher'
+                    : '👨‍🏫 መምህር'
                   : currentUser?.role === 'accountant'
-                  ? '💵 ሒሳብ ሰራተኛ'
+                  ? currentLang === 'om'
+                    ? '💵 Faayinaansii'
+                    : currentLang === 'en'
+                    ? '💵 Accountant'
+                    : '💵 ሒሳብ ሰራተኛ'
                   : currentUser?.role === 'registrar'
-                  ? '📋 ሬጅስትራር'
+                  ? currentLang === 'om'
+                    ? '📋 Reejistiraara'
+                    : currentLang === 'en'
+                    ? '📋 Registrar'
+                    : '📋 ሬጅስትራር'
                   : currentUser?.role === 'bureau_admin'
-                  ? '🏛️ የቢሮ ተቆጣጣሪ'
+                  ? currentLang === 'om'
+                    ? '🏛️ To\'ataa Biiroo'
+                    : currentLang === 'en'
+                    ? '🏛️ Bureau Inspector'
+                    : '🏛️ የቢሮ ተቆጣጣሪ'
+                  : currentLang === 'om'
+                  ? '🏫 Hojjetaa M/B'
+                  : currentLang === 'en'
+                  ? '🏫 School Staff'
                   : '🏫 የት/ቤት ሰራተኛ'}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3 text-emerald-300" />
-                <span>የተጠበቀ የስራ ወሰን (Role Isolated)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Daangaa Hojii Eegame (Role Isolated)'
+                    : currentLang === 'en'
+                    ? 'Role Isolated'
+                    : 'የተጠበቀ የስራ ወሰን (Role Isolated)'}
+                </span>
               </span>
             </div>
             <p className="text-[11px] text-emerald-200/90 truncate mt-0.5">
               {isLibrarian
-                ? 'የተፈቀደ የስራ ወሰን፡ የመጻሕፍት ካታሎግ፣ የተማሪዎች ንባብ አገልግሎትና የተውሶ መዝገብ ብቻ (የሌሎች ክፍሎች ስራ ተደብቋል)'
+                ? currentLang === 'om'
+                  ? 'Daangaa heyyamame: Kaataloogii kitaabaa, tajaajila dubbisa barattootaa fi galmee liqaa qofa'
+                  : currentLang === 'en'
+                  ? 'Permitted scope: Book catalog, student reading desk & lending registers only'
+                  : 'የተፈቀደ የስራ ወሰን፡ የመጻሕፍት ካታሎግ፣ የተማሪዎች ንባብ አገልግሎትና የተውሶ መዝገብ ብቻ (የሌሎች ክፍሎች ስራ ተደብቋል)'
                 : currentUser?.role === 'school_owner'
-                ? 'ሙሉ ስልጣን፡ ዳይሬክተር መቅጠር፣ ኮድ መስጠት፣ ት/ቤቱን መቆጣጠርና ማስታወቂያ መለጠፍ'
+                ? currentLang === 'om'
+                  ? 'Aangoo guutuu: Daarektara qacaruu, koodii kennuu, m/b to\'achuu fi beeksisa maxxansuu'
+                  : currentLang === 'en'
+                  ? 'Executive governance: appoint directors, issue codes, manage school & post board notices'
+                  : 'ሙሉ ስልጣን፡ ዳይሬክተር መቅጠር፣ ኮድ መስጠት፣ ት/ቤቱን መቆጣጠርና ማስታወቂያ መለጠፍ'
                 : currentUser?.role === 'school_director'
-                ? 'ሙሉ ስልጣን፡ ሰራተኞችንና ተማሪዎችን መቆጣጠር፣ ሪፖርቶች መቀበልና ማስታወቂያ ማሰራጨት'
+                ? currentLang === 'om'
+                  ? 'Aangoo guutuu: Hojjettoota fi barattoota to\'achuu, gabaasota fuudhuu fi beeksisa tamsaasu'
+                  : currentLang === 'en'
+                  ? 'Operational oversight: supervise staff, students, review submissions & dispatch alerts'
+                  : 'ሙሉ ስልጣን፡ ሰራተኞችንና ተማሪዎችን መቆጣጠር፣ ሪፖርቶች መቀበልና ማስታወቂያ ማሰራጨት'
                 : currentUser?.role === 'teacher'
-                ? 'የተፈቀደ የስራ ወሰን፡ ተማሪ ማስተማር፣ ውጤትና መገኘት መመዝገብ፣ የቤት ስራ መስጠትና ማረም (የፋይናንስና አስተዳደር መረጃ ተደብቋል)'
+                ? currentLang === 'om'
+                  ? 'Daangaa heyyamame: Barataa barsiisuu, qabxii fi hirmaannaa galmeessuu, hojii manaa kennuu'
+                  : currentLang === 'en'
+                  ? 'Permitted scope: Teach, score rosters, mark attendance & assign homework'
+                  : 'የተፈቀደ የስራ ወሰን፡ ተማሪ ማስተማር፣ ውጤትና መገኘት መመዝገብ፣ የቤት ስራ መስጠትና ማረም (የፋይናንስና አስተዳደር መረጃ ተደብቋል)'
                 : currentUser?.role === 'accountant'
-                ? 'የተፈቀደ የስራ ወሰን፡ የተማሪዎች የወር ክፍያ መሰብሰብ፣ ደረሰኝ፣ የት/ቤት ወጪዎችና ሚዛን (የተማሪዎች ፈተና ውጤት ተደብቋል)'
+                ? currentLang === 'om'
+                  ? 'Daangaa heyyamame: Kaffaltii ji\'aa sassaabuu, nagahee, baasii m/b fi madaallii herregaa'
+                  : currentLang === 'en'
+                  ? 'Permitted scope: Tuition fee collection, receipts, operating expenses & ledger balance'
+                  : 'የተፈቀደ የስራ ወሰን፡ የተማሪዎች የወር ክፍያ መሰብሰብ፣ ደረሰኝ፣ የት/ቤት ወጪዎችና ሚዛን (የተማሪዎች ፈተና ውጤት ተደብቋል)'
                 : currentUser?.role === 'registrar'
-                ? 'የተፈቀደ የስራ ወሰን፡ አዳዲስ ተማሪዎችን መመዝገብ፣ ክፍል መመደብና መታወቂያ ካርድ ማዘጋጀት (የፋይናንስ ወጪ ተደብቋል)'
+                ? currentLang === 'om'
+                  ? 'Daangaa heyyamame: Barattoota haaraa galmeessuu, daree ramaduu fi waraqaa eenyummaa qopheessuu'
+                  : currentLang === 'en'
+                  ? 'Permitted scope: Student enrollment, section allocation & official student ID cards'
+                  : 'የተፈቀደ የስራ ወሰን፡ አዳዲስ ተማሪዎችን መመዝገብ፣ ክፍል መመደብና መታወቂያ ካርድ ማዘጋጀት (የፋይናንስ ወጪ ተደብቋል)'
+                : currentLang === 'om'
+                ? 'Hojiiwwan bulchiinsaa, humna namaa fi faayinaansii mana barnootaa guutuu'
+                : currentLang === 'en'
+                ? 'Complete school administrative, human resources and financial operations'
                 : 'የትምህርት ቤቱን የተሟላ አስተዳደራዊ፣ የሰው ኃይል እና የፋይናንስ ተግባራት'}
             </p>
           </div>
@@ -1467,7 +1675,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white rounded-xl text-xs font-semibold border border-white/20 transition-all cursor-pointer shrink-0"
         >
           <HelpCircle className="w-3.5 h-3.5 text-amber-300" />
-          <span>የስራ ድርሻና መዋቅር መመሪያ (Role Matrix)</span>
+          <span>
+            {currentLang === 'om'
+              ? 'Qajeelfama Gahee fi Caasaa Hojii (Role Matrix)'
+              : currentLang === 'en'
+              ? 'Role Matrix & Structure Guide'
+              : 'የስራ ድርሻና መዋቅር መመሪያ (Role Matrix)'}
+          </span>
         </button>
       </div>
 
@@ -1664,7 +1878,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       {info.title}
                     </h4>
                     <p className="text-[11px] font-medium text-slate-400 group-hover:text-slate-600 mt-0.5 truncate">
-                      {currentLang === 'om' ? info.titleAm : info.titleEn}
+                      {info.titleEn}
                     </p>
                     <p className="text-xs text-slate-600 group-hover:text-slate-700 mt-2 line-clamp-2 leading-relaxed">
                       {info.desc}
@@ -2154,14 +2368,22 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                    የተማሪዎች ውጤት ዝርዝር እና የውጤት ካርድ ማውጫ
+                    {currentLang === 'om'
+                      ? 'Tarree Qabxii Barattootaa fi Kaardii Qabxii'
+                      : currentLang === 'en'
+                      ? 'Student Grades Roster & Report Cards'
+                      : 'የተማሪዎች ውጤት ዝርዝር እና የውጤት ካርድ ማውጫ'}
                   </h3>
                   <span className="text-xs bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
-                    {filteredStudents.length} ተማሪዎች
+                    {filteredStudents.length} {currentLang === 'om' ? 'barattoota' : currentLang === 'en' ? 'students' : 'ተማሪዎች'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  የተማሪዎች ፈተና ውጤት፣ ደረጃ፣ ስነ-ምግባር እና የተማሪ/ወላጅ መግቢያ ኮዶች (በክፍል ደረጃና በሴክሽን ማጣሪያና ማደራጃ)
+                  {currentLang === 'om'
+                    ? 'Qabxii qormaataa, sadarkaa, naamusa fi koodii seensaa barattootaa/maatii (kutaa fi dareedhaan calalamuu danda\'a)'
+                    : currentLang === 'en'
+                    ? 'Student exam scores, rank, conduct, and student/parent access codes (filter by grade & section)'
+                    : 'የተማሪዎች ፈተና ውጤት፣ ደረጃ፣ ስነ-ምግባር እና የተማሪ/ወላጅ መግቢያ ኮዶች (በክፍል ደረጃና በሴክሽን ማጣሪያና ማደራጃ)'}
                 </p>
               </div>
 
@@ -2172,12 +2394,14 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>አዲስ ተማሪ መዝግብ</span>
+                  <span>{currentLang === 'om' ? 'Barataa Haaraa Galmeessi' : currentLang === 'en' ? 'Register Student' : 'አዲስ ተማሪ መዝግብ'}</span>
                 </button>
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold shrink-0">
                   <Lock className="w-3.5 h-3.5 text-amber-800" />
-                  <span>ተማሪዎች ማየት ብቻ (Read-Only)</span>
+                  <span>
+                    {currentLang === 'om' ? 'Ilaalcha Qofa (Read-Only)' : currentLang === 'en' ? 'View Only (Read-Only)' : 'ተማሪዎች ማየት ብቻ (Read-Only)'}
+                  </span>
                 </div>
               )}
             </div>
@@ -2191,7 +2415,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   type="text"
                   value={studentSearchQuery}
                   onChange={(e) => setStudentSearchQuery(e.target.value)}
-                  placeholder="ተማሪ በስም፣ በመታወቂያ ወይም በኮድ ፈልግ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Maqaa, ID ykn koodiin barbaadi...'
+                      : currentLang === 'en'
+                      ? 'Search student by name, ID or code...'
+                      : 'ተማሪ በስም፣ በመታወቂያ ወይም በኮድ ፈልግ...'
+                  }
                   className="w-full pl-9 pr-8 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden transition-all"
                 />
                 {studentSearchQuery && (
@@ -2199,7 +2429,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     type="button"
                     onClick={() => setStudentSearchQuery('')}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                    title="ፍለጋ አጽዳ"
+                    title={currentLang === 'om' ? 'Barbaacha qulqulleessi' : currentLang === 'en' ? 'Clear search' : 'ፍለጋ አጽዳ'}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -2224,10 +2454,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   }}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 >
-                  <option value="all">ሁሉም የክፍል ደረጃዎች ({students.length})</option>
+                  <option value="all">
+                    {currentLang === 'om'
+                      ? `Sadarkaa Kutaa Hunda (${students.length})`
+                      : currentLang === 'en'
+                      ? `All Grade Levels (${students.length})`
+                      : `ሁሉም የክፍል ደረጃዎች (${students.length})`}
+                  </option>
                   {availableGrades.map((g) => (
                     <option key={g} value={g.toString()}>
-                      Grade {g} ({studentCountsByGrade[g.toString()] || 0} ተማሪዎች)
+                      {currentLang === 'om'
+                        ? `Kutaa ${g} (Barattoota ${studentCountsByGrade[g.toString()] || 0})`
+                        : currentLang === 'en'
+                        ? `Grade ${g} (${studentCountsByGrade[g.toString()] || 0} students)`
+                        : `Grade ${g} (${studentCountsByGrade[g.toString()] || 0} ተማሪዎች)`}
                     </option>
                   ))}
                 </select>
@@ -2240,10 +2480,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   onChange={(e) => setStudentSectionFilter(e.target.value)}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 >
-                  <option value="all">ሁሉም ክፍልፋዮች / Sections (All)</option>
+                  <option value="all">
+                    {currentLang === 'om'
+                      ? 'Dareewwan Hunda (All Sections)'
+                      : currentLang === 'en'
+                      ? 'All Sections'
+                      : 'ሁሉም ክፍልፋዮች / Sections (All)'}
+                  </option>
                   {availableSections.map((sec) => (
                     <option key={sec} value={sec}>
-                      ክፍልፋይ (Section) {sec} ({studentCountsBySection[sec] || 0} ተማሪዎች)
+                      {currentLang === 'om'
+                        ? `Daree ${sec} (Barattoota ${studentCountsBySection[sec] || 0})`
+                        : currentLang === 'en'
+                        ? `Section ${sec} (${studentCountsBySection[sec] || 0} students)`
+                        : `ክፍልፋይ (Section) ${sec} (${studentCountsBySection[sec] || 0} ተማሪዎች)`}
                     </option>
                   ))}
                 </select>
@@ -2256,16 +2506,16 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   onChange={(e) => setStudentSortBy(e.target.value as any)}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 >
-                  <option value="rank_asc">ደርድር፡ ደረጃ (#1 መጀመሪያ)</option>
-                  <option value="rank_desc">ደርድር፡ ደረጃ (ከታች ወደ ላይ)</option>
-                  <option value="grade_asc">ደርድር፡ ክፍል ደረጃ (ዝቅተኛ → ከፍተኛ)</option>
-                  <option value="grade_desc">ደርድር፡ ክፍል ደረጃ (ከፍተኛ → ዝቅተኛ)</option>
-                  <option value="section_asc">ደርድር፡ ክፍልፋይ (Section A → Z)</option>
-                  <option value="section_desc">ደርድር፡ ክፍልፋይ (Section Z → A)</option>
-                  <option value="name_asc">ደርድር፡ የተማሪ ስም (A → Z)</option>
-                  <option value="name_desc">ደርድር፡ የተማሪ ስም (Z → A)</option>
-                  <option value="score_desc">ደርድር፡ አማካይ ውጤት (ከፍተኛ መጀመሪያ)</option>
-                  <option value="score_asc">ደርድር፡ አማካይ ውጤት (ዝቅተኛ መጀመሪያ)</option>
+                  <option value="rank_asc">{currentLang === 'om' ? 'Tartiiba: Sadarkaa (#1 jalqaba)' : currentLang === 'en' ? 'Sort: Rank (#1 first)' : 'ደርድር፡ ደረጃ (#1 መጀመሪያ)'}</option>
+                  <option value="rank_desc">{currentLang === 'om' ? 'Tartiiba: Sadarkaa (gadi-aanaa)' : currentLang === 'en' ? 'Sort: Rank (lowest first)' : 'ደርድር፡ ደረጃ (ከታች ወደ ላይ)'}</option>
+                  <option value="grade_asc">{currentLang === 'om' ? 'Tartiiba: Kutaa (Xiqqaa → Guddaa)' : currentLang === 'en' ? 'Sort: Grade (Low → High)' : 'ደርድር፡ ክፍል ደረጃ (ዝቅተኛ → ከፍተኛ)'}</option>
+                  <option value="grade_desc">{currentLang === 'om' ? 'Tartiiba: Kutaa (Guddaa → Xiqqaa)' : currentLang === 'en' ? 'Sort: Grade (High → Low)' : 'ደርድር፡ ክፍል ደረጃ (ከፍተኛ → ዝቅተኛ)'}</option>
+                  <option value="section_asc">{currentLang === 'om' ? 'Tartiiba: Daree (A → Z)' : currentLang === 'en' ? 'Sort: Section (A → Z)' : 'ደርድር፡ ክፍልፋይ (Section A → Z)'}</option>
+                  <option value="section_desc">{currentLang === 'om' ? 'Tartiiba: Daree (Z → A)' : currentLang === 'en' ? 'Sort: Section (Z → A)' : 'ደርድር፡ ክፍልፋይ (Section Z → A)'}</option>
+                  <option value="name_asc">{currentLang === 'om' ? 'Tartiiba: Maqaa (A → Z)' : currentLang === 'en' ? 'Sort: Name (A → Z)' : 'ደርድር፡ የተማሪ ስም (A → Z)'}</option>
+                  <option value="name_desc">{currentLang === 'om' ? 'Tartiiba: Maqaa (Z → A)' : currentLang === 'en' ? 'Sort: Name (Z → A)' : 'ደርድር፡ የተማሪ ስም (Z → A)'}</option>
+                  <option value="score_desc">{currentLang === 'om' ? 'Tartiiba: Giddugaleessa (Olaanaa)' : currentLang === 'en' ? 'Sort: Average (High → Low)' : 'ደርድር፡ አማካይ ውጤት (ከፍተኛ መጀመሪያ)'}</option>
+                  <option value="score_asc">{currentLang === 'om' ? 'Tartiiba: Giddugaleessa (Gadi-aanaa)' : currentLang === 'en' ? 'Sort: Average (Low → High)' : 'ደርድር፡ አማካይ ውጤት (ዝቅተኛ መጀመሪያ)'}</option>
                 </select>
               </div>
             </div>
@@ -2275,7 +2525,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
                   <Filter className="w-3 h-3 text-emerald-700" />
-                  <span>ክፍል፡</span>
+                  <span>{currentLang === 'om' ? 'Kutaa:' : currentLang === 'en' ? 'Grade:' : 'ክፍል፡'}</span>
                 </span>
                 <button
                   type="button"
@@ -2286,7 +2536,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  ሁሉም ({students.length})
+                  {currentLang === 'om' ? 'Hunda' : currentLang === 'en' ? 'All' : 'ሁሉም'} ({students.length})
                 </button>
                 {availableGrades.map((g) => (
                   <button
@@ -2299,7 +2549,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
-                    Grade {g} ({studentCountsByGrade[g.toString()] || 0})
+                    {currentLang === 'om' ? `Kutaa ${g}` : `Grade ${g}`} ({studentCountsByGrade[g.toString()] || 0})
                   </button>
                 ))}
 
@@ -2307,7 +2557,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 {availableSections.length > 0 && (
                   <>
                     <span className="text-slate-300 mx-1">|</span>
-                    <span className="text-[11px] font-bold text-slate-500 mr-1">ሴክሽን፡</span>
+                    <span className="text-[11px] font-bold text-slate-500 mr-1">
+                      {currentLang === 'om' ? 'Daree:' : currentLang === 'en' ? 'Section:' : 'ሴክሽን፡'}
+                    </span>
                     <button
                       type="button"
                       onClick={() => setStudentSectionFilter('all')}
@@ -2317,7 +2569,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
-                      ሁሉም
+                      {currentLang === 'om' ? 'Hunda' : currentLang === 'en' ? 'All' : 'ሁሉም'}
                     </button>
                     {availableSections.map((sec) => (
                       <button
@@ -2339,7 +2591,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 {/* Shift Quick Pills: All, Day, Night */}
                 <span className="text-slate-300 mx-1">|</span>
                 <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
-                  <span>ፈረቃ፡</span>
+                  <span>{currentLang === 'om' ? 'Yeroo:' : currentLang === 'en' ? 'Shift:' : 'ፈረቃ፡'}</span>
                 </span>
                 <button
                   type="button"
@@ -2350,7 +2602,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  ሁሉም ({students.length})
+                  {currentLang === 'om' ? 'Hunda' : currentLang === 'en' ? 'All' : 'ሁሉም'} ({students.length})
                 </button>
                 <button
                   type="button"
@@ -2361,7 +2613,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  ☀️ ቀን ({dayStudentsCount})
+                  ☀️ {currentLang === 'om' ? 'Guyyaa' : currentLang === 'en' ? 'Day' : 'ቀን'} ({dayStudentsCount})
                 </button>
                 <button
                   type="button"
@@ -2372,7 +2624,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  🌙 ማታ ({nightStudentsCount})
+                  🌙 {currentLang === 'om' ? 'Galgala' : currentLang === 'en' ? 'Night' : 'ማታ'} ({nightStudentsCount})
                 </button>
               </div>
 
@@ -2388,7 +2640,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-lg text-[11px] font-bold border border-rose-200 transition-colors cursor-pointer shrink-0 ml-auto"
                 >
                   <RotateCcw className="w-3 h-3 text-rose-600" />
-                  <span>ማጣሪያዎችን አፅዳ (Reset)</span>
+                  <span>{currentLang === 'om' ? 'Calallii Haqi (Reset)' : currentLang === 'en' ? 'Reset Filters' : 'ማጣሪያዎችን አፅዳ (Reset)'}</span>
                 </button>
               )}
             </div>
@@ -2402,9 +2654,15 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   <GraduationCap className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800">ምንም ተማሪ አልተገኘም</h4>
+                  <h4 className="text-sm font-bold text-slate-800">
+                    {currentLang === 'om' ? 'Barataan hin argamne' : currentLang === 'en' ? 'No students found' : 'ምንም ተማሪ አልተገኘም'}
+                  </h4>
                   <p className="text-xs text-slate-500 mt-1">
-                    በተመረጠው የክፍል ደረጃ ወይም ክፍልፋይ የተመዘገበ ተማሪ የለም።
+                    {currentLang === 'om'
+                      ? 'Kutaa ykn daree filatame keessatti barataan galmaa\'e hin jiru.'
+                      : currentLang === 'en'
+                      ? 'No students matched the selected grade or section.'
+                      : 'በተመረጠው የክፍል ደረጃ ወይም ክፍልፋይ የተመዘገበ ተማሪ የለም።'}
                   </p>
                 </div>
                 <button
@@ -2413,7 +2671,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-900 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>ሁሉንም ተማሪዎች አሳይ (Reset Filters)</span>
+                  <span>{currentLang === 'om' ? 'Barattoota Hunda Agarsiisi' : currentLang === 'en' ? 'Show All Students' : 'ሁሉንም ተማሪዎች አሳይ (Reset Filters)'}</span>
                 </button>
               </div>
             ) : (
@@ -2450,26 +2708,39 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                             {st.shift === 'night_shift' && (
                               <span className="text-[9px] font-extrabold bg-indigo-950 text-indigo-100 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
                                 <Moon className="w-2.5 h-2.5 text-indigo-300" />
-                                <span>ማታ</span>
+                                <span>{currentLang === 'om' ? 'Galgala' : currentLang === 'en' ? 'Night' : 'ማታ'}</span>
                               </span>
                             )}
                           </div>
                           <span className="text-[10px] text-slate-400 font-mono block">
-                            ID: {st.studentIdNumber} · ፆታ፡ {st.gender === 'M' ? 'ወንድ' : 'ሴት'}
+                            ID: {st.studentIdNumber} · {currentLang === 'om' ? 'Saala:' : currentLang === 'en' ? 'Gender:' : 'ፆታ፡'}{' '}
+                            {st.gender === 'M'
+                              ? currentLang === 'om'
+                                ? 'Dhiira'
+                                : currentLang === 'en'
+                                ? 'Male'
+                                : 'ወንድ'
+                              : currentLang === 'om'
+                              ? 'Dubartii'
+                              : currentLang === 'en'
+                              ? 'Female'
+                              : 'ሴት'}
                             {st.occupation ? ` · 💼 ${st.occupation}` : ''}
                           </span>
                         </div>
                       </div>
 
                       <span className="text-[10px] font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded-full shrink-0">
-                        Grade {st.grade}-{st.section}
+                        {currentLang === 'om' ? 'Kutaa' : 'Grade'} {st.grade}-{st.section}
                       </span>
                     </div>
 
                     {/* Middle Info: Access Codes */}
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/70 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500 font-medium">የተማሪ ኮድ፡</span>
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          {currentLang === 'om' ? 'Koodii Barataa:' : currentLang === 'en' ? 'Student Code:' : 'የተማሪ ኮድ፡'}
+                        </span>
                         <button
                           type="button"
                           onClick={() => copyCode(st.accessCode, `stu-code-${st.id}`)}
@@ -2486,14 +2757,16 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
                       <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
                         <div>
-                          <span className="text-[11px] text-slate-500 font-medium">ወላጅ፡ </span>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            {currentLang === 'om' ? 'Maatii: ' : currentLang === 'en' ? 'Parent: ' : 'ወላጅ፡ '}
+                          </span>
                           <strong className="text-slate-800 text-[11px]">{st.parentName}</strong>
                         </div>
                         <button
                           type="button"
                           onClick={() => copyCode(st.parentAccessCode, `par-code-${st.id}`)}
                           className="font-mono text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-300 inline-flex items-center gap-1 text-[10px]"
-                          title="የወላጅ ኮድ ቅዳ"
+                          title={currentLang === 'om' ? 'Koodii maatii waraabi' : currentLang === 'en' ? 'Copy parent code' : 'የወላጅ ኮድ ቅዳ'}
                         >
                           <span>{st.parentAccessCode}</span>
                           {copiedCodeId === `par-code-${st.id}` ? (
@@ -2509,10 +2782,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     <div className="flex items-center justify-between text-xs pt-1">
                       <div className="flex items-center gap-2">
                         <span className={`px-2 py-0.5 rounded-lg text-xs font-black border ${scoreBadgeClass}`}>
-                          {avg}% አማካይ
+                          {avg}% {currentLang === 'om' ? 'Giddugaleessa' : currentLang === 'en' ? 'Avg' : 'አማካይ'}
                         </span>
                         <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px] border border-emerald-200">
-                          ባህሪ: {st.conduct}
+                          {currentLang === 'om' ? 'Naamusa:' : currentLang === 'en' ? 'Conduct:' : 'ባህሪ:'} {st.conduct}
                         </span>
                       </div>
 
@@ -2524,7 +2797,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-300 transition-colors"
                         >
                           <CreditCard className="w-3.5 h-3.5 text-amber-700" />
-                          <span>መታወቂያ</span>
+                          <span>{currentLang === 'om' ? 'Eenyummaa' : currentLang === 'en' ? 'ID Card' : 'መታወቂያ'}</span>
                         </button>
 
                         <button
@@ -2533,7 +2806,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-xl border border-emerald-300 transition-colors"
                         >
                           <FileText className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>ካርድ</span>
+                          <span>{currentLang === 'om' ? 'Kaardii' : currentLang === 'en' ? 'Card' : 'ካርድ'}</span>
                         </button>
                       </div>
                     </div>
@@ -2552,10 +2825,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     <th
                       className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       onClick={() => setStudentSortBy(studentSortBy === 'rank_asc' ? 'rank_desc' : 'rank_asc')}
-                      title="በደረጃ ለመደርደር ይጫኑ"
+                      title={currentLang === 'om' ? 'Sadarkaan tartiibessuuf cuqaasi' : currentLang === 'en' ? 'Sort by rank' : 'በደረጃ ለመደርደር ይጫኑ'}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>ደረጃ (Rank)</span>
+                        <span>{currentLang === 'om' ? 'Sadarkaa (Rank)' : currentLang === 'en' ? 'Rank' : 'ደረጃ (Rank)'}</span>
                         {studentSortBy === 'rank_asc' ? (
                           <ArrowUp className="w-3.5 h-3.5 text-emerald-800" />
                         ) : studentSortBy === 'rank_desc' ? (
@@ -2568,10 +2841,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     <th
                       className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       onClick={() => setStudentSortBy(studentSortBy === 'name_asc' ? 'name_desc' : 'name_asc')}
-                      title="በተማሪ ስም ለመደርደር ይጫኑ"
+                      title={currentLang === 'om' ? 'Maqaan tartiibessuuf cuqaasi' : currentLang === 'en' ? 'Sort by student name' : 'በተማሪ ስም ለመደርደር ይጫኑ'}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>የተማሪ ስም</span>
+                        <span>{currentLang === 'om' ? 'Maqaa Barataa' : currentLang === 'en' ? 'Student Name' : 'የተማሪ ስም'}</span>
                         {studentSortBy === 'name_asc' ? (
                           <ArrowUp className="w-3.5 h-3.5 text-emerald-800" />
                         ) : studentSortBy === 'name_desc' ? (
@@ -2589,10 +2862,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         else if (studentSortBy === 'section_asc') setStudentSortBy('section_desc');
                         else setStudentSortBy('grade_asc');
                       }}
-                      title="በክፍል ደረጃ እና ክፍልፋይ ለመደርደር ይጫኑ"
+                      title={currentLang === 'om' ? 'Kutaa fi dareedhaan tartiibessuuf cuqaasi' : currentLang === 'en' ? 'Sort by grade and section' : 'በክፍል ደረጃ እና ክፍልፋይ ለመደርደር ይጫኑ'}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>ክፍል / ክፍልፋይ</span>
+                        <span>{currentLang === 'om' ? 'Kutaa / Daree' : currentLang === 'en' ? 'Grade / Section' : 'ክፍል / ክፍልፋይ'}</span>
                         {studentSortBy === 'grade_asc' || studentSortBy === 'section_asc' ? (
                           <ArrowUp className="w-3.5 h-3.5 text-emerald-800" />
                         ) : studentSortBy === 'grade_desc' || studentSortBy === 'section_desc' ? (
@@ -2605,15 +2878,15 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         </span>
                       </div>
                     </th>
-                    <th className="px-4 py-3.5">የተማሪ መግቢያ ኮድ</th>
-                    <th className="px-4 py-3.5">ወላጅ እና ስልክ</th>
+                    <th className="px-4 py-3.5">{currentLang === 'om' ? 'Koodii Barataa' : currentLang === 'en' ? 'Access Code' : 'የተማሪ መግቢያ ኮድ'}</th>
+                    <th className="px-4 py-3.5">{currentLang === 'om' ? 'Maatii & Bilbila' : currentLang === 'en' ? 'Parent & Phone' : 'ወላጅ እና ስልክ'}</th>
                     <th
                       className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 transition-colors select-none"
                       onClick={() => setStudentSortBy(studentSortBy === 'score_desc' ? 'score_asc' : 'score_desc')}
-                      title="በአማካይ ውጤት ለመደርደር ይጫኑ"
+                      title={currentLang === 'om' ? 'Giddugaleessaan tartiibessuuf cuqaasi' : currentLang === 'en' ? 'Sort by average score' : 'በአማካይ ውጤት ለመደርደር ይጫኑ'}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>አማካይ ውጤት</span>
+                        <span>{currentLang === 'om' ? 'Qabxii Giddugaleessaa' : currentLang === 'en' ? 'Average Score' : 'አማካይ ውጤት'}</span>
                         {studentSortBy === 'score_desc' ? (
                           <ArrowDown className="w-3.5 h-3.5 text-emerald-800" />
                         ) : studentSortBy === 'score_asc' ? (
@@ -2623,8 +2896,8 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         )}
                       </div>
                     </th>
-                    <th className="px-4 py-3.5">ስነ-ምግባር</th>
-                    <th className="px-4 py-3.5 text-right">ተግባራት</th>
+                    <th className="px-4 py-3.5">{currentLang === 'om' ? 'Naamusa' : currentLang === 'en' ? 'Conduct' : 'ስነ-ምግባር'}</th>
+                    <th className="px-4 py-3.5 text-right">{currentLang === 'om' ? 'Gochaalee' : currentLang === 'en' ? 'Actions' : 'ተግባራት'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -2636,11 +2909,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                             <GraduationCap className="w-6 h-6" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-slate-800">በተመረጠው ማጣሪያ ምንም ተማሪ አልተገኘም</h4>
+                            <h4 className="text-sm font-bold text-slate-800">
+                              {currentLang === 'om' ? 'Calallii filatameen barataan hin argamne' : currentLang === 'en' ? 'No students matched the current filter' : 'በተመረጠው ማጣሪያ ምንም ተማሪ አልተገኘም'}
+                            </h4>
                             <p className="text-xs text-slate-500 mt-1">
-                              {studentGradeFilter !== 'all' && `ክፍል፡ Grade ${studentGradeFilter} `}
-                              {studentSectionFilter !== 'all' && `ሴክሽን፡ ${studentSectionFilter} `}
-                              {studentSearchQuery && `ፍለጋ፡ "${studentSearchQuery}"`}
+                              {studentGradeFilter !== 'all' && `${currentLang === 'om' ? 'Kutaa:' : currentLang === 'en' ? 'Grade:' : 'ክፍል፡'} ${studentGradeFilter} `}
+                              {studentSectionFilter !== 'all' && `${currentLang === 'om' ? 'Daree:' : currentLang === 'en' ? 'Section:' : 'ሴክሽን፡'} ${studentSectionFilter} `}
+                              {studentSearchQuery && `${currentLang === 'om' ? 'Barbaacha:' : currentLang === 'en' ? 'Search:' : 'ፍለጋ፡'} "${studentSearchQuery}"`}
                             </p>
                           </div>
                           <button
@@ -2649,7 +2924,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-900 transition-colors cursor-pointer shadow-xs"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
-                            <span>ሁሉንም ተማሪዎች አሳይ (Reset Filters)</span>
+                            <span>{currentLang === 'om' ? 'Barattoota Hunda Agarsiisi' : currentLang === 'en' ? 'Show All Students' : 'ሁሉንም ተማሪዎች አሳይ (Reset Filters)'}</span>
                           </button>
                         </div>
                       </td>
@@ -2672,17 +2947,17 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                               {st.shift === 'night_shift' && (
                                 <span className="text-[9px] font-extrabold bg-indigo-950 text-indigo-100 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
                                   <Moon className="w-2.5 h-2.5 text-indigo-300" />
-                                  <span>ማታ</span>
+                                  <span>{currentLang === 'om' ? 'Galgala' : currentLang === 'en' ? 'Night' : 'ማታ'}</span>
                                 </span>
                               )}
                             </div>
                             <span className="text-[10px] text-slate-400 block font-normal">
-                              መታወቂያ: {st.studentIdNumber} {st.occupation ? `· 💼 ${st.occupation}` : ''}
+                              {currentLang === 'om' ? 'Eenyummaa:' : currentLang === 'en' ? 'ID:' : 'መታወቂያ:'} {st.studentIdNumber} {st.occupation ? `· 💼 ${st.occupation}` : ''}
                             </span>
                           </td>
                           <td className="px-4 py-3.5 font-semibold text-slate-800">
                             <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-bold">
-                              Grade {st.grade} - {st.section}
+                              {currentLang === 'om' ? 'Kutaa' : 'Grade'} {st.grade} - {st.section}
                             </span>
                           </td>
                           <td className="px-4 py-3.5">
@@ -2690,7 +2965,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                               type="button"
                               onClick={() => copyCode(st.accessCode, `tbl-stu-${st.id}`)}
                               className="font-mono font-bold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-200 inline-flex items-center gap-1 hover:bg-emerald-100 transition-colors"
-                              title="ኮድ ቅዳ"
+                              title={currentLang === 'om' ? 'Koodii waraabi' : currentLang === 'en' ? 'Copy code' : 'ኮድ ቅዳ'}
                             >
                               <span>{st.accessCode}</span>
                               {copiedCodeId === `tbl-stu-${st.id}` ? (
@@ -2703,7 +2978,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                           <td className="px-4 py-3.5">
                             <span className="font-medium text-slate-900 block">{st.parentName}</span>
                             <span className="text-[10px] text-slate-500 font-mono">
-                              {st.parentPhone} (ኮድ: {st.parentAccessCode})
+                              {st.parentPhone} ({currentLang === 'om' ? 'Koodii:' : currentLang === 'en' ? 'Code:' : 'ኮድ:'} {st.parentAccessCode})
                             </span>
                           </td>
                           <td className="px-4 py-3.5 font-extrabold text-slate-900">
@@ -2720,10 +2995,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                                 type="button"
                                 onClick={() => setSelectedStudentForIdCard(st)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-300 transition-colors"
-                                title="የተማሪ መታወቂያ ካርድ (Student ID Card)"
+                                title={currentLang === 'om' ? 'Waraqaa Eenyummaa Barataa' : currentLang === 'en' ? 'Student ID Card' : 'የተማሪ መታወቂያ ካርድ (Student ID Card)'}
                               >
                                 <CreditCard className="w-3.5 h-3.5 text-amber-700" />
-                                <span>መታወቂያ</span>
+                                <span>{currentLang === 'om' ? 'Eenyummaa' : currentLang === 'en' ? 'ID Card' : 'መታወቂያ'}</span>
                               </button>
                               <button
                                 type="button"
@@ -2731,7 +3006,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                                 className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
                               >
                                 <FileText className="w-3.5 h-3.5" />
-                                <span>ካርድ</span>
+                                <span>{currentLang === 'om' ? 'Kaardii' : currentLang === 'en' ? 'Card' : 'ካርድ'}</span>
                               </button>
                             </div>
                           </td>
@@ -2761,10 +3036,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   </div>
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
-                      የትምህርት ቤት ባለድርሻ አካላት፣ ቤተ-መጻሕፍት እና የስራ ጽሕፈት ቤቶች
+                      {currentLang === 'om'
+                        ? 'Qooda-fudhattoota Mana Barumsaa, Mana Kitaabaa fi Waajjiraalee'
+                        : currentLang === 'en'
+                        ? 'School Stakeholders, Library & Offices'
+                        : 'የትምህርት ቤት ባለድርሻ አካላት፣ ቤተ-መጻሕፍት እና የስራ ጽሕፈት ቤቶች'}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      የትምህርት ቤተ-መጻሕፍት ኃላፊ፣ ርዕሰ መምህራን፣ መምህራን፣ የፋይዳ ዲጂታል መታወቂያ እና የተረጋገጡ የተመረቁባቸው ማስረጃዎች
+                      {currentLang === 'om'
+                        ? 'Itti-gaafatamaa Mana Kitaabaa, Daarektaroota, Barsiisota, Eenyummaa Dijitaalaa Faayidaa fi Ragaalee Barnootaa'
+                        : currentLang === 'en'
+                        ? 'Head Librarian, Principals, Teachers, Fayda Digital ID & Verified Graduation Credentials'
+                        : 'የትምህርት ቤተ-መጻሕፍት ኃላፊ፣ ርዕሰ መምህራን፣ መምህራን፣ የፋይዳ ዲጂታል መታወቂያ እና የተረጋገጡ የተመረቁባቸው ማስረጃዎች'}
                     </p>
                   </div>
                 </div>
@@ -2780,13 +3063,25 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ አዲስ ባለድርሻ አካል መዝግብ</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? '+ Qooda-fudhaa Haaraa Galmeessi'
+                      : currentLang === 'en'
+                      ? '+ Register Stakeholder'
+                      : '+ አዲስ ባለድርሻ አካል መዝግብ'}
+                  </span>
                 </button>
               )}
               {isBureauRole && (
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold shrink-0">
                   <Lock className="w-3.5 h-3.5 text-amber-800" />
-                  <span>ባለድርሻ አካላት ማየት ብቻ (Read-Only)</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Ilaalcha Qofa (Read-Only)'
+                      : currentLang === 'en'
+                      ? 'View Only (Read-Only)'
+                      : 'ባለድርሻ አካላት ማየት ብቻ (Read-Only)'}
+                  </span>
                 </div>
               )}
             </div>
@@ -2794,21 +3089,28 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             {/* Quick Metrics Bar */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
               <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-emerald-900">አጠቃላይ ባለድርሻ አካላት</span>
+                <span className="text-[11px] font-bold text-emerald-900">
+                  {currentLang === 'om' ? 'Qooda-fudhattoota Waliigalaa' : currentLang === 'en' ? 'Total Stakeholders' : 'አጠቃላይ ባለድርሻ አካላት'}
+                </span>
                 <span className="text-lg font-black text-emerald-950 mt-1">
-                  {currentSchoolStakeholders.length} ሰዎች
+                  {currentSchoolStakeholders.length} {currentLang === 'om' ? 'namoota' : currentLang === 'en' ? 'people' : 'ሰዎች'}
                 </span>
               </div>
 
               <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-amber-900">የተረጋገጡ የፋይዳ መታወቂያዎች</span>
+                <span className="text-[11px] font-bold text-amber-900">
+                  {currentLang === 'om' ? 'Eenyummaa Faayidaa Mirkanaa\'an' : currentLang === 'en' ? 'Verified Fayda IDs' : 'የተረጋገጡ የፋይዳ መታወቂያዎች'}
+                </span>
                 <span className="text-lg font-black text-amber-950 mt-1">
-                  {currentSchoolStakeholders.filter((s) => s.faydaVerified).length} የተረጋገጡ
+                  {currentSchoolStakeholders.filter((s) => s.faydaVerified).length}{' '}
+                  {currentLang === 'om' ? 'mirkanaa\'e' : currentLang === 'en' ? 'verified' : 'የተረጋገጡ'}
                 </span>
               </div>
 
               <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-blue-900">የት/ቤት ቤተ-መጻሕፍት ጽ/ቤት</span>
+                <span className="text-[11px] font-bold text-blue-900">
+                  {currentLang === 'om' ? 'Waajjira Mana Kitaabaa M/B' : currentLang === 'en' ? 'School Library Office' : 'የት/ቤት ቤተ-መጻሕፍት ጽ/ቤት'}
+                </span>
                 <span className="text-lg font-black text-blue-950 mt-1">
                   {
                     currentSchoolStakeholders.filter(
@@ -2818,18 +3120,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         s.officeOrDepartment.includes('Library')
                     ).length
                   }{' '}
-                  ባለሙያዎች
+                  {currentLang === 'om' ? 'ogeeyyii' : currentLang === 'en' ? 'specialists' : 'ባለሙያዎች'}
                 </span>
               </div>
 
               <div className="bg-purple-50/70 border border-purple-200/80 rounded-xl p-3 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-purple-900">የተመረቁባቸው ማስረጃዎች</span>
+                <span className="text-[11px] font-bold text-purple-900">
+                  {currentLang === 'om' ? 'Ragaalee Eebbaa' : currentLang === 'en' ? 'Graduation Credentials' : 'የተመረቁባቸው ማስረጃዎች'}
+                </span>
                 <span className="text-lg font-black text-purple-950 mt-1">
                   {currentSchoolStakeholders.reduce(
                     (acc, s) => acc + (s.credentials?.length || 0),
                     0
                   )}{' '}
-                  ሰነዶች
+                  {currentLang === 'om' ? 'sanadoota' : currentLang === 'en' ? 'documents' : 'ሰነዶች'}
                 </span>
               </div>
             </div>
@@ -2842,7 +3146,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   type="text"
                   value={stakeholderSearchQuery}
                   onChange={(e) => setStakeholderSearchQuery(e.target.value)}
-                  placeholder="ባለድርሻ አካል በስም፣ በፋይዳ ቁጥር፣ በጽሕፈት ቤት ወይም በትምህርት መስክ ፈልግ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Maqaa, lakkoofsa Faayidaa, waajjira ykn gosa barnootaatiin barbaadi...'
+                      : currentLang === 'en'
+                      ? 'Search by name, Fayda ID, office or field of study...'
+                      : 'ባለድርሻ አካል በስም፣ በፋይዳ ቁጥር፣ በጽሕፈት ቤት ወይም በትምህርት መስክ ፈልግ...'
+                  }
                   className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden"
                 />
               </div>
@@ -2857,7 +3167,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  ሁሉም ({currentSchoolStakeholders.length})
+                  {currentLang === 'om' ? 'Hunda' : currentLang === 'en' ? 'All' : 'ሁሉም'} ({currentSchoolStakeholders.length})
                 </button>
 
                 <button
@@ -2870,7 +3180,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>ቤተ-መጻሕፍት (Library)</span>
+                  <span>{currentLang === 'om' ? 'Mana Kitaabaa' : currentLang === 'en' ? 'Library' : 'ቤተ-መጻሕፍት (Library)'}</span>
                 </button>
 
                 <button
@@ -2882,7 +3192,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  ርዕሰ መምህራን & አመራር
+                  {currentLang === 'om' ? 'Daarektaroota & Hoggansa' : currentLang === 'en' ? 'Principals & Leadership' : 'ርዕሰ መምህራን & አመራር'}
                 </button>
 
                 <button
@@ -2894,7 +3204,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  መምህራን & ላብራቶሪ
+                  {currentLang === 'om' ? 'Barsiisota & Laaboraatoorii' : currentLang === 'en' ? 'Teachers & Lab' : 'መምህራን & ላብራቶሪ'}
                 </button>
 
                 <button
@@ -2906,7 +3216,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  አስተዳደር & PTA
+                  {currentLang === 'om' ? 'Bulchiinsa & PTA' : currentLang === 'en' ? 'Admin & PTA' : 'አስተዳደር & PTA'}
                 </button>
               </div>
             </div>
@@ -2920,13 +3230,17 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   🔒
                 </span>
                 <span>
-                  <strong>የተከለለ የባለሙያ መገለጫ ገጽ ({currentUser?.name})፡</strong> የእርስዎ ይፋዊ መረጃ፣
-                  የፋይዳ ብሔራዊ መታወቂያ እና የተመረቁባቸው ማስረጃዎች ብቻ ተለይተዋል (ሌሎች ሰራተኞች የእርስዎን
-                  አያዩም፤ እርስዎም የሌሎችን አያዩም)።
+                  {currentLang === 'om' ? (
+                    <><strong>Fuula Profaayilii Daangeffame ({currentUser?.name}):</strong> Odeeffannoo seera-qabeessa keessan, Eenyummaa Faayidaa fi ragaaleen eebbaa keessan qofti adda baafameera.</>
+                  ) : currentLang === 'en' ? (
+                    <><strong>Isolated Staff Profile ({currentUser?.name}):</strong> Only your official profile, Fayda ID, and credentials are visible here.</>
+                  ) : (
+                    <><strong>የተከለለ የባለሙያ መገለጫ ገጽ ({currentUser?.name})፡</strong> የእርስዎ ይፋዊ መረጃ፣ የፋይዳ ብሔራዊ መታወቂያ እና የተመረቁባቸው ማስረጃዎች ብቻ ተለይተዋል (ሌሎች ሰራተኞች የእርስዎን አያዩም፤ እርስዎም የሌሎችን አያዩም)።</>
+                  )}
                 </span>
               </div>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 uppercase font-mono shrink-0">
-                የተከለለ የስራ ወሰን
+                {currentLang === 'om' ? 'Daangaa Hojii Eegame' : currentLang === 'en' ? 'Isolated Scope' : 'የተከለለ የስራ ወሰን'}
               </span>
             </div>
           )}
@@ -2958,7 +3272,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         {stk.faydaVerified && (
                           <div
                             className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-0.5 rounded-full shadow-xs"
-                            title="በፋይዳ ብሔራዊ ስርዓት የተረጋገጠ"
+                            title={currentLang === 'om' ? 'Sirna Biyyaalessaa Faayidaatiin mirkanaa\'e' : currentLang === 'en' ? 'Verified by Fayda National ID' : 'በፋይዳ ብሔራዊ ስርዓት የተረጋገጠ'}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                           </div>
@@ -2975,7 +3289,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                           {stk.fullName}
                         </h4>
                         <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                          {stk.phone} · {stk.email || 'ይፋዊ መረጃ'}
+                          {stk.phone} · {stk.email || (currentLang === 'om' ? 'Odeeffannoo Seeraa' : currentLang === 'en' ? 'Official Info' : 'ይፋዊ መረጃ')}
                         </p>
                       </div>
                     </div>
@@ -2985,7 +3299,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <div className="flex items-center gap-1.5 text-emerald-900 font-bold mb-0.5">
                         <Building2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                         <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-                          የፕሮፋይል ጽሕፈት ቤት:
+                          {currentLang === 'om' ? 'Waajjira Profaayilii:' : currentLang === 'en' ? 'Office / Department:' : 'የፕሮፋይል ጽሕፈት ቤት:'}
                         </span>
                       </div>
                       <p className="font-extrabold text-slate-900 pl-5 leading-snug">
@@ -2997,7 +3311,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 flex items-center justify-between text-xs">
                       <div>
                         <span className="text-[9px] uppercase font-bold text-amber-800 block">
-                          ፋይዳ ብሔራዊ ዲጂታል መታወቂያ:
+                          {currentLang === 'om' ? 'Eenyummaa Dijitaalaa Faayidaa:' : currentLang === 'en' ? 'Fayda National Digital ID:' : 'ፋይዳ ብሔራዊ ዲጂታል መታወቂያ:'}
                         </span>
                         <span className="font-mono font-black text-slate-900 text-xs">
                           {stk.faydaNumber}
@@ -3008,7 +3322,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         type="button"
                         onClick={() => copyCode(stk.faydaNumber, `fayda-${stk.id}`)}
                         className="p-1 hover:bg-amber-100 rounded-lg text-amber-900 transition-colors"
-                        title="የፋይዳ ቁጥር ቅዳ"
+                        title={currentLang === 'om' ? 'Lakkoofsa Faayidaa waraabi' : currentLang === 'en' ? 'Copy Fayda ID' : 'የፋይዳ ቁጥር ቅዳ'}
                       >
                         {copiedCodeId === `fayda-${stk.id}` ? (
                           <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -3023,10 +3337,10 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-700 flex items-center gap-1">
                           <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>የተመረቀባቸው ማስረጃዎች:</span>
+                          <span>{currentLang === 'om' ? 'Ragaalee Eebbaa:' : currentLang === 'en' ? 'Credentials:' : 'የተመረቁባቸው ማስረጃዎች:'}</span>
                         </span>
                         <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          {stk.credentials?.length || 0} ማስረጃዎች
+                          {stk.credentials?.length || 0} {currentLang === 'om' ? 'ragaalee' : currentLang === 'en' ? 'docs' : 'ማስረጃዎች'}
                         </span>
                       </div>
 
@@ -3043,18 +3357,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                                 </span>
                                 <span className="text-slate-800 font-semibold">{c.fieldOfStudy}</span>
                                 <span className="text-slate-500 block text-[10px] truncate">
-                                  {c.institution} ({c.graduationYear} ዓ.ም)
+                                  {c.institution} ({c.graduationYear} {currentLang === 'om' ? 'A.L.I' : currentLang === 'en' ? 'E.C.' : 'ዓ.ም'})
                                 </span>
                               </div>
                               {c.documentFileUrl && (
                                 <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded shrink-0">
-                                  ሰነድ አለ
+                                  {currentLang === 'om' ? 'Sanadni Jira' : currentLang === 'en' ? 'Has File' : 'ሰነድ አለ'}
                                 </span>
                               )}
                             </div>
                           ))
                         ) : (
-                          <p className="text-[11px] text-slate-400 italic">ምንም ማስረጃ አልተያያዘም</p>
+                          <p className="text-[11px] text-slate-400 italic">
+                            {currentLang === 'om' ? 'Ragaan hin maxxanfamne' : currentLang === 'en' ? 'No credentials attached' : 'ምንም ማስረጃ አልተያያዘም'}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -3069,7 +3385,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r from-emerald-800 to-teal-900 hover:from-emerald-900 hover:to-teal-950 text-white rounded-xl text-xs font-bold shadow-xs transition-all"
                     >
                       <Award className="w-4 h-4 text-amber-300" />
-                      <span>ይፋዊ የፕሮፋይል ምስክር ወረቀት እይ (Certificate)</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'Waraqaa Ragaa Profaayilii Ilaali (Certificate)'
+                          : currentLang === 'en'
+                          ? 'View Official Profile Certificate'
+                          : 'ይፋዊ የፕሮፋይል ምስክር ወረቀት እይ (Certificate)'}
+                      </span>
                     </button>
 
                     <div className="flex items-center gap-2">
@@ -3082,7 +3404,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                           }}
                           className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold transition-colors"
                         >
-                          <span>አስተካክል / ሰነድ አክል</span>
+                          <span>{currentLang === 'om' ? 'Sirreessi / Sanada Dabali' : currentLang === 'en' ? 'Edit / Add Doc' : 'አስተካክል / ሰነድ አክል'}</span>
                         </button>
                       )}
 
@@ -3090,9 +3412,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         type="button"
                         onClick={() => copyCode(stk.accessCode, `stk-code-${stk.id}`)}
                         className="inline-flex items-center gap-1 py-1.5 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-lg text-xs font-mono font-bold border border-emerald-200 transition-colors"
-                        title="የመግቢያ ኮድ ቅዳ"
+                        title={currentLang === 'om' ? 'Koodii seensaa waraabi' : currentLang === 'en' ? 'Copy access code' : 'የመግቢያ ኮድ ቅዳ'}
                       >
-                        <span>ኮድ</span>
+                        <span>{currentLang === 'om' ? 'Koodii' : currentLang === 'en' ? 'Code' : 'ኮድ'}</span>
                         {copiedCodeId === `stk-code-${stk.id}` ? (
                           <Check className="w-3 h-3 text-emerald-600" />
                         ) : (
@@ -3101,14 +3423,33 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       </button>
 
                       {canManageStaff && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteStakeholder(stk.id)}
-                          className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                          title="ሰርዝ"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        confirmDeleteStakeholderId === stk.id ? (
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteStakeholder(stk.id)}
+                              className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold rounded-lg transition-colors"
+                            >
+                              {currentLang === 'om' ? 'Mirkaneessi' : currentLang === 'en' ? 'Confirm' : 'አረጋግጥ'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteStakeholderId(null)}
+                              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition-colors"
+                            >
+                              {currentLang === 'om' ? 'Dhiisi' : currentLang === 'en' ? 'Cancel' : 'ተወው'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteStakeholderId(stk.id)}
+                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                            title={currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Delete' : 'ሰርዝ'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )
                       )}
                     </div>
                   </div>
@@ -3117,9 +3458,15 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             ) : (
               <div className="col-span-full bg-white rounded-2xl p-8 border border-slate-200 text-center text-slate-500 space-y-2">
                 <Award className="w-10 h-10 mx-auto text-slate-300" />
-                <h4 className="text-sm font-bold text-slate-800">ምንም ባለድርሻ አካል አልተገኘም</h4>
+                <h4 className="text-sm font-bold text-slate-800">
+                  {currentLang === 'om' ? 'Qooda-fudhaan hin argamne' : currentLang === 'en' ? 'No stakeholders found' : 'ምንም ባለድርሻ አካል አልተገኘም'}
+                </h4>
                 <p className="text-xs text-slate-500">
-                  የፍለጋ ቃሉን ይቀይሩ ወይም አዲስ ባለድርሻ አካል ይመዝግቡ
+                  {currentLang === 'om'
+                    ? 'Jecha barbaachaa jijjiiraa ykn qooda-fudhaa haaraa galmeessaa'
+                    : currentLang === 'en'
+                    ? 'Try a different search term or register a new stakeholder'
+                    : 'የፍለጋ ቃሉን ይቀይሩ ወይም አዲስ ባለድርሻ አካል ይመዝግቡ'}
                 </p>
                 {!isBureauRole && (
                   <button
@@ -3131,7 +3478,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 text-white rounded-xl text-xs font-bold hover:bg-emerald-900 transition-colors mt-2"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>አዲስ ባለድርሻ አካል መዝግብ</span>
+                    <span>{currentLang === 'om' ? 'Qooda-fudhaa Haaraa Galmeessi' : currentLang === 'en' ? 'Register Stakeholder' : 'አዲስ ባለድርሻ አካል መዝግብ'}</span>
                   </button>
                 )}
               </div>
@@ -3169,7 +3516,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl text-xs font-bold shrink-0">
                   <Lock className="w-3.5 h-3.5 text-amber-800" />
-                  <span>ኮዶች ማየት ብቻ (Read-Only)</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Koodii Ilaaluu Qofa (Read-Only)'
+                      : currentLang === 'en'
+                      ? 'Read-Only Access'
+                      : 'ኮዶች ማየት ብቻ (Read-Only)'}
+                  </span>
                 </div>
               )}
             </div>
@@ -3182,7 +3535,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   type="text"
                   value={codeSearchQuery}
                   onChange={(e) => setCodeSearchQuery(e.target.value)}
-                  placeholder="ተጠቃሚ በስም ወይም በኮድ ፈልግ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fayyadamaa maqaa ykn koodiidhaan barbaadi...'
+                      : currentLang === 'en'
+                      ? 'Search user by name or code...'
+                      : 'ተጠቃሚ በስም ወይም በኮድ ፈልግ...'
+                  }
                   className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -3192,11 +3551,21 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 onChange={(e) => setCodeRoleFilter(e.target.value)}
                 className="px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white text-slate-700 font-medium focus:outline-hidden"
               >
-                <option value="all">ሁሉም ሚናዎች (All Roles)</option>
-                <option value="school_director">ዳይሬክተር (Director)</option>
-                <option value="teacher">መምህር (Teacher)</option>
-                <option value="student">ተማሪ (Student)</option>
-                <option value="parent">ወላጅ (Parent)</option>
+                <option value="all">
+                  {currentLang === 'om' ? 'Gahee Hunda (All Roles)' : currentLang === 'en' ? 'All Roles' : 'ሁሉም ሚናዎች (All Roles)'}
+                </option>
+                <option value="school_director">
+                  {currentLang === 'om' ? 'Daarektara (Director)' : currentLang === 'en' ? 'Director' : 'ዳይሬክተር (Director)'}
+                </option>
+                <option value="teacher">
+                  {currentLang === 'om' ? 'Barsiisaa (Teacher)' : currentLang === 'en' ? 'Teacher' : 'መምህር (Teacher)'}
+                </option>
+                <option value="student">
+                  {currentLang === 'om' ? 'Barataa (Student)' : currentLang === 'en' ? 'Student' : 'ተማሪ (Student)'}
+                </option>
+                <option value="parent">
+                  {currentLang === 'om' ? 'Maatii (Parent)' : currentLang === 'en' ? 'Parent' : 'ወላጅ (Parent)'}
+                </option>
               </select>
             </div>
           </div>
@@ -3205,11 +3574,27 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             {filteredSchoolCodes.map((item) => {
               const roleLabel =
                 item.role === 'school_director'
-                  ? 'ዳይሬክተር (Director)'
+                  ? currentLang === 'om'
+                    ? 'Daarektara (Director)'
+                    : currentLang === 'en'
+                    ? 'Director'
+                    : 'ዳይሬክተር (Director)'
                   : item.role === 'teacher'
-                  ? 'መምህር (Teacher)'
+                  ? currentLang === 'om'
+                    ? 'Barsiisaa (Teacher)'
+                    : currentLang === 'en'
+                    ? 'Teacher'
+                    : 'መምህር (Teacher)'
                   : item.role === 'student'
-                  ? 'ተማሪ (Student)'
+                  ? currentLang === 'om'
+                    ? 'Barataa (Student)'
+                    : currentLang === 'en'
+                    ? 'Student'
+                    : 'ተማሪ (Student)'
+                  : currentLang === 'om'
+                  ? 'Maatii (Parent)'
+                  : currentLang === 'en'
+                  ? 'Parent'
                   : 'ወላጅ (Parent)';
 
               const rolePillClass =
@@ -3238,13 +3623,20 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       {item.fullName}
                     </h4>
                     <p className="text-xs text-slate-500 mt-1">
-                      ኃላፊነት / ክፍል፡ <strong>{item.assignedClassOrSubject}</strong>
+                      {currentLang === 'om'
+                        ? 'Itti-gaafatamummaa / Kutaa:'
+                        : currentLang === 'en'
+                        ? 'Role / Class:'
+                        : 'ኃላፊነት / ክፍል፡'}{' '}
+                      <strong>{item.assignedClassOrSubject}</strong>
                     </p>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">የመግቢያ ኮድ</span>
+                      <span className="text-[10px] text-slate-400 block">
+                        {currentLang === 'om' ? 'Koodii Seensaa' : currentLang === 'en' ? 'Access Code' : 'የመግቢያ ኮድ'}
+                      </span>
                       <span className="font-mono font-bold text-emerald-950 text-xs sm:text-sm">
                         {item.accessCode}
                       </span>
@@ -3258,12 +3650,16 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       {copiedCodeId === item.id ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700 font-bold">ተቀድቷል</span>
+                          <span className="text-emerald-700 font-bold">
+                            {currentLang === 'om' ? 'Garagalfameera' : currentLang === 'en' ? 'Copied' : 'ተቀድቷል'}
+                          </span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5 text-slate-500" />
-                          <span>ኮድ ቅዳ</span>
+                          <span>
+                            {currentLang === 'om' ? 'Koodii Garagalchi' : currentLang === 'en' ? 'Copy Code' : 'ኮድ ቅዳ'}
+                          </span>
                         </>
                       )}
                     </button>
@@ -3287,34 +3683,66 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
             <div className="space-y-2">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
-                🔒 የትምህርት ቢሮ ግንኙነት ተዘግቷል (Bureau Locked)
+                {currentLang === 'om'
+                  ? '🔒 Walqunnamtiin Biiroo Barnootaa Cufameera (Bureau Locked)'
+                  : currentLang === 'en'
+                  ? '🔒 Education Bureau Connection Locked'
+                  : '🔒 የትምህርት ቢሮ ግንኙነት ተዘግቷል (Bureau Locked)'}
               </span>
               <h3 className="text-base sm:text-xl font-black text-slate-900">
-                ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ሪፖርት መላክ አልተፈቀደም
+                {currentLang === 'om'
+                  ? 'Gara Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamanneetti Gabaasa Erguun Hin Hayyamamne'
+                  : currentLang === 'en'
+                  ? 'Sending Reports to Shashemene City Education Bureau is Currently Restricted'
+                  : 'ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ሪፖርት መላክ አልተፈቀደም'}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-                የትምህርት ቤቱን ባለድርሻ አካላትና ተማሪዎችን መረጃ ካጠናቀቁ በኋላ ለእውቅና ወደ ትምህርት ቢሮ ሪፖርት ለመላክ ለሲስተም አበልፃጊ (ታምራት ዓለ) የፈቃድ ክፍያ በባንክ ፈጽመው ደረሰኝ መላክ አለብዎት። በአበልፃጊው ሲረጋገጥ ግንኙነቱ ወዲያውኑ ይከፈታል።
+                {currentLang === 'om'
+                  ? 'Odeeffannoo qooda-fudhattootaa fi barattoota mana barumsaa erga guuttanii booda beekamtiif gara Biiroo Barnootaatti gabaasa erguuf kaffaltii hayyamaa misoomsaa siistemaa (Taamraat Allee) baankiin raawwattanii nagahee erguu qabdu. Yeroo misoomsaan mirkaneessu walqunnamtiin battalumatti banama.'
+                  : currentLang === 'en'
+                  ? 'After registering your school stakeholders and students, pay the developer license fee (Tamerat Ale) via bank and upload the receipt to send official reports to the Bureau. Connection unlocks immediately upon approval.'
+                  : 'የትምህርት ቤቱን ባለድርሻ አካላትና ተማሪዎችን መረጃ ካጠናቀቁ በኋላ ለእውቅና ወደ ትምህርት ቢሮ ሪፖርት ለመላክ ለሲስተም አበልፃጊ (ታምራት ዓለ) የፈቃድ ክፍያ በባንክ ፈጽመው ደረሰኝ መላክ አለብዎት። በአበልፃጊው ሲረጋገጥ ግንኙነቱ ወዲያውኑ ይከፈታል።'}
               </p>
             </div>
 
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-left text-xs space-y-2 font-mono text-slate-700">
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-sans">የትምህርት ቤት ስም፡</span>
+                <span className="text-slate-500 font-sans">
+                  {currentLang === 'om' ? 'Maqaa Mana Barnootaa:' : currentLang === 'en' ? 'School Name:' : 'የትምህርት ቤት ስም፡'}
+                </span>
                 <span className="font-bold text-slate-900 font-sans">{currentSchool.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-sans">የአበልፃጊ ፈቃድ ክፍያ ሁኔታ፡</span>
+                <span className="text-slate-500 font-sans">
+                  {currentLang === 'om' ? 'Haala Kaffaltii Hayyama Misoomsaa:' : currentLang === 'en' ? 'Developer License Status:' : 'የአበልፃጊ ፈቃድ ክፍያ ሁኔታ፡'}
+                </span>
                 <span className="font-bold text-amber-600 font-sans">
                   {currentSchool.developerPaymentStatus === 'receipt_submitted'
-                    ? '📩 ደረሰኝ ቀርቧል (በመጠባበቅ ላይ)'
+                    ? currentLang === 'om'
+                      ? '📩 Nagaheen Dhiyaateera (Eegamaa jira)'
+                      : currentLang === 'en'
+                      ? '📩 Receipt Submitted (Pending)'
+                      : '📩 ደረሰኝ ቀርቧል (በመጠባበቅ ላይ)'
                     : currentSchool.developerPaymentStatus === 'rejected'
-                    ? '❌ ደረሰኝ ውድቅ ተደርጓል'
+                    ? currentLang === 'om'
+                      ? '❌ Nagaheen Kufaa Ta\'eera'
+                      : currentLang === 'en'
+                      ? '❌ Receipt Rejected'
+                      : '❌ ደረሰኝ ውድቅ ተደርጓል'
+                    : currentLang === 'om'
+                    ? 'Hin Kaffalamne (Pending Payment)'
+                    : currentLang === 'en'
+                    ? 'Pending Payment'
                     : 'ያልከፈለ (Pending Payment)'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-sans">የክፍያ መጠን፡</span>
-                <span className="font-bold text-emerald-700">5,000 ብር (ETB)</span>
+                <span className="text-slate-500 font-sans">
+                  {currentLang === 'om' ? 'Hanga Kaffaltii:' : currentLang === 'en' ? 'Fee Amount:' : 'የክፍያ መጠን፡'}
+                </span>
+                <span className="font-bold text-emerald-700">
+                  {currentLang === 'om' ? 'Qarshii 5,000 (ETB)' : currentLang === 'en' ? '5,000 ETB' : '5,000 ብር (ETB)'}
+                </span>
               </div>
             </div>
 
@@ -3327,7 +3755,15 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 <CreditCard className="w-4 h-4" />
                 <span>
                   {currentSchool.developerPaymentStatus === 'receipt_submitted'
-                    ? 'የተላከውን ደረሰኝ ሁኔታ ተመልከት'
+                    ? currentLang === 'om'
+                      ? 'Haala Nagahee Ergamee Ilaali'
+                      : currentLang === 'en'
+                      ? 'View Submitted Receipt Status'
+                      : 'የተላከውን ደረሰኝ ሁኔታ ተመልከት'
+                    : currentLang === 'om'
+                    ? '💳 Baankiin Kaffalaatii Nagahee Ergaa'
+                    : currentLang === 'en'
+                    ? '💳 Pay via Bank & Upload Receipt'
                     : '💳 በባንክ ከፍለው ደረሰኝ ይላኩ'}
                 </span>
               </button>
@@ -3338,15 +3774,23 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                  የትምህርት ቤት የተማሪዎች ውጤት ሪፖርት ለሻሸመኔ ትምህርት ቢሮ ማስገቢያ
+                  {currentLang === 'om'
+                    ? 'Ergii Gabaasa Qabxii Barattootaa Gara Biiroo Barnootaa Shaashamannee'
+                    : currentLang === 'en'
+                    ? 'Submit Student Results Report to Shashemene Education Bureau'
+                    : 'የትምህርት ቤት የተማሪዎች ውጤት ሪፖርት ለሻሸመኔ ትምህርት ቢሮ ማስገቢያ'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  የፈተና ውጤት ማጠቃለያ፣ የማለፍ ምጣኔ እና ከፍተኛ ውጤቶችን ለከተማው ትምህርት ቢሮ ይላኩ።
+                  {currentLang === 'om'
+                    ? 'Cuunfaa qabxii qormaataa, hamma darbinsaa fi qabxii olaanaa gara Biiroo Barnootaa magaalaatti ergaa.'
+                    : currentLang === 'en'
+                    ? 'Send exam summary, pass rates, and top student scores to the City Education Bureau.'
+                    : 'የፈተና ውጤት ማጠቃለያ፣ የማለፍ ምጣኔ እና ከፍተኛ ውጤቶችን ለከተማው ትምህርት ቢሮ ይላኩ።'}
                 </p>
               </div>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                ቢሮ የተገናኘ
+                {currentLang === 'om' ? 'Biiroo Waliin Walqunnameera' : currentLang === 'en' ? 'Bureau Connected' : 'ቢሮ የተገናኘ'}
               </span>
             </div>
 
@@ -3354,7 +3798,11 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs font-semibold flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                 <span>
-                  የውጤት ሪፖርቱ ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ በተሳካ ሁኔታ ተልኳል! በቢሮው ተገምግሞ ይጸድቃል።
+                  {currentLang === 'om'
+                    ? 'Gabaasni qabxii gara Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamanneetti milkaa\'inaan ergameera! Biiroon qoratamee mirkanaa\'a.'
+                    : currentLang === 'en'
+                    ? 'Results report submitted successfully to Shashemene City Education Bureau for review and approval.'
+                    : 'የውጤት ሪፖርቱ ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ በተሳካ ሁኔታ ተልኳል! በቢሮው ተገምግሞ ይጸድቃል።'}
                 </span>
               </div>
             )}
@@ -3363,7 +3811,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት ዘመን (Academic Year)
+                    {currentLang === 'om' ? 'Bara Barnootaa (Academic Year)' : currentLang === 'en' ? 'Academic Year' : 'የትምህርት ዘመን (Academic Year)'}
                   </label>
                   <input
                     type="text"
@@ -3376,7 +3824,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የሴሚስተር ወቅት
+                    {currentLang === 'om' ? 'Yeroo Seemisteeraa' : currentLang === 'en' ? 'Semester Term' : 'የሴሚስተር ወቅት'}
                   </label>
                   <select
                     value={reportSemester}
@@ -3385,34 +3833,66 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden"
                   >
-                    <option value="Semester 1">ሴሚስተር 1 (Semester 1)</option>
-                    <option value="Semester 2">ሴሚስተር 2 (Semester 2)</option>
-                    <option value="Annual">ዓመታዊ ጠቅላላ (Annual)</option>
+                    <option value="Semester 1">
+                      {currentLang === 'om' ? 'Seemisteera 1 (Semester 1)' : currentLang === 'en' ? 'Semester 1' : 'ሴሚስተር 1 (Semester 1)'}
+                    </option>
+                    <option value="Semester 2">
+                      {currentLang === 'om' ? 'Seemisteera 2 (Semester 2)' : currentLang === 'en' ? 'Semester 2' : 'ሴሚስተር 2 (Semester 2)'}
+                    </option>
+                    <option value="Annual">
+                      {currentLang === 'om' ? 'Waliigala Waggaa (Annual)' : currentLang === 'en' ? 'Annual Summary' : 'ዓመታዊ ጠቅላላ (Annual)'}
+                    </option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የክፍል ደረጃዎች
+                  {currentLang === 'om' ? 'Sadarkaa Kutaalee' : currentLang === 'en' ? 'Grade Levels' : 'የክፍል ደረጃዎች'}
                 </label>
                 <input
                   type="text"
                   required
                   value={reportGradeLevel}
                   onChange={(e) => setReportGradeLevel(e.target.value)}
-                  placeholder="ምሳሌ፡ Grades 9 - 12 ወይም All Grades"
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fakkeenyaaf: Kutaa 9 - 12 ykn Kutaalee Hunda'
+                      : currentLang === 'en'
+                      ? 'e.g. Grades 9 - 12 or All Grades'
+                      : 'ምሳሌ፡ Grades 9 - 12 ወይም All Grades'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
 
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-                <span className="font-bold text-slate-800 block">ከሲስተሙ በራስ-ሰር የተሰላ ስታትስቲክስ፡</span>
+                <span className="font-bold text-slate-800 block">
+                  {currentLang === 'om'
+                    ? 'Istaatistiksii Siistemichaan Ofumaan Herregame:'
+                    : currentLang === 'en'
+                    ? 'Auto-Calculated System Statistics:'
+                    : 'ከሲስተሙ በራስ-ሰር የተሰላ ስታትስቲክስ፡'}
+                </span>
                 <div className="grid grid-cols-2 gap-2 text-slate-600">
-                  <span>አጠቃላይ ተፈታኞች: <strong>{students.length} ተማሪዎች</strong></span>
-                  <span>የማለፍ ምጣኔ: <strong className="text-emerald-800">94.2%</strong></span>
-                  <span>አማካይ ውጤት: <strong>85.4 / 100</strong></span>
-                  <span>ከፍተኛ ውጤት: <strong>98.6% (ኪያር ከድር)</strong></span>
+                  <span>
+                    {currentLang === 'om' ? 'Qoramtoota Waliigalaa:' : currentLang === 'en' ? 'Total Examinees:' : 'አጠቃላይ ተፈታኞች:'}{' '}
+                    <strong>
+                      {students.length} {currentLang === 'om' ? 'Barattoota' : currentLang === 'en' ? 'Students' : 'ተማሪዎች'}
+                    </strong>
+                  </span>
+                  <span>
+                    {currentLang === 'om' ? 'Hamma Darbinsaa:' : currentLang === 'en' ? 'Pass Rate:' : 'የማለፍ ምጣኔ:'}{' '}
+                    <strong className="text-emerald-800">94.2%</strong>
+                  </span>
+                  <span>
+                    {currentLang === 'om' ? 'Giddugaleessa Qabxii:' : currentLang === 'en' ? 'Average Score:' : 'አማካይ ውጤት:'}{' '}
+                    <strong>85.4 / 100</strong>
+                  </span>
+                  <span>
+                    {currentLang === 'om' ? 'Qabxii Olaanaa:' : currentLang === 'en' ? 'Top Score:' : 'ከፍተኛ ውጤት:'}{' '}
+                    <strong>98.6% ({currentLang === 'om' ? 'Kiyaar Kadiir' : currentLang === 'en' ? 'Kiyar Kedir' : 'ኪያር ከድር'})</strong>
+                  </span>
                 </div>
               </div>
 
@@ -3422,12 +3902,24 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
-                  <span>ሪፖርቱን ለከተማ ትምህርት ቢሮ ላክ</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Gabaasa Gara Biiroo Barnootaa Magaalaatti Ergi'
+                      : currentLang === 'en'
+                      ? 'Send Report to City Education Bureau'
+                      : 'ሪፖርቱን ለከተማ ትምህርት ቢሮ ላክ'}
+                  </span>
                 </button>
               ) : (
                 <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-center text-xs font-bold text-amber-950 flex items-center justify-center gap-2">
                   <Lock className="w-4 h-4 text-amber-800" />
-                  <span>የትምህርት ቢሮ እይታ፡ ሪፖርት የሚልኩት የትምህርት ቤቱ ዳይሬክተር ብቻ ናቸው (ማየት ብቻ)</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Ilaalcha Biiroo Barnootaa: Gabaasa kan ergu Daarektara Mana Barumsaa qofa (Ilaaluu Qofa)'
+                      : currentLang === 'en'
+                      ? 'Bureau View: Only the School Director can submit reports (Read-Only)'
+                      : 'የትምህርት ቢሮ እይታ፡ ሪፖርት የሚልኩት የትምህርት ቤቱ ዳይሬክተር ብቻ ናቸው (ማየት ብቻ)'}
+                  </span>
                 </div>
               )}
             </form>
@@ -3625,10 +4117,19 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     {currentSchool.name}
                   </h3>
                   <p className="text-xs text-emerald-800 font-semibold">
-                    የተማሪ ይፋዊ የውጤት ካርድ (Official Student Academic Report Card)
+                    {currentLang === 'om'
+                      ? 'Kaardii Qabxii Seera-Qabeessa Barataa (Official Report Card)'
+                      : currentLang === 'en'
+                      ? 'Official Student Academic Report Card'
+                      : 'የተማሪ ይፋዊ የውጤት ካርድ (Official Student Academic Report Card)'}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    {currentSchool.subcity} · ሻሸመኔ ከተማ
+                    {currentSchool.subcity} ·{' '}
+                    {currentLang === 'om'
+                      ? 'Magaalaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene City'
+                      : 'ሻሸመኔ ከተማ'}
                   </p>
                 </div>
               </div>
@@ -3645,23 +4146,31 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             {/* Student metadata */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
               <div>
-                <span className="text-[10px] text-slate-400 block">የተማሪው ስም</span>
+                <span className="text-[10px] text-slate-400 block">
+                  {currentLang === 'om' ? 'Maqaa Barataa' : currentLang === 'en' ? 'Student Name' : 'የተማሪው ስም'}
+                </span>
                 <strong className="text-slate-900">{selectedStudentForCard.fullName}</strong>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 block">ክፍል እና ክፍልፋይ</span>
+                <span className="text-[10px] text-slate-400 block">
+                  {currentLang === 'om' ? 'Kutaa fi Daree' : currentLang === 'en' ? 'Grade & Section' : 'ክፍል እና ክፍልፋይ'}
+                </span>
                 <strong className="text-slate-900">
-                  Grade {selectedStudentForCard.grade} - {selectedStudentForCard.section}
+                  {currentLang === 'om' ? 'Kutaa' : 'Grade'} {selectedStudentForCard.grade} - {selectedStudentForCard.section}
                 </strong>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 block">የክፍል ደረጃ (Rank)</span>
+                <span className="text-[10px] text-slate-400 block">
+                  {currentLang === 'om' ? 'Sadarkaa Daree (Rank)' : currentLang === 'en' ? 'Class Rank' : 'የክፍል ደረጃ (Rank)'}
+                </span>
                 <strong className="text-emerald-900 font-extrabold text-sm">
                   #{selectedStudentForCard.rank}
                 </strong>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 block">የስነ-ምግባር ውጤት</span>
+                <span className="text-[10px] text-slate-400 block">
+                  {currentLang === 'om' ? 'Qabxii Naamusaa' : currentLang === 'en' ? 'Conduct Grade' : 'የስነ-ምግባር ውጤት'}
+                </span>
                 <strong className="text-emerald-800 font-bold">{selectedStudentForCard.conduct}</strong>
               </div>
             </div>
@@ -3671,12 +4180,24 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100/70 border-b border-slate-200 text-slate-700 font-bold text-[11px]">
                   <tr>
-                    <th className="px-3 py-2">የትምህርት አይነት</th>
-                    <th className="px-2 py-2">ስራ (20%)</th>
-                    <th className="px-2 py-2">ግማሽ (30%)</th>
-                    <th className="px-2 py-2">መጨረሻ (50%)</th>
-                    <th className="px-2 py-2">ድምር (100%)</th>
-                    <th className="px-2 py-2 text-center">ፊደል</th>
+                    <th className="px-3 py-2">
+                      {currentLang === 'om' ? 'Gosa Barnootaa' : currentLang === 'en' ? 'Subject' : 'የትምህርት አይነት'}
+                    </th>
+                    <th className="px-2 py-2">
+                      {currentLang === 'om' ? 'Hojii (20%)' : currentLang === 'en' ? 'Work (20%)' : 'ስራ (20%)'}
+                    </th>
+                    <th className="px-2 py-2">
+                      {currentLang === 'om' ? 'Walakkaa (30%)' : currentLang === 'en' ? 'Mid (30%)' : 'ግማሽ (30%)'}
+                    </th>
+                    <th className="px-2 py-2">
+                      {currentLang === 'om' ? 'Xumuraa (50%)' : currentLang === 'en' ? 'Final (50%)' : 'መጨረሻ (50%)'}
+                    </th>
+                    <th className="px-2 py-2">
+                      {currentLang === 'om' ? 'Ida\'ama (100%)' : currentLang === 'en' ? 'Total (100%)' : 'ድምር (100%)'}
+                    </th>
+                    <th className="px-2 py-2 text-center">
+                      {currentLang === 'om' ? 'Qubee' : currentLang === 'en' ? 'Grade' : 'ፊደል'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -3701,7 +4222,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             {/* Summary statistics */}
             <div className="flex flex-wrap items-center justify-between text-xs bg-emerald-50/80 p-3 rounded-xl border border-emerald-200 gap-2">
               <div>
-                <span className="text-slate-500">አጠቃላይ ድምር: </span>
+                <span className="text-slate-500">
+                  {currentLang === 'om' ? 'Ida\'ama Waliigalaa: ' : currentLang === 'en' ? 'Total Score: ' : 'አጠቃላይ ድምር: '}
+                </span>
                 <strong className="text-emerald-950 font-extrabold text-sm">
                   {selectedStudentForCard.scores.reduce((a, b) => a + b.total, 0)}
                 </strong>
@@ -3710,7 +4233,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 </span>
               </div>
               <div>
-                <span className="text-slate-500">አማካይ: </span>
+                <span className="text-slate-500">
+                  {currentLang === 'om' ? 'Giddugaleessa: ' : currentLang === 'en' ? 'Average: ' : 'አማካይ: '}
+                </span>
                 <strong className="text-emerald-950 font-extrabold text-sm">
                   {(
                     selectedStudentForCard.scores.reduce((a, b) => a + b.total, 0) /
@@ -3720,7 +4245,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 </strong>
               </div>
               <div>
-                <span className="text-slate-500">የመገኘት ምጣኔ: </span>
+                <span className="text-slate-500">
+                  {currentLang === 'om' ? 'Hirmaannaa Argamuu: ' : currentLang === 'en' ? 'Attendance Rate: ' : 'የመገኘት ምጣኔ: '}
+                </span>
                 <strong className="text-slate-900 font-bold">
                   {selectedStudentForCard.attendanceRate}%
                 </strong>
@@ -3742,7 +4269,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 onClick={() => setSelectedStudentForCard(null)}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl"
               >
-                ዝጋ
+                {currentLang === 'om' ? 'Cufi' : currentLang === 'en' ? 'Close' : 'ዝጋ'}
               </button>
             </div>
           </div>
@@ -3780,10 +4307,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-hidden"
                 >
-                  <option value="school_director">ዳይሬክተር / ርዕሰ መምህር (Director)</option>
-                  <option value="teacher">መምህር (Teacher)</option>
-                  <option value="student">ተማሪ (Student)</option>
-                  <option value="parent">ወላጅ (Parent)</option>
+                  <option value="school_director">
+                    {currentLang === 'om' ? 'Daarektara / Durabu\'aa (Director)' : currentLang === 'en' ? 'Director / Principal' : 'ዳይሬክተር / ርዕሰ መምህር (Director)'}
+                  </option>
+                  <option value="teacher">
+                    {currentLang === 'om' ? 'Barsiisaa (Teacher)' : currentLang === 'en' ? 'Teacher' : 'መምህር (Teacher)'}
+                  </option>
+                  <option value="student">
+                    {currentLang === 'om' ? 'Barataa (Student)' : currentLang === 'en' ? 'Student' : 'ተማሪ (Student)'}
+                  </option>
+                  <option value="parent">
+                    {currentLang === 'om' ? 'Maatii (Parent)' : currentLang === 'en' ? 'Parent' : 'ወላጅ (Parent)'}
+                  </option>
                 </select>
               </div>
 
@@ -3796,7 +4331,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   required
                   value={targetFullName}
                   onChange={(e) => setTargetFullName(e.target.value)}
-                  placeholder="ስም አስገባ..."
+                  placeholder={currentLang === 'om' ? 'Maqaa galchi...' : currentLang === 'en' ? 'Enter full name...' : 'ስም አስገባ...'}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -3810,13 +4345,23 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   required
                   value={targetAssignment}
                   onChange={(e) => setTargetAssignment(e.target.value)}
-                  placeholder="ምሳሌ፡ ሂሳብ 10A እና 10B ወይም Grade 10 Section A"
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fakkeenyaaf: Herrega 10A fi 10B ykn Kutaa 10 Daree A'
+                      : currentLang === 'en'
+                      ? 'e.g. Math 10A & 10B or Grade 10 Section A'
+                      : 'ምሳሌ፡ ሂሳብ 10A እና 10B ወይም Grade 10 Section A'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
 
               <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-900">
-                ይህ ተጠቃሚ ወደ ሲስተሙ የሚገባበት ልዩ የይለፍ ኮድ በራስ-ሰር ይፈጠራል።
+                {currentLang === 'om'
+                  ? 'Koodiin addaa fayyadamaan kun ittiin gara siistemichaa seenu ofumaan uumama.'
+                  : currentLang === 'en'
+                  ? 'A unique access code for this user to log into the system will be generated automatically.'
+                  : 'ይህ ተጠቃሚ ወደ ሲስተሙ የሚገባበት ልዩ የይለፍ ኮድ በራስ-ሰር ይፈጠራል።'}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -3825,13 +4370,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   onClick={() => setShowAddCodeModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs"
                 >
-                  ኮድ ፍጠር
+                  {currentLang === 'om' ? 'Koodii Uumi' : currentLang === 'en' ? 'Generate Code' : 'ኮድ ፍጠር'}
                 </button>
               </div>
             </form>
@@ -3846,7 +4391,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">አዲስ ተማሪ መዝግብ</h3>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                {currentLang === 'om' ? 'Barataa Haaraa Galmeessi' : currentLang === 'en' ? 'Register New Student' : 'አዲስ ተማሪ መዝግብ'}
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowAddStudentModal(false)}
@@ -3859,21 +4406,21 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             <form onSubmit={handleAddStudent} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የተማሪው ሙሉ ስም *
+                  {currentLang === 'om' ? 'Maqaa Guutuu Barataa *' : currentLang === 'en' ? 'Student Full Name *' : 'የተማሪው ሙሉ ስም *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newStudentName}
                   onChange={(e) => setNewStudentName(e.target.value)}
-                  placeholder="ስም..."
+                  placeholder={currentLang === 'om' ? 'Maqaa...' : currentLang === 'en' ? 'Name...' : 'ስም...'}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የፈረቃ ዓይነት (Shift) *
+                  {currentLang === 'om' ? 'Gosa Shifitii (Shift) *' : currentLang === 'en' ? 'Shift Type *' : 'የፈረቃ ዓይነት (Shift) *'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -3890,7 +4437,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    <span>☀️ የቀን ተማሪ</span>
+                    <span>
+                      {currentLang === 'om' ? '☀️ Barataa Guyyaa' : currentLang === 'en' ? '☀️ Day Student' : '☀️ የቀን ተማሪ'}
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -3907,7 +4456,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }`}
                   >
                     <Moon className="w-3.5 h-3.5 text-indigo-300" />
-                    <span>🌙 የማታ ተማሪ</span>
+                    <span>
+                      {currentLang === 'om' ? '🌙 Barataa Galgalaa' : currentLang === 'en' ? '🌙 Night Student' : '🌙 የማታ ተማሪ'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -3916,26 +4467,48 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 <div className="bg-indigo-50/70 p-3 rounded-xl border border-indigo-200 space-y-2.5">
                   <div className="text-[11px] font-bold text-indigo-900 flex items-center gap-1">
                     <Briefcase className="w-3.5 h-3.5 text-indigo-700" />
-                    <span>የማታ ተማሪ የቀን ስራና የስራ ቦታ መረጃ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Odeeffannoo Hojii Guyyaa fi Bakka Hojii Barataa Galgalaa'
+                        : currentLang === 'en'
+                        ? 'Night Student Daytime Occupation & Workplace'
+                        : 'የማታ ተማሪ የቀን ስራና የስራ ቦታ መረጃ'}
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] font-semibold text-indigo-900 mb-0.5">የቀን ሙያ / ስራ</label>
+                      <label className="block text-[10px] font-semibold text-indigo-900 mb-0.5">
+                        {currentLang === 'om' ? 'Ogummaa / Hojii Guyyaa' : currentLang === 'en' ? 'Daytime Occupation' : 'የቀን ሙያ / ስራ'}
+                      </label>
                       <input
                         type="text"
                         value={newStudentOccupation}
                         onChange={(e) => setNewStudentOccupation(e.target.value)}
-                        placeholder="ምሳሌ፡ የመንግስት ሰራተኛ፣ ነጋዴ..."
+                        placeholder={
+                          currentLang === 'om'
+                            ? 'Fakkeenyaaf: Hojjetaa Mootummaa, Daldalaa...'
+                            : currentLang === 'en'
+                            ? 'e.g. Civil Servant, Merchant...'
+                            : 'ምሳሌ፡ የመንግስት ሰራተኛ፣ ነጋዴ...'
+                        }
                         className="w-full px-2.5 py-1.5 text-xs bg-white border border-indigo-300 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-indigo-900 mb-0.5">የመስሪያ ቦታ / ድርጅት</label>
+                      <label className="block text-[10px] font-semibold text-indigo-900 mb-0.5">
+                        {currentLang === 'om' ? 'Bakka Hojii / Dhaabbata' : currentLang === 'en' ? 'Workplace / Organization' : 'የመስሪያ ቦታ / ድርጅት'}
+                      </label>
                       <input
                         type="text"
                         value={newStudentWorkplace}
                         onChange={(e) => setNewStudentWorkplace(e.target.value)}
-                        placeholder="ምሳሌ፡ ሻሸመኔ ጤና ጣቢያ..."
+                        placeholder={
+                          currentLang === 'om'
+                            ? 'Fakkeenyaaf: Buufata Fayyaa Shaashamannee...'
+                            : currentLang === 'en'
+                            ? 'e.g. Shashemene Health Center...'
+                            : 'ምሳሌ፡ ሻሸመኔ ጤና ጣቢያ...'
+                        }
                         className="w-full px-2.5 py-1.5 text-xs bg-white border border-indigo-300 rounded-lg"
                       />
                     </div>
@@ -3945,18 +4518,26 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ፆታ</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {currentLang === 'om' ? 'Saala' : currentLang === 'en' ? 'Gender' : 'ፆታ'}
+                  </label>
                   <select
                     value={newStudentGender}
                     onChange={(e) => setNewStudentGender(e.target.value as 'M' | 'F')}
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-lg bg-white"
                   >
-                    <option value="M">ወንድ (M)</option>
-                    <option value="F">ሴት (F)</option>
+                    <option value="M">
+                      {currentLang === 'om' ? 'Dhiira (M)' : currentLang === 'en' ? 'Male (M)' : 'ወንድ (M)'}
+                    </option>
+                    <option value="F">
+                      {currentLang === 'om' ? 'Dubara (F)' : currentLang === 'en' ? 'Female (F)' : 'ሴት (F)'}
+                    </option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ክፍል</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'}
+                  </label>
                   <input
                     type="number"
                     min={1}
@@ -3967,7 +4548,9 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">ክፍልፋይ</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {currentLang === 'om' ? 'Daree' : currentLang === 'en' ? 'Section' : 'ክፍልፋይ'}
+                  </label>
                   <input
                     type="text"
                     value={newStudentSection}
@@ -3979,21 +4562,21 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የወላጅ ሙሉ ስም *
+                  {currentLang === 'om' ? 'Maqaa Guutuu Maatii *' : currentLang === 'en' ? 'Parent Full Name *' : 'የወላጅ ሙሉ ስም *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newParentName}
                   onChange={(e) => setNewParentName(e.target.value)}
-                  placeholder="አቶ/ወ/ሮ..."
+                  placeholder={currentLang === 'om' ? 'Obbo / Aadde...' : currentLang === 'en' ? 'Mr./Ms....' : 'አቶ/ወ/ሮ...'}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የወላጅ ስልክ ቁጥር *
+                  {currentLang === 'om' ? 'Lakkoofsa Bilbilaa Maatii *' : currentLang === 'en' ? 'Parent Phone Number *' : 'የወላጅ ስልክ ቁጥር *'}
                 </label>
                 <input
                   type="tel"
@@ -4010,13 +4593,13 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                   onClick={() => setShowAddStudentModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs"
                 >
-                  መዝግብ እና ኮድ አፍልቅ
+                  {currentLang === 'om' ? 'Galmeessiitii Koodii Uumi' : currentLang === 'en' ? 'Register & Generate Code' : 'መዝግብ እና ኮድ አፍልቅ'}
                 </button>
               </div>
             </form>
@@ -4093,10 +4676,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                    የትምህርት ቤት መዋቅር፣ የስራ ድርሻና ስልጣን መመሪያ
+                    {currentLang === 'om'
+                      ? 'Qajeelfama Caasaa, Gahee Hojii fi Aangoo Mana Barnootaa'
+                      : currentLang === 'en'
+                      ? 'School Roles, Organizational Responsibilities & Authority Matrix'
+                      : 'የትምህርት ቤት መዋቅር፣ የስራ ድርሻና ስልጣን መመሪያ'}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    School Roles, Organizational Responsibilities & Authority Matrix
+                    {currentLang === 'om'
+                      ? 'Gahee Hojii Mana Barumsaa, Itti-Gaafatamummaa fi Matrix Aangoo'
+                      : currentLang === 'en'
+                      ? 'Complete Digital Governance & Role Breakdown'
+                      : 'School Roles, Organizational Responsibilities & Authority Matrix'}
                   </p>
                 </div>
               </div>
@@ -4114,15 +4705,24 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
               <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <div>
-                <strong>ይፋዊ የትምህርት ቤት ሲስተም አሰራር መመሪያ፡</strong> ይህ ሲስተም በአንድ ትምህርት ቤት ውስጥ የሚገኙትን
-                ባለድርሻ አካላት በሙሉ በማስተሳሰር ባለቤቱ፣ ዳይሬክተሩ፣ መምህራን፣ ተማሪዎች፣ ወላጆች፣ ሒሳብ ሰራተኛ እና ሬጅስትራር
-                የየራሳቸውን ተግባር በዲጂታል መንገድ እንዲወጡ ያስችላል።
+                <strong>
+                  {currentLang === 'om'
+                    ? 'Qajeelfama Hojii Seera-Qabeessa Siistema Mana Barumsaa:'
+                    : currentLang === 'en'
+                    ? 'Official School System Workflow Guide:'
+                    : 'ይፋዊ የትምህርት ቤት ሲስተም አሰራር መመሪያ፡'}
+                </strong>{' '}
+                {currentLang === 'om'
+                  ? 'Siistemni kun qooda-fudhattoota mana barumsaa hunda walqunnamsiisuun abbaa mana barumsaa, daarektara, barsiisota, barattoota, maatii, hojjetaa herregaa fi reejistiraarri gahee isaanii bifa dijitaalaatiin akka bahatan taasisa.'
+                  : currentLang === 'en'
+                  ? 'This system connects every school stakeholder—Owner, Principal, Teachers, Students, Parents, Finance Officer, and Registrar—so each role performs its duties digitally.'
+                  : 'ይህ ሲስተም በአንድ ትምህርት ቤት ውስጥ የሚገኙትን ባለድርሻ አካላት በሙሉ በማስተሳሰር ባለቤቱ፣ ዳይሬክተሩ፣ መምህራን፣ ተማሪዎች፣ ወላጆች፣ ሒሳብ ሰራተኛ እና ሬጅስትራር የየራሳቸውን ተግባር በዲጂታል መንገድ እንዲወጡ ያስችላል።'}
               </div>
             </div>
 
             {/* Grid of the 7 Key Roles & Responsibilities */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {/* 1. ባለቤት (የቦርድ አባል) */}
+              {/* 1. Owner / Board Member */}
               <div className="p-4 rounded-xl border-2 border-amber-200 bg-amber-50/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -4130,20 +4730,38 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <Crown className="w-4 h-4" />
                     </span>
                     <h4 className="text-xs font-bold text-slate-900">
-                      1. ባለቤት / የቦርድ ሰብሳቢ (Owner / Board Member)
+                      {currentLang === 'om'
+                        ? '1. Abbaa Mana Barumsaa / Dura-Taa\'aa Boordii (Owner / Board)'
+                        : currentLang === 'en'
+                        ? '1. Owner / Board Member'
+                        : '1. ባለቤት / የቦርድ ሰብሳቢ (Owner / Board Member)'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full">
-                    ከፍተኛ አመራር
+                    {currentLang === 'om' ? 'Hoggansa Olaanaa' : currentLang === 'en' ? 'Executive' : 'ከፍተኛ አመራር'}
                   </span>
                 </div>
                 <ul className="text-xs text-slate-700 space-y-1.5 list-disc pl-4">
-                  <li><strong>ትምህርት ቤት ይከፍታል / ያቋቁማል፡</strong> የተቋሙን አጠቃላይ ፈቃድ፣ አርማ እና ዝርዝር መረጃ ይመዘግባል።</li>
-                  <li><strong>ዳይሬክተር ይቀጥራል፡</strong> የትምህርት ቤቱን ዋና ዳይሬክተር ይመርጣል፣ የስልጣንና ኃላፊነት ስምምነት ይሰጣል።</li>
-                  <li><strong>የመግቢያ ኮድ ይሰጣል፡</strong> ለዳይሬክተርና ለቁልፍ ሰራተኞች በሲስተም ውስጥ መግባት የሚያስችል ኮድ ያመነጫል።</li>
-                  <li><strong>ት/ቤቱን ሙሉ በሙሉ ይቆጣጠራል፡</strong> የተማሪዎች ቁጥር፣ የሰራተኞች ዝርዝር፣ የኢንስፔክሽን ደረጃ እና የፈተና ውጤት ያያል።</li>
-                  <li><strong>ማስታወቂያ ይለጥፋል፡</strong> ለመላው ማህበረሰብ፣ ለቦርድ አባላት ወይም ለሰራተኞች ይፋዊ መግለጫ ያስተላልፋል።</li>
-                  <li><strong>የዳይሬክተሩ ስልጣን በሙሉ አለው፡</strong> ባለቤቱ በዳይሬክተር ስር ያሉትን ሁሉንም ክፍሎች የመቆጣጠር ሙሉ መብት አለው።</li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Mana barumsaa ni hundeessa:' : currentLang === 'en' ? 'Establishes the school:' : 'ትምህርት ቤት ይከፍታል / ያቋቁማል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Hayyama waliigalaa, asxaa fi odeeffannoo dhaabbatichaa galmeessa.' : currentLang === 'en' ? 'Registers institutional licenses, logo, and details.' : 'የተቋሙን አጠቃላይ ፈቃድ፣ አርማ እና ዝርዝር መረጃ ይመዘግባል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Daarektara ni qacara:' : currentLang === 'en' ? 'Appoints Principal:' : 'ዳይሬክተር ይቀጥራል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Daarektara olaanaa mana barumsaa filatee aangoo fi itti-gaafatamummaa kenna.' : currentLang === 'en' ? 'Selects the School Principal and delegates authority.' : 'የትምህርት ቤቱን ዋና ዳይሬክተር ይመርጣል፣ የስልጣንና ኃላፊነት ስምምነት ይሰጣል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Koodii seensaa ni kenna:' : currentLang === 'en' ? 'Issues access codes:' : 'የመግቢያ ኮድ ይሰጣል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Daarektara fi hojjettoota ijoodhaaf koodii seensaa maddisiisa.' : currentLang === 'en' ? 'Generates system access codes for Principal and key staff.' : 'ለዳይሬክተርና ለቁልፍ ሰራተኞች በሲስተም ውስጥ መግባት የሚያስችል ኮድ ያመነጫል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Mana barumsaa guutummaatti ni to\'ata:' : currentLang === 'en' ? 'Full school oversight:' : 'ት/ቤቱን ሙሉ በሙሉ ይቆጣጠራል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Baay\'ina barattootaa, tarree hojjettootaa, sadarkaa inspeekshinii fi qabxii ni ilaala.' : currentLang === 'en' ? 'Monitors student counts, staff roster, inspection level, and exam performance.' : 'የተማሪዎች ቁጥር፣ የሰራተኞች ዝርዝር፣ የኢንስፔክሽን ደረጃ እና የፈተና ውጤት ያያል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Beeksisa ni maxxansa:' : currentLang === 'en' ? 'Posts announcements:' : 'ማስታወቂያ ይለጥፋል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Hawaasa hundaaf, miseensota boordii ykn hojjettootaaf ibsa seera-qabeessa dabarsa.' : currentLang === 'en' ? 'Broadcasts official announcements to the board or community.' : 'ለመላው ማህበረሰብ፣ ለቦርድ አባላት ወይም ለሰራተኞች ይፋዊ መግለጫ ያስተላልፋል።'}
+                  </li>
                 </ul>
                 <div className="pt-2">
                   <button
@@ -4154,12 +4772,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }}
                     className="text-xs text-amber-800 font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    <span>ወደ ቦርድ አስተዳደር ገፅ ሂድ →</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara Fuula Bulchiinsa Boordii Deemi →'
+                        : currentLang === 'en'
+                        ? 'Go to Board Governance Page →'
+                        : 'ወደ ቦርድ አስተዳደር ገፅ ሂድ →'}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              {/* 2. ዳይሬክተር */}
+              {/* 2. Director */}
               <div className="p-4 rounded-xl border-2 border-teal-200 bg-teal-50/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -4167,19 +4791,34 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <Building2 className="w-4 h-4" />
                     </span>
                     <h4 className="text-xs font-bold text-slate-900">
-                      2. ዋና ዳይሬክተር / ርዕሰ መምህር (Principal / Director)
+                      {currentLang === 'om'
+                        ? '2. Daarektara Olaanaa / Durabu\'aa (Principal / Director)'
+                        : currentLang === 'en'
+                        ? '2. Principal / Director'
+                        : '2. ዋና ዳይሬክተር / ርዕሰ መምህር (Principal / Director)'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-teal-200 text-teal-900 rounded-full">
-                    ስራ አስኪያጅ
+                    {currentLang === 'om' ? 'Hojii-Gaggeessaa' : currentLang === 'en' ? 'Manager' : 'ስራ አስኪያጅ'}
                   </span>
                 </div>
                 <ul className="text-xs text-slate-700 space-y-1.5 list-disc pl-4">
-                  <li><strong>ሰራተኞችን በሙሉ ይቆጣጠራል፡</strong> መምህራንን፣ ሬጅስትራርን፣ ሒሳብ ሰራተኛን፣ ቤተ-መጻሕፍትና ድጋፍ ሰጪዎችን ያስተዳድራል።</li>
-                  <li><strong>የማየትና የማፅደቅ ስልጣን፡</strong> የተማሪዎች ውጤት፣ የተማሪ ቅበላ፣ የወጪ ማረጋገጫ እና የትምህርት ማስረጃዎችን ያፀድቃል።</li>
-                  <li><strong>ሪፖርቶች ይቀበላል እና ይልካል፡</strong> ከክፍሎች ሪፖርት ተቀብሎ ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ ሪፖርት ይልካል።</li>
-                  <li><strong>ማስታወቂያ ይለጥፋል፡</strong> ለመምህራን፣ ለተማሪዎች፣ ለወላጆች ወይም ለሰራተኞች በተናጥልም ሆነ በጋራ ማስታወቂያ ያስተላልፋል።</li>
-                  <li><strong>የዲጂታል መታወቂያ እና ማስረጃ ያረጋግጣል፡</strong> የሰራተኞችን የፋይዳ (Fayda ID) እና የትምህርት ምስክር ወረቀቶች ይመረምራል።</li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Hojjettoota hunda ni to\'ata:' : currentLang === 'en' ? 'Supervises all staff:' : 'ሰራተኞችን በሙሉ ይቆጣጠራል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Barsiisota, reejistiraara, hojjetaa herregaa, mana kitaabaa fi deeggartoota bulcha.' : currentLang === 'en' ? 'Manages teachers, registrar, accountant, library, and support staff.' : 'መምህራንን፣ ሬጅስትራርን፣ ሒሳብ ሰራተኛን፣ ቤተ-መጻሕፍትና ድጋፍ ሰጪዎችን ያስተዳድራል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Aangoo ilaaluu fi mirkaneessuu:' : currentLang === 'en' ? 'Review & approval authority:' : 'የማየትና የማፅደቅ ስልጣን፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Qabxii barattootaa, simannaa barattootaa, baasii fi ragaa barnootaa mirkaneessa.' : currentLang === 'en' ? 'Approves grades, admissions, expenditures, and academic credentials.' : 'የተማሪዎች ውጤት፣ የተማሪ ቅበላ፣ የወጪ ማረጋገጫ እና የትምህርት ማስረጃዎችን ያፀድቃል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Gabaasa ni fudhata ni ergas:' : currentLang === 'en' ? 'Receives & sends reports:' : 'ሪፖርቶች ይቀበላል እና ይልካል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Kutaa irraa gabaasa fudhatee gara Biiroo Barnootaa Shaashamanneetti gabaasa seera-qabeessa erga.' : currentLang === 'en' ? 'Collects department reports and submits official reports to Shashemene Education Bureau.' : 'ከክፍሎች ሪፖርት ተቀብሎ ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ ሪፖርት ይልካል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Waraqaa eenyummaa fi ragaa mirkaneessa:' : currentLang === 'en' ? 'Verifies IDs & credentials:' : 'የዲጂታል መታወቂያ እና ማስረጃ ያረጋግጣል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Waraqaa Eenyummaa Fayda fi ragaa barnoota hojjettootaa qorata.' : currentLang === 'en' ? 'Verifies staff Fayda IDs and academic certificates.' : 'የሰራተኞችን የፋይዳ (Fayda ID) እና የትምህርት ምስክር ወረቀቶች ይመረምራል።'}
+                  </li>
                 </ul>
                 <div className="pt-2">
                   <button
@@ -4190,12 +4829,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }}
                     className="text-xs text-teal-800 font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    <span>ወደ ባለድርሻ አካላት & ማስረጃዎች ሂድ →</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara Qooda-Fudhattootaa & Ragaa Deemi →'
+                        : currentLang === 'en'
+                        ? 'Go to Stakeholders & Credentials →'
+                        : 'ወደ ባለድርሻ አካላት & ማስረጃዎች ሂድ →'}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              {/* 3. መምህር */}
+              {/* 3. Teacher */}
               <div className="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -4203,20 +4848,34 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <GraduationCap className="w-4 h-4" />
                     </span>
                     <h4 className="text-xs font-bold text-slate-900">
-                      3. መምህር (Teacher)
+                      {currentLang === 'om' ? '3. Barsiisaa (Teacher)' : currentLang === 'en' ? '3. Teacher' : '3. መምህር (Teacher)'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded-full">
-                    አስተማሪ
+                    {currentLang === 'om' ? 'Barsiisaa' : currentLang === 'en' ? 'Educator' : 'አስተማሪ'}
                   </span>
                 </div>
                 <ul className="text-xs text-slate-700 space-y-1.5 list-disc pl-4">
-                  <li><strong>ተማሪ ያስተምራል፡</strong> የትምህርት እቅድ፣ ይዘት እና የማስተማሪያ ግብአቶችን ያቀርባል።</li>
-                  <li><strong>ውጤት ይመዘግባል፡</strong> የፈተና፣ የፈተሽ (Quiz)፣ የከፊል (Mid) እና የፍፃሜ (Final) ውጤቶችን በሲስተሙ ያስገባል።</li>
-                  <li><strong>የቤት ስራ ይሰጣል እና ያርማል፡</strong> ለክፍሉ የቤት ስራ ይሰጣል፤ ተማሪዎች የላኩትን መልስ አርሞ ማርክና አስተያየት ይሰጣል።</li>
-                  <li><strong>ዕለታዊ መገኘት ይይዛል፡</strong> የተማሪዎችን መገኘት (Present)፣ አለመገኘት (Absent)፣ ማርፈድ (Late) በየቀኑ ይመዘግባል።</li>
-                  <li><strong>ማስታወቂያዎችን ያያል፡</strong> ከአስተዳዳሪ እና ከሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የሚላኩ መመሪያዎችን ይከታተላል።</li>
-                  <li><strong>የሙያ ማሻሻያ፡</strong> የቢሮውን የመምህራን ፈተና (Online Exam) ይወስዳል፤ የስልጠና ሰነዶችን ያጠናል።</li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Barataa ni barsiisa:' : currentLang === 'en' ? 'Teaches students:' : 'ተማሪ ያስተምራል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Karoora barnootaa, qabiyyee fi meeshaalee barsiisuu dhiyeessa.' : currentLang === 'en' ? 'Prepares lesson plans, materials, and instruction.' : 'የትምህርት እቅድ፣ ይዘት እና የማስተማሪያ ግብአቶችን ያቀርባል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Qabxii ni galmeessa:' : currentLang === 'en' ? 'Records grades:' : 'ውጤት ይመዘግባል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Qabxii qormaataa, Quiz, Mid fi Final siistematti galcha.' : currentLang === 'en' ? 'Enters Quiz, Mid, and Final exam scores in the system.' : 'የፈተና፣ የፈተሽ (Quiz)፣ የከፊል (Mid) እና የፍፃሜ (Final) ውጤቶችን በሲስተሙ ያስገባል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Hojii manaa ni kenna ni soroorsas:' : currentLang === 'en' ? 'Assigns & grades homework:' : 'የቤት ስራ ይሰጣል እና ያርማል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Dareedhaaf hojii manaa kennee deebii barattootaa soroorsuun yaada kenna.' : currentLang === 'en' ? 'Assigns class homework and grades student submissions.' : 'ለክፍሉ የቤት ስራ ይሰጣል፤ ተማሪዎች የላኩትን መልስ አርሞ ማርክና አስተያየት ይሰጣል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Hirmaannaa guyyaa ni qabata:' : currentLang === 'en' ? 'Takes daily attendance:' : 'ዕለታዊ መገኘት ይይዛል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Argamuu (Present), hafuu (Absent) fi barfachuu (Late) guyyaa guyyaan galmeessa.' : currentLang === 'en' ? 'Tracks daily Present, Absent, and Late records.' : 'የተማሪዎችን መገኘት (Present)፣ አለመገኘት (Absent)፣ ማርፈድ (Late) በየቀኑ ይመዘግባል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Fooyya\'insa ogummaa:' : currentLang === 'en' ? 'Professional development:' : 'የሙያ ማሻሻያ፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Qormaata Biiroo toora interneetiin fudhata; sanadoota leenjii qo\'ata.' : currentLang === 'en' ? 'Takes Bureau online exams and downloads training materials.' : 'የቢሮውን የመምህራን ፈተና (Online Exam) ይወስዳል፤ የስልጠና ሰነዶችን ያጠናል።'}
+                  </li>
                 </ul>
                 <div className="pt-2">
                   <button
@@ -4227,12 +4886,18 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }}
                     className="text-xs text-emerald-800 font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    <span>ወደ የቤት ስራ እና መገኘት ገፅ ሂድ →</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara Fuula Hojii Manaa fi Hirmaannaa Deemi →'
+                        : currentLang === 'en'
+                        ? 'Go to Homework & Attendance →'
+                        : 'ወደ የቤት ስራ እና መገኘት ገፅ ሂድ →'}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              {/* 4. ተማሪ */}
+              {/* 4. Student */}
               <div className="p-4 rounded-xl border-2 border-blue-200 bg-blue-50/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -4240,23 +4905,34 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <User className="w-4 h-4" />
                     </span>
                     <h4 className="text-xs font-bold text-slate-900">
-                      4. ተማሪ (Student)
+                      {currentLang === 'om' ? '4. Barataa (Student)' : currentLang === 'en' ? '4. Student' : '4. ተማሪ (Student)'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-200 text-blue-900 rounded-full">
-                    ተማሪ
+                    {currentLang === 'om' ? 'Barataa' : currentLang === 'en' ? 'Student' : 'ተማሪ'}
                   </span>
                 </div>
                 <ul className="text-xs text-slate-700 space-y-1.5 list-disc pl-4">
-                  <li><strong>የራሱን ውጤት ያያል፡</strong> የፈተና ውጤቶችን፣ ደረጃውን (Rank) እና ይፋዊ የውጤት ካርዱን ይመለከታል።</li>
-                  <li><strong>የቤት ስራ ይሰራል፡</strong> የተሰጠውን የቤት ስራ አይቶ መልሱን በሲስተሙ በቀጥታ ይልካል።</li>
-                  <li><strong>መታወቂያ ካርድ ያገኛል፡</strong> ይፋዊ የተማሪዎች ዲጂታል መታወቂያ ካርድ (Student ID Card) ያትማል።</li>
-                  <li><strong>ማስታወቂያ ያያል፡</strong> ከአስተዳደር እና ከመምህራን የሚላኩ ማስታወቂያዎችን በቅጽበት ይከታተላል።</li>
-                  <li><strong>ክፍያ ይከፍላል፡</strong> የትምህርት ቤት ክፍያ ሁኔታውን አይቶ በቴሌብር ወይም በባንክ እንዲከፈል ያደርጋል።</li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Qabxii ofii ni ilaala:' : currentLang === 'en' ? 'Views own grades:' : 'የራሱን ውጤት ያያል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Qabxii qormaataa, sadarkaa daree fi kaardii qabxii seera-qabeessa ilaala.' : currentLang === 'en' ? 'Checks exam marks, class rank, and official report card.' : 'የፈተና ውጤቶችን፣ ደረጃውን (Rank) እና ይፋዊ የውጤት ካርዱን ይመለከታል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Hojii manaa ni hojjeta:' : currentLang === 'en' ? 'Completes homework:' : 'የቤት ስራ ይሰራል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Hojii manaa kenname ilaalee deebii kallattiin siistamaan erga.' : currentLang === 'en' ? 'Views assigned homework and submits answers online.' : 'የተሰጠውን የቤት ስራ አይቶ መልሱን በሲስተሙ በቀጥታ ይልካል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Kaardii eenyummaa ni argata:' : currentLang === 'en' ? 'Gets Student ID Card:' : 'መታወቂያ ካርድ ያገኛል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Waraqaa eenyummaa barataa dijitaalaa (Student ID Card) maxxanfata.' : currentLang === 'en' ? 'Downloads or prints official Digital Student ID Card.' : 'ይፋዊ የተማሪዎች ዲጂታል መታወቂያ ካርድ (Student ID Card) ያትማል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Kaffaltii ni raawwata:' : currentLang === 'en' ? 'Manages tuition fee:' : 'ክፍያ ይከፍላል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Haala kaffaltii ji\'aa ilaalee Telebirr ykn Baankiin kaffalee nagahee erga.' : currentLang === 'en' ? 'Checks monthly fee schedule and uploads payment receipts.' : 'የትምህርት ቤት ክፍያ ሁኔታውን አይቶ በቴሌብር ወይም በባንክ እንዲከፈል ያደርጋል።'}
+                  </li>
                 </ul>
               </div>
 
-              {/* 5. ወላጅ */}
+              {/* 5. Parent */}
               <div className="p-4 rounded-xl border-2 border-purple-200 bg-purple-50/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -4264,23 +4940,34 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <Users className="w-4 h-4" />
                     </span>
                     <h4 className="text-xs font-bold text-slate-900">
-                      5. ወላጅ / አሳዳጊ (Parent / Guardian)
+                      {currentLang === 'om' ? '5. Maatii / Guddistuu (Parent / Guardian)' : currentLang === 'en' ? '5. Parent / Guardian' : '5. ወላጅ / አሳዳጊ (Parent / Guardian)'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-purple-200 text-purple-900 rounded-full">
-                    ወላጅ
+                    {currentLang === 'om' ? 'Maatii' : currentLang === 'en' ? 'Parent' : 'ወላጅ'}
                   </span>
                 </div>
                 <ul className="text-xs text-slate-700 space-y-1.5 list-disc pl-4">
-                  <li><strong>የልጁን ውጤት ያያል፡</strong> የልጁን የትምህርት ውጤት፣ ዝርዝር ማርክ እና የክፍል ደረጃ በቅርበት ይከታተላል።</li>
-                  <li><strong>ዕለታዊ መገኘት ይቆጣጠራል፡</strong> ልጁ ዛሬ ትምህርት ቤት መገኘቱን፣ ማርፈዱን ወይም መቅረቱን ወዲያውኑ ያውቃል።</li>
-                  <li><strong>ማስታወቂያ ያያል፡</strong> ከትምህርት ቤቱ አስተዳደርና ከመምህራን የሚላኩ የወላጆች ጥሪና ማስታወቂያዎች ይመለከታል።</li>
-                  <li><strong>የወር ክፍያ ይከፍላል፡</strong> የትምህርት ክፍያዎችን በቴሌብር (Telebirr)፣ በሲቢኢ ብር (CBE Birr) በቀጥታ ይከፍላል፤ ደረሰኝ ያገኛል።</li>
-                  <li><strong>ከመምህራን ጋር ግንኙነት ያደርጋል፡</strong> የልጁን ስነ-ምግባር እና ክትትል ከመምህራን ጋር ይገመግማል።</li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Qabxii ilma/intala isaa ni hordofa:' : currentLang === 'en' ? 'Monitors child\'s grades:' : 'የልጁን ውጤት ያያል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Qabxii barnootaa, bal\'ina maarkii fi sadarkaa daree dhiyeenyatti hordofa.' : currentLang === 'en' ? 'Follows detailed subject scores and class ranking closely.' : 'የልጁን የትምህርት ውጤት፣ ዝርዝር ማርክ እና የክፍል ደረጃ በቅርበት ይከታተላል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Hirmaannaa guyyaa ni to\'ata:' : currentLang === 'en' ? 'Tracks daily attendance:' : 'ዕለታዊ መገኘት ይቆጣጠራል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Ilmi/intalli isaa har\'a argamuu, barfachuu ykn hafuu battalumatti beeka.' : currentLang === 'en' ? 'Knows immediately if child is present, late, or absent.' : 'ልጁ ዛሬ ትምህርት ቤት መገኘቱን፣ ማርፈዱን ወይም መቅረቱን ወዲያውኑ ያውቃል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Kaffaltii ji\'aa ni kaffala:' : currentLang === 'en' ? 'Pays monthly tuition:' : 'የወር ክፍያ ይከፍላል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Kaffaltii ji\'aa Telebirr ykn Baankiin raawwatee nagahee erga.' : currentLang === 'en' ? 'Pays tuition via Telebirr or Bank and attaches receipts.' : 'የትምህርት ክፍያዎችን በቴሌብር (Telebirr)፣ በሲቢኢ ብር (CBE Birr) በቀጥታ ይከፍላል፤ ደረሰኝ ያገኛል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Barsiisota waliin ni qunnama:' : currentLang === 'en' ? 'Communicates with teachers:' : 'ከመምህራን ጋር ግንኙነት ያደርጋል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Naamusaa fi hordoffii barataa barsiisota waliin gamaaggama.' : currentLang === 'en' ? 'Coordinates student conduct and academic progress with teachers.' : 'የልጁን ስነ-ምግባር እና ክትትል ከመምህራን ጋር ይገመግማል።'}
+                  </li>
                 </ul>
               </div>
 
-              {/* 6. የሒሳብ ሰራተኛ */}
+              {/* 6. Accountant / Cashier */}
               <div className="p-4 rounded-xl border-2 border-green-200 bg-green-50/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -4288,19 +4975,30 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                       <DollarSign className="w-4 h-4" />
                     </span>
                     <h4 className="text-xs font-bold text-slate-900">
-                      6. የሒሳብ ሰራተኛ / ፋይናንስ ሹም (Accountant / Cashier)
+                      {currentLang === 'om' ? '6. Hojjetaa Herregaa / Kaashiyara (Accountant / Cashier)' : currentLang === 'en' ? '6. Accountant / Cashier' : '6. የሒሳብ ሰራተኛ / ፋይናንስ ሹም (Accountant / Cashier)'}
                     </h4>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-green-200 text-green-900 rounded-full">
-                    ፋይናንስ
+                    {currentLang === 'om' ? 'Faayinaansii' : currentLang === 'en' ? 'Finance' : 'ፋይናንስ'}
                   </span>
                 </div>
                 <ul className="text-xs text-slate-700 space-y-1.5 list-disc pl-4">
-                  <li><strong>የወር ክፍያ ይሰበስባል፡</strong> የተማሪዎችን ወርሃዊ የትምህርት ክፍያ ተቀብሎ ይፋዊ የኤሌክትሮኒክ ደረሰኝ ያትማል።</li>
-                  <li><strong>ያልከፈሉትን ይለያል፡</strong> በወቅቱ ያልከፈሉ ተማሪዎችን ዝርዝር በማውጣት ለዳይሬክተር እና ለወላጆች ያሳውቃል።</li>
-                  <li><strong>አስተዳደራዊ ወጪ ያወጣል፡</strong> የሰራተኞች ደመወዝ፣ የመብራትና ውሃ፣ የጥገና፣ የማስተማሪያ ቁሳቁስ ግዥ ወጪዎችን ይመዘግባል።</li>
-                  <li><strong>ማስታወቂያ ያያል፡</strong> ከትምህርት ቤቱ አስተዳደር የሚወጡ የበጀት እና የፋይናንስ ማስታወቂያዎችን ይከታተላል።</li>
-                  <li><strong>የፋይናንስ መግለጫ ያዘጋጃል፡</strong> ወርሃዊና ዓመታዊ የገቢና ወጪ ሚዛን ሪፖርት ለዳይሬክተሩና ለቦርዱ ያቀርባል።</li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Kaffaltii ji\'aa ni sassaaba:' : currentLang === 'en' ? 'Collects tuition fees:' : 'የወር ክፍያ ይሰበስባል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Kaffaltii barattootaa ji\'aa fuudhee nagahee elektirooniksii maxxansa.' : currentLang === 'en' ? 'Receives monthly tuition payments and issues electronic receipts.' : 'የተማሪዎችን ወርሃዊ የትምህርት ክፍያ ተቀብሎ ይፋዊ የኤሌክትሮኒክ ደረሰኝ ያትማል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Kanneen hin kaffalin ni adda baasa:' : currentLang === 'en' ? 'Tracks unpaid accounts:' : 'ያልከፈሉትን ይለያል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Tarree barattoota yeroon hin kaffalin baasee daarektaraa fi maatiif beeksisa.' : currentLang === 'en' ? 'Identifies overdue student balances and notifies parents.' : 'በወቅቱ ያልከፈሉ ተማሪዎችን ዝርዝር በማውጣት ለዳይሬክተር እና ለወላጆች ያሳውቃል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Baasii bulchiinsaa ni galmeessa:' : currentLang === 'en' ? 'Records expenses:' : 'አስተዳደራዊ ወጪ ያወጣል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Mindaa hojjettootaa, ifaa, bishaanii fi bittaa meeshaalee galmeessa.' : currentLang === 'en' ? 'Logs staff payroll, utilities, maintenance, and supply expenses.' : 'የሰራተኞች ደመወዝ፣ የመብራትና ውሃ፣ የጥገና፣ የማስተማሪያ ቁሳቁስ ግዥ ወጪዎችን ይመዘግባል።'}
+                  </li>
+                  <li>
+                    <strong>{currentLang === 'om' ? 'Ibsa faayinaansii ni qopheessa:' : currentLang === 'en' ? 'Prepares financial statements:' : 'የፋይናንስ መግለጫ ያዘጋጃል፡'}</strong>{' '}
+                    {currentLang === 'om' ? 'Gabaasa madaallii galii fi baasii ji\'aa fi waggaa dhiyeessa.' : currentLang === 'en' ? 'Delivers monthly and annual balance reports to leadership.' : 'ወርሃዊና ዓመታዊ የገቢና ወጪ ሚዛን ሪፖርት ለዳይሬክተሩና ለቦርዱ ያቀርባል።'}
+                  </li>
                 </ul>
                 <div className="pt-2">
                   <button
@@ -4311,36 +5009,73 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }}
                     className="text-xs text-green-800 font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    <span>ወደ ሒሳብና ክፍያ ገፅ ሂድ →</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara Fuula Herregaa fi Kaffaltii Deemi →'
+                        : currentLang === 'en'
+                        ? 'Go to Finance & Tuition Page →'
+                        : 'ወደ ሒሳብና ክፍያ ገፅ ሂድ →'}
+                    </span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* 7. Question 7 Answer: ማን ተማሪ ይመዘግባል? ማን መምህር ይመዘግባል? ምን ምን ሰራተኛ ያስፈልጋል? */}
+            {/* 7. Org Structure */}
             <div className="p-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50/60 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="p-1.5 bg-indigo-700 text-white rounded-lg">
                   <Briefcase className="w-4 h-4" />
                 </span>
                 <h4 className="text-sm font-bold text-slate-900">
-                  7. የትምህርት ቤት መዋቅር፡ ተማሪን ማን ይመዘግባል? መምህርን ማን ይመዘግባል? ምን ሰራተኛ ያስፈልጋል?
+                  {currentLang === 'om'
+                    ? '7. Caasaa Mana Barnootaa: Barataa eenyutu galmeessa? Barsiisaa eenyutu galmeessa? Hojjetaan akkamii barbaachisa?'
+                    : currentLang === 'en'
+                    ? '7. Organizational Structure: Who enrolls students? Who hires staff? What staff are needed?'
+                    : '7. የትምህርት ቤት መዋቅር፡ ተማሪን ማን ይመዘግባል? መምህርን ማን ይመዘግባል? ምን ሰራተኛ ያስፈልጋል?'}
                 </h4>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {/* 7a. ተማሪን ማን ይመዘግባል */}
                 <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-xs space-y-1.5">
                   <span className="font-bold text-indigo-950 block text-xs">
-                    👉 ተማሪን ማን ይመዘግባል? (Who Enrolls Students?)
+                    {currentLang === 'om'
+                      ? '👉 Barataa eenyutu galmeessa? (Who Enrolls Students?)'
+                      : currentLang === 'en'
+                      ? '👉 Who Enrolls Students?'
+                      : '👉 ተማሪን ማን ይመዘግባል? (Who Enrolls Students?)'}
                   </span>
                   <p className="text-slate-700 text-[11px] leading-relaxed">
-                    <strong>ሬጅስትራር / የተማሪዎች ቅበላና መረጃ ክፍል (School Registrar & Admissions Officer)</strong>
+                    <strong>
+                      {currentLang === 'om'
+                        ? 'Reejistiraara / Kutaa Simannaa fi Odeeffannoo Barattootaa (School Registrar)'
+                        : currentLang === 'en'
+                        ? 'School Registrar & Admissions Officer'
+                        : 'ሬጅስትራር / የተማሪዎች ቅበላና መረጃ ክፍል (School Registrar & Admissions Officer)'}
+                    </strong>
                   </p>
                   <ul className="text-slate-600 text-[11px] space-y-1 list-disc pl-4">
-                    <li>አዳዲስ ተማሪዎችን ይመዘግባል፣ የልደትና የዝውውር ሰነዶችን ያረጋግጣል።</li>
-                    <li>ተማሪዎችን በክፍል እና በክፍልፋይ (Section A, B, C...) ይመድባል።</li>
-                    <li>የተማሪ መታወቂያ ካርድ (Student ID Card) ያትማል፤ ትራንስክሪፕት ያዘጋጃል።</li>
+                    <li>
+                      {currentLang === 'om'
+                        ? 'Barattoota haaraa galmeessa; ragaa dhalootaa fi jijjiirraa mirkaneessa.'
+                        : currentLang === 'en'
+                        ? 'Registers new students and verifies birth & transfer records.'
+                        : 'አዳዲስ ተማሪዎችን ይመዘግባል፣ የልደትና የዝውውር ሰነዶችን ያረጋግጣል።'}
+                    </li>
+                    <li>
+                      {currentLang === 'om'
+                        ? 'Barattoota kutaa fi dareedhaan (Section A, B, C...) ramada.'
+                        : currentLang === 'en'
+                        ? 'Assigns students into grades and sections (A, B, C...).'
+                        : 'ተማሪዎችን በክፍል እና በክፍልፋይ (Section A, B, C...) ይመድባል።'}
+                    </li>
+                    <li>
+                      {currentLang === 'om'
+                        ? 'Kaardii eenyummaa barataa maxxansa; tiraanskiriippii qopheessa.'
+                        : currentLang === 'en'
+                        ? 'Prints Student ID Cards and prepares transcripts.'
+                        : 'የተማሪ መታወቂያ ካርድ (Student ID Card) ያትማል፤ ትራንስክሪፕት ያዘጋጃል።'}
+                    </li>
                   </ul>
                   <button
                     type="button"
@@ -4350,22 +5085,55 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }}
                     className="mt-1 text-[11px] text-indigo-700 font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    <span>ወደ ሬጅስትራር & ተማሪ ምዝገባ ሂድ →</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara Reejistiraaraa & Galmee Barattootaa Deemi →'
+                        : currentLang === 'en'
+                        ? 'Go to Registrar & Student Admissions →'
+                        : 'ወደ ሬጅስትራር & ተማሪ ምዝገባ ሂድ →'}
+                    </span>
                   </button>
                 </div>
 
-                {/* 7b. መምህርን ማን ይመዘግባል */}
                 <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-xs space-y-1.5">
                   <span className="font-bold text-indigo-950 block text-xs">
-                    👉 መምህርን እና ሰራተኛን ማን ይመዘግባል? (Who Hires & Registers Staff?)
+                    {currentLang === 'om'
+                      ? '👉 Barsiisaa fi hojjettoota eenyutu galmeessa? (Who Hires Staff?)'
+                      : currentLang === 'en'
+                      ? '👉 Who Hires & Registers Staff?'
+                      : '👉 መምህርን እና ሰራተኛን ማን ይመዘግባል? (Who Hires & Registers Staff?)'}
                   </span>
                   <p className="text-slate-700 text-[11px] leading-relaxed">
-                    <strong>የሰው ኃይል አስተዳደር ክፍል / ዳይሬክተር (HR & School Director)</strong>
+                    <strong>
+                      {currentLang === 'om'
+                        ? 'Kutaa Bulchiinsa Qabeenya Namaa / Daarektara (HR & School Director)'
+                        : currentLang === 'en'
+                        ? 'HR Department & School Director'
+                        : 'የሰው ኃይል አስተዳደር ክፍል / ዳይሬክተር (HR & School Director)'}
+                    </strong>
                   </p>
                   <ul className="text-slate-600 text-[11px] space-y-1 list-disc pl-4">
-                    <li>አዳዲስ መምህራንን እና ድጋፍ ሰጪ ሰራተኞችን በሲስተሙ ይመዘግባል።</li>
-                    <li>የፋይዳ ዲጂታል ብሔራዊ መታወቂያ ቁጥር (Fayda ID) እና ሰነድ ያረጋግጣል።</li>
-                    <li>የተመረቀበትን ዲፕሎማ፣ ዲግሪ፣ ማስተርስ እና የሙያ ፈቃድ መረጃ ያስገባል።</li>
+                    <li>
+                      {currentLang === 'om'
+                        ? 'Barsiisota haaraa fi hojjettoota deeggarsa kennan siistematti galmeessa.'
+                        : currentLang === 'en'
+                        ? 'Registers new teachers and support personnel in the system.'
+                        : 'አዳዲስ መምህራንን እና ድጋፍ ሰጪ ሰራተኞችን በሲስተሙ ይመዘግባል።'}
+                    </li>
+                    <li>
+                      {currentLang === 'om'
+                        ? 'Lakkoofsa Eenyummaa Biyyaalessaa Fayda fi sanadoota mirkaneessa.'
+                        : currentLang === 'en'
+                        ? 'Verifies Fayda Digital National ID and supporting documents.'
+                        : 'የፋይዳ ዲጂታል ብሔራዊ መታወቂያ ቁጥር (Fayda ID) እና ሰነድ ያረጋግጣል።'}
+                    </li>
+                    <li>
+                      {currentLang === 'om'
+                        ? 'Odeeffannoo dippiloomaa, digirii, maastarsii fi hayyama ogummaa galcha.'
+                        : currentLang === 'en'
+                        ? 'Records Diploma, Degree, Masters, and professional licenses.'
+                        : 'የተመረቀበትን ዲፕሎማ፣ ዲግሪ፣ ማስተርስ እና የሙያ ፈቃድ መረጃ ያስገባል።'}
+                    </li>
                   </ul>
                   <button
                     type="button"
@@ -4375,40 +5143,74 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                     }}
                     className="mt-1 text-[11px] text-indigo-700 font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    <span>ወደ ባለድርሻ አካላት ምዝገባ ሂድ →</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara Galmee Qooda-Fudhattootaa Deemi →'
+                        : currentLang === 'en'
+                        ? 'Go to Stakeholder Registration →'
+                        : 'ወደ ባለድርሻ አካላት ምዝገባ ሂድ →'}
+                    </span>
                   </button>
                 </div>
               </div>
 
-              {/* 7c. አንድ ትምህርት ቤት የሚያስፈልጉ ተጨማሪ አስፈላጊ ሰራተኞች */}
+              {/* Additional support staff */}
               <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-xs space-y-2">
                 <span className="font-bold text-indigo-950 block text-xs">
-                  👉 ለአንድ ትምህርት ቤት የሚያስፈልጉ ባለድርሻ አካላትና ድጋፍ ሰጪ ሰራተኞች በሙሉ፡
+                  {currentLang === 'om'
+                    ? '👉 Qooda-fudhattoonni fi hojjettoonni deeggarsaa mana barnootaa tokkoof barbaachisan hundi:'
+                    : currentLang === 'en'
+                    ? '👉 Essential Support Staff & Stakeholders Required for a School:'
+                    : '👉 ለአንድ ትምህርት ቤት የሚያስፈልጉ ባለድርሻ አካላትና ድጋፍ ሰጪ ሰራተኞች በሙሉ፡'}
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-slate-700">
                   <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <strong className="block text-slate-900">1. የቤተ-መጻሕፍት ባለሙያ</strong>
-                    <span>Librarian - የመጻሕፍት ዝርዝርና የተማሪ ንባብ አገልግሎት</span>
+                    <strong className="block text-slate-900">
+                      {currentLang === 'om' ? '1. Ogeessa Mana Kitaabaa' : currentLang === 'en' ? '1. School Librarian' : '1. የቤተ-መጻሕፍት ባለሙያ'}
+                    </strong>
+                    <span>
+                      {currentLang === 'om' ? 'Tarree kitaabotaa fi tajaajila dubbisaa' : currentLang === 'en' ? 'Book catalog & student reading service' : 'Librarian - የመጻሕፍት ዝርዝርና የተማሪ ንባብ አገልግሎት'}
+                    </span>
                   </div>
                   <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <strong className="block text-slate-900">2. የምክር አገልግሎት ባለሙያ</strong>
-                    <span>Guidance Counselor - የተማሪዎች ስነ-ልቦናና ምክር</span>
+                    <strong className="block text-slate-900">
+                      {currentLang === 'om' ? '2. Ogeessa Gorsaa' : currentLang === 'en' ? '2. Guidance Counselor' : '2. የምክር አገልግሎት ባለሙያ'}
+                    </strong>
+                    <span>
+                      {currentLang === 'om' ? 'Xiin-sammuu fi gorsa barattootaa' : currentLang === 'en' ? 'Student psychology & counseling' : 'Guidance Counselor - የተማሪዎች ስነ-ልቦናና ምክር'}
+                    </span>
                   </div>
                   <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <strong className="block text-slate-900">3. የላብራቶሪ ቴክኒሻን</strong>
-                    <span>Lab Technician - የሳይንስና ቴክኖሎጂ ላብራቶሪ</span>
+                    <strong className="block text-slate-900">
+                      {currentLang === 'om' ? '3. Teeknishaanii Laaboraatoorii' : currentLang === 'en' ? '3. Lab Technician' : '3. የላብራቶሪ ቴክኒሻን'}
+                    </strong>
+                    <span>
+                      {currentLang === 'om' ? 'Laaboraatoorii saayinsii fi teeknooloojii' : currentLang === 'en' ? 'Science & technology laboratories' : 'Lab Technician - የሳይንስና ቴክኖሎጂ ላብራቶሪ'}
+                    </span>
                   </div>
                   <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <strong className="block text-slate-900">4. የትምህርት ቤት ነርስ / ክሊኒክ</strong>
-                    <span>School Nurse - የመጀመሪያ ደረጃ ህክምናና ጤና</span>
+                    <strong className="block text-slate-900">
+                      {currentLang === 'om' ? '4. Narsii Mana Barumsaa / Kilinika' : currentLang === 'en' ? '4. School Nurse / Clinic' : '4. የትምህርት ቤት ነርስ / ክሊኒክ'}
+                    </strong>
+                    <span>
+                      {currentLang === 'om' ? 'Gargaarsa fayyaa jalqabaa fi fayyaa' : currentLang === 'en' ? 'First aid & campus health' : 'School Nurse - የመጀመሪያ ደረጃ ህክምናና ጤና'}
+                    </span>
                   </div>
                   <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <strong className="block text-slate-900">5. አይቲ / ሲስተም ድጋፍ</strong>
-                    <span>IT Specialist - ኮምፒውተር ላብራቶሪና ሲስተም</span>
+                    <strong className="block text-slate-900">
+                      {currentLang === 'om' ? '5. Deeggarsa IT / Siistemaa' : currentLang === 'en' ? '5. IT Specialist' : '5. አይቲ / ሲስተም ድጋፍ'}
+                    </strong>
+                    <span>
+                      {currentLang === 'om' ? 'Laaboraatoorii kompiitaraa fi siistema' : currentLang === 'en' ? 'Computer lab & digital systems' : 'IT Specialist - ኮምፒውተር ላብራቶሪና ሲስተም'}
+                    </span>
                   </div>
                   <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <strong className="block text-slate-900">6. የንብረትና ግዥ ክፍል</strong>
-                    <span>Storekeeper - የትምህርት ቁሳቁስና እቃዎች ክምችት</span>
+                    <strong className="block text-slate-900">
+                      {currentLang === 'om' ? '6. Kutaa Qabeenyaa fi Bittaa' : currentLang === 'en' ? '6. Storekeeper & Procurement' : '6. የንብረትና ግዥ ክፍል'}
+                    </strong>
+                    <span>
+                      {currentLang === 'om' ? 'Kuusaa meeshaalee barnootaa fi qabeenyaa' : currentLang === 'en' ? 'Instructional supplies & inventory' : 'Storekeeper - የትምህርት ቁሳቁስና እቃዎች ክምችት'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -4421,7 +5223,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
                 onClick={() => setShowRoleGuideModal(false)}
                 className="px-5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
               >
-                ተረድቻለሁ (Close Guide)
+                {currentLang === 'om' ? 'Hubadheera (Qajeelfama Cufi)' : currentLang === 'en' ? 'Got It (Close Guide)' : 'ተረድቻለሁ (Close Guide)'}
               </button>
             </div>
           </div>
@@ -4433,6 +5235,7 @@ export const SchoolPortal: React.FC<SchoolPortalProps> = ({
         isOpen={showDeveloperPaymentModal}
         onClose={() => setShowDeveloperPaymentModal(false)}
         school={currentSchool}
+        currentLang={currentLang}
         onSuccess={handleDeveloperPaymentSuccess}
       />
     </div>

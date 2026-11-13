@@ -209,16 +209,43 @@ class OfflineSyncEngine {
     return item;
   }
 
+  private getLang(): 'om' | 'en' | 'am' {
+    try {
+      const lang = typeof localStorage !== 'undefined' ? localStorage.getItem('shash_edu_lang') : null;
+      if (lang === 'om' || lang === 'en' || lang === 'am') return lang;
+    } catch (_) {}
+    return 'om';
+  }
+
   /**
    * Synchronize pending offline queue with central server
    */
   public async sync(force = false): Promise<{ success: boolean; syncedCount: number; message: string }> {
+    const lang = this.getLang();
     if (this.isSyncing) {
-      return { success: false, syncedCount: 0, message: 'ማመሳሰል በሂደት ላይ ነው (Sync already in progress)' };
+      return {
+        success: false,
+        syncedCount: 0,
+        message:
+          lang === 'om'
+            ? 'Walsimsiisni adeemsa irra jira (Sync already in progress)'
+            : lang === 'en'
+            ? 'Sync already in progress'
+            : 'ማመሳሰል በሂደት ላይ ነው (Sync already in progress)'
+      };
     }
 
     if (!this.isOnline() && !force) {
-      return { success: false, syncedCount: 0, message: 'ከመስመር ውጭ (Offline) - ኢንተርኔት ሲኖር ይመሳሰላል' };
+      return {
+        success: false,
+        syncedCount: 0,
+        message:
+          lang === 'om'
+            ? 'Sarara ala (Offline) - Yeroo intarneetiin argamu ni walsimsiifama'
+            : lang === 'en'
+            ? 'Offline - Will sync automatically once connected'
+            : 'ከመስመር ውጭ (Offline) - ኢንተርኔት ሲኖር ይመሳሰላል'
+      };
     }
 
     const pendingItems = this.queue.filter((q) => q.status === 'pending' || q.status === 'failed');
@@ -232,7 +259,16 @@ class OfflineSyncEngine {
           this.saveState();
         }
       } catch (_) {}
-      return { success: true, syncedCount: 0, message: 'ሁሉም መረጃዎች ቀድመው ተመሳስለዋል (All data up to date)' };
+      return {
+        success: true,
+        syncedCount: 0,
+        message:
+          lang === 'om'
+            ? 'Odeeffannoon hundi duraanuu walsimsiifameera (All data up to date)'
+            : lang === 'en'
+            ? 'All data is already up to date'
+            : 'ሁሉም መረጃዎች ቀድመው ተመሳስለዋል (All data up to date)'
+      };
     }
 
     this.isSyncing = true;
@@ -281,7 +317,12 @@ class OfflineSyncEngine {
       return {
         success: true,
         syncedCount: pendingItems.length,
-        message: `✓ ${pendingItems.length} መረጃዎች ከመካከለኛው ሰርቨር ጋር በተሳካ ሁኔታ ተመሳስለዋል!`
+        message:
+          lang === 'om'
+            ? `✓ Odeeffannoon ${pendingItems.length} sarara giddugaleessaa waliin milkaa'inaan walsimsiifameera!`
+            : lang === 'en'
+            ? `✓ Successfully synced ${pendingItems.length} records with the central server!`
+            : `✓ ${pendingItems.length} መረጃዎች ከመካከለኛው ሰርቨር ጋር በተሳካ ሁኔታ ተመሳስለዋል!`
       };
     } catch (error: any) {
       console.warn('Sync push error:', error);
@@ -298,7 +339,12 @@ class OfflineSyncEngine {
       return {
         success: false,
         syncedCount: 0,
-        message: `የማመሳሰል ስህተት፡ ${error?.message || 'ከሰርቨሩ ጋር መገናኘት አልተቻለም'}`
+        message:
+          lang === 'om'
+            ? `Dogoggora walsimsiisaa: ${error?.message || 'Sarvara waliin walqunnamuun hin danda\'amne'}`
+            : lang === 'en'
+            ? `Sync error: ${error?.message || 'Unable to connect to server'}`
+            : `የማመሳሰል ስህተት፡ ${error?.message || 'ከሰርቨሩ ጋር መገናኘት አልተቻለም'}`
       };
     }
   }

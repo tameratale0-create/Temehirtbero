@@ -46,6 +46,7 @@ interface CriterionConfig {
   titleOm: string;
   titleEn: string;
   descriptionAm: string;
+  descriptionOm: string;
   descriptionEn: string;
   icon: string;
 }
@@ -58,6 +59,7 @@ const CRITERIA_CONFIGS: CriterionConfig[] = [
     titleOm: 'Dandeettii Barsiisuu (Gartuu Barnootaa)',
     titleEn: 'Teaching Competence & Subject Mastery',
     descriptionAm: 'መምህሩ በትምህርት አይነቱ ላይ ያለው ጥልቅ እውቀት፣ ውስብስብ ፅንሰ-ሀሳቦችን የማስረዳትና ጥያቄዎችን የመመለስ አቅም',
+    descriptionOm: 'Beekumsa gad-fageenyaa barsiisaan gosa barnootaa irratti qabu, yaad-rimeewwan walxaxoo ibsuu fi gaaffilee deebisuu danda\'uu',
     descriptionEn: 'Teacher mastery of the curriculum, depth of subject knowledge, and capability to explain complex concepts',
     icon: '🧠'
   },
@@ -68,6 +70,7 @@ const CRITERIA_CONFIGS: CriterionConfig[] = [
     titleOm: 'Haala Dhiheessa Barnootaa',
     titleEn: 'Pedagogical Delivery & Clarity of Explanation',
     descriptionAm: 'ትምህርቱን ግልጽና ሳቢ በሆነ መንገድ የማቅረብ፣ የተለያዩ የማስተማሪያ ዘዴዎችን፣ ምሳሌዎችንና እይታዎችን የመጠቀም ችሎታ',
+    descriptionOm: 'Barnoota karaa ifa fi hawwataa ta\'een dhiyeessuu, tooftaalee barsiisuu adda addaa, fakkeenyotaa fi meeshaalee deeggarsaa fayyadamuu',
     descriptionEn: 'Ability to explain clearly and engagingly, using relevant practical examples, audiovisuals and active student engagement',
     icon: '💡'
   },
@@ -78,6 +81,7 @@ const CRITERIA_CONFIGS: CriterionConfig[] = [
     titleOm: 'Kaka\'umsa Barsiisuuf Qabu',
     titleEn: 'Teaching Motivation, Enthusiasm & Punctuality',
     descriptionAm: 'ለስራው ያለው ፍቅር፣ በሰዓት መገኘት፣ የተማሪዎችን ፍላጎት የማነሳሳትና የማበረታታት ጉጉት',
+    descriptionOm: 'Jaalala hojii isaaf qabu, yerootti argamuu, fedhii fi hamilee barattootaa kakaasuu fi jajjabeessuu',
     descriptionEn: 'Teacher enthusiasm for the profession, punctuality to class, and passion for inspiring and encouraging learners',
     icon: '🔥'
   },
@@ -88,6 +92,7 @@ const CRITERIA_CONFIGS: CriterionConfig[] = [
     titleOm: 'Gaaffii Barattootaa Dhaggeeffachuu fi Deeggaruu',
     titleEn: 'Student Support, Empathy & Approachability',
     descriptionAm: 'ተማሪዎች ጥያቄ ሲጠይቁ በትዕግስት የማዳመጥ፣ እኩል የማየት፣ የሚያስቸግራቸውን ተማሪዎች የመደገፍ አቀራረብ',
+    descriptionOm: 'Yeroo barattoonni gaaffii gaafatan obsaan dhaggeeffachuu, walqixa ilaaluu fi barattoota deeggarsa barbaadan gargaaruu',
     descriptionEn: 'Patience when listening to learner questions, equitable treatment without discrimination, and helping struggling students',
     icon: '🤝'
   },
@@ -98,6 +103,7 @@ const CRITERIA_CONFIGS: CriterionConfig[] = [
     titleOm: 'Nagaa fi Sirna Daree Eeguu fi Yeroo Qusachuu',
     titleEn: 'Classroom Management & Time Utilization',
     descriptionAm: 'የክፍል ውስጥ ጸጥታና ስነ-ስርዓት በአግባቡ የመጠበቅ፣ 45ቱን ደቂቃ ለትምህርት ብቻ የመጠቀም ችሎታ',
+    descriptionOm: 'Tasgabbii fi naamusaa daree sirnaan eeguu fi daqiiqaa 45 guutuu barnootaaf qofa sirnaan itti fayyadamuu',
     descriptionEn: 'Maintaining a quiet, respectful learning atmosphere and maximizing the entire period for instructional value',
     icon: '⏱️'
   },
@@ -108,6 +114,7 @@ const CRITERIA_CONFIGS: CriterionConfig[] = [
     titleOm: 'Hojii Mannee fi Qormaata Yeroon Sirreessuu',
     titleEn: 'Timely Assessment, Correction & Constructive Feedback',
     descriptionAm: 'የቤት ስራዎችንና ፈተናዎችን በወቅቱ አርሞ ማስታወሻና ማበረታቻ የመስጠት፣ ስህተቶችን ለተማሪው የማስረዳት ልምድ',
+    descriptionOm: 'Hojii manee fi qormaata yeroon sirreessuun duub-deebii fi jajjabina kennuu, dogoggorootas barattootaaf ibsuu',
     descriptionEn: 'Correcting quizzes and homework promptly, returning marks with constructive guidance, and explaining mistakes',
     icon: '📝'
   }
@@ -122,6 +129,10 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
   preSelectedTeacherId,
   onEvaluationSubmitted
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   // Available teachers in this school or generally
   const allTeachers = useMemo(() => {
     const list = StorageService.getCredentials();
@@ -194,13 +205,25 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
   const getTierLabel = (tier: string) => {
     switch (tier) {
       case 'outstanding':
-        return { label: 'የላቀ ውጤት (Outstanding)', color: 'bg-emerald-500 text-white border-emerald-400' };
+        return {
+          label: t3('Qabxii Ol\'aanaa (Outstanding)', 'Outstanding', 'የላቀ ውጤት (Outstanding)'),
+          color: 'bg-emerald-500 text-white border-emerald-400'
+        };
       case 'very_good':
-        return { label: 'በጣም ጥሩ (Very Good)', color: 'bg-teal-500 text-white border-teal-400' };
+        return {
+          label: t3('Baay\'ee Gaarii (Very Good)', 'Very Good', 'በጣም ጥሩ (Very Good)'),
+          color: 'bg-teal-500 text-white border-teal-400'
+        };
       case 'satisfactory':
-        return { label: 'አጥጋቢ (Satisfactory)', color: 'bg-amber-500 text-slate-950 border-amber-400' };
+        return {
+          label: t3('Quubsaa (Satisfactory)', 'Satisfactory', 'አጥጋቢ (Satisfactory)'),
+          color: 'bg-amber-500 text-slate-950 border-amber-400'
+        };
       default:
-        return { label: 'ማሻሻያ የሚሻ (Needs Improvement)', color: 'bg-rose-500 text-white border-rose-400' };
+        return {
+          label: t3('Fooyya\'iinsa Barbaada (Needs Improvement)', 'Needs Improvement', 'ማሻሻያ የሚሻ (Needs Improvement)'),
+          color: 'bg-rose-500 text-white border-rose-400'
+        };
     }
   };
 
@@ -245,7 +268,7 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
       subject: activeTeacher.subject,
       gradeLevel: student?.grade || 10,
       section: student?.section || 'A',
-      academicYear: '2016/2017 ዓ.ም',
+      academicYear: t3('2016/2017 B.A', '2016/2017 E.C.', '2016/2017 ዓ.ም'),
       semester: '1',
       scores: { ...scores },
       totalScore,
@@ -261,7 +284,11 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
       evaluatorParentName: isAnonymous ? undefined : evaluatorParentName.trim() || undefined,
       submittedAt: new Date().toISOString(),
       bureauSyncStatus: 'synced',
-      bureauDecisionNotes: 'ከወላጅ/ተማሪ በቀጥታ ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የተላከ ይፋዊ ግምገማ'
+      bureauDecisionNotes: t3(
+        'Madaallii idilee maatii/barataa irraa kallattiin Biiroo Barnootaa Magaalaa Shaashamanneetiif ergame',
+        'Official evaluation submitted directly from parent/student to Shashemene City Education Bureau',
+        'ከወላጅ/ተማሪ በቀጥታ ለሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የተላከ ይፋዊ ግምገማ'
+      )
     };
 
     // 1. Save in local StorageService
@@ -274,7 +301,9 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
       newEvaluation.id,
       newEvaluation,
       {
-        authorName: isAnonymous ? 'ስም ያልተገለጸ ተማሪ/ወላጅ' : evaluatorName || 'ተማሪ',
+        authorName: isAnonymous
+          ? t3('Barataa/Maatii Maqaan Hin Ibsamne', 'Anonymous Student/Parent', 'ስም ያልተገለጸ ተማሪ/ወላጅ')
+          : evaluatorName || t3('Barataa', 'Student', 'ተማሪ'),
         schoolName: school.name,
         role: evaluatorRole,
         description: `Teacher appraisal for ${activeTeacher.teacherName} (${percentage}%)`
@@ -308,10 +337,18 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
-                የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · ይፋዊ የመምህራን መመዘኛ
+                {t3(
+                  'Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee · Madaallii Barsiisotaa Idilee',
+                  'Shashemene City Education Bureau · Official Teacher Appraisal',
+                  'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ · ይፋዊ የመምህራን መመዘኛ'
+                )}
               </span>
               <h2 className="text-base sm:text-lg font-bold tracking-tight">
-                የመምህራን የማስተማር ብቃትና የትምህርት አሰጣጥ ግምገማ
+                {t3(
+                  'Madaallii Gahumsa Barsiisuu fi Dhiyeessa Barnootaa Barsiisotaa',
+                  'Teacher Teaching Competence & Delivery Evaluation',
+                  'የመምህራን የማስተማር ብቃትና የትምህርት አሰጣጥ ግምገማ'
+                )}
               </h2>
             </div>
           </div>
@@ -333,15 +370,18 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <h3 className="text-xl font-bold text-slate-900">
-                ግምገማዎ በተሳካ ሁኔታ ተልኳል!
+                {t3('Madaalliin Keessan Milkaa\'inaan Ergameera!', 'Your Evaluation Has Been Submitted!', 'ግምገማዎ በተሳካ ሁኔታ ተልኳል!')}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
-                ለመ/ር <strong>{activeTeacher?.teacherName}</strong> የሰጡት ምዘና <strong>({totalScore}/60 - {percentage}%)</strong> ተመዝግቧል።
-                መረጃው ወደ ሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የመምህራን መመዘኛና እድገት ዳታቤዝ በቀጥታ ተልኳል።
+                {t3(
+                  `Madaalliin Barsiisaa ${activeTeacher?.teacherName}f kennitan (${totalScore}/60 - ${percentage}%) galmaa'eera. Odeeffannoon kun kallattiin gara kuusaa deetaa madaallii fi guddina barsiisotaa Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamanneetti ergameera.`,
+                  `Your evaluation for ${activeTeacher?.teacherName} (${totalScore}/60 - ${percentage}%) has been recorded and synced directly to the Shashemene City Education Bureau appraisal database.`,
+                  `ለመ/ር ${activeTeacher?.teacherName} የሰጡት ምዘና (${totalScore}/60 - ${percentage}%) ተመዝግቧል። መረጃው ወደ ሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የመምህራን መመዘኛና እድገት ዳታቤዝ በቀጥታ ተልኳል።`
+                )}
               </p>
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>ወደ ማዕከላዊ የትምህርት ቢሮ ሰርቨር ተመሳስሏል (Synced)</span>
+                <span>{t3('Gara Sarvara Giddugaleessaa Biiroo Barnootaatti Wal-simeera (Synced)', 'Synced to Central Education Bureau Server', 'ወደ ማዕከላዊ የትምህርት ቢሮ ሰርቨር ተመሳስሏል (Synced)')}</span>
               </div>
             </div>
           ) : (
@@ -351,10 +391,18 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                 <Shield className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="font-bold">
-                    ይህ ግምገማ ለመምህራን የብቃት መመዘኛ፣ የደረጃ እድገት እና የማስተማር ፈቃድ እድሳት በግብዓትነት ያገለግላል።
+                    {t3(
+                      'Madaalliin kun madaallii gahumsaa, guddina sadarkaa fi haaromsa hayyama barsiisummaa barsiisotaatiif galtee ta\'ee tajaajila.',
+                      'This evaluation serves as input for teacher competence appraisal, career promotion, and teaching license renewal.',
+                      'ይህ ግምገማ ለመምህራን የብቃት መመዘኛ፣ የደረጃ እድገት እና የማስተማር ፈቃድ እድሳት በግብዓትነት ያገለግላል።'
+                    )}
                   </p>
                   <p className="text-amber-800">
-                    እባክዎ እያንዳንዱን መስፈርት ከ 10 ነጥብ በጥንቃቄና በታማኝነት ይመዝኑ። የተማሪው/የወላጁ ስም በምስጢር እንዲጠበቅ መምረጥ ይችላሉ።
+                    {t3(
+                      'Maaloo ulaagaa tokkoon tokkoon isaanii qabxii 10 keessaa of-eeggannoo fi amanamummaan madaalaa. Maqaan barataa/maatii icciitiin akka qabamu filachuu dandeessu.',
+                      'Please score each criterion honestly out of 10 points. You may choose to keep student/parent identity confidential.',
+                      'እባክዎ እያንዳንዱን መስፈርት ከ 10 ነጥብ በጥንቃቄና በታማኝነት ይመዝኑ። የተማሪው/የወላጁ ስም በምስጢር እንዲጠበቅ መምረጥ ይችላሉ።'
+                    )}
                   </p>
                 </div>
               </div>
@@ -364,7 +412,7 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                 {/* Teacher Dropdown */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    የሚገመገመው መምህር (Select Teacher):
+                    {t3('Barsiisaa Madaalamu Filadhaa:', 'Select Teacher to Evaluate:', 'የሚገመገመው መምህር (Select Teacher):')}
                   </label>
                   <select
                     value={selectedTeacherId}
@@ -380,9 +428,13 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                   {activeTeacher && (
                     <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-2">
                       <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>የትምህርት ደረጃ፡ {activeTeacher.qualification} ({activeTeacher.institution})</span>
+                      <span>
+                        {t3('Sadarkaa Barnootaa:', 'Qualification:', 'የትምህርት ደረጃ፡')} {activeTeacher.qualification} ({activeTeacher.institution})
+                      </span>
                       <span>·</span>
-                      <span>የስራ ልምድ፡ {activeTeacher.experienceYears} ዓመት</span>
+                      <span>
+                        {t3('Muuxannoo:', 'Experience:', 'የስራ ልምድ፡')} {activeTeacher.experienceYears} {t3('waggaa', 'yrs', 'ዓመት')}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -390,7 +442,7 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                 {/* Evaluator Role & Anonymity */}
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-slate-700">
-                    የገምጋሚው አካል (Evaluator Role):
+                    {t3('Qaama Madaalu (Evaluator Role):', 'Evaluator Role:', 'የገምጋሚው አካል (Evaluator Role):')}
                   </label>
                   <div className="flex items-center gap-3">
                     <button
@@ -403,7 +455,7 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                       }`}
                     >
                       <User className="w-3.5 h-3.5" />
-                      <span>ተማሪ ነኝ (Student)</span>
+                      <span>{t3('Barataadha (Student)', 'I am a Student', 'ተማሪ ነኝ (Student)')}</span>
                     </button>
 
                     <button
@@ -416,7 +468,7 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                       }`}
                     >
                       <Heart className="w-3.5 h-3.5" />
-                      <span>ወላጅ ነኝ (Parent)</span>
+                      <span>{t3('Maatiidha (Parent)', 'I am a Parent', 'ወላጅ ነኝ (Parent)')}</span>
                     </button>
                   </div>
 
@@ -428,7 +480,9 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                       onChange={(e) => setIsAnonymous(e.target.checked)}
                       className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                     />
-                    <span className="font-semibold">ስሜ በምስጢር ይያዝልኝ (Anonymous Evaluation)</span>
+                    <span className="font-semibold">
+                      {t3('Maqaan koo icciitiin haa qabamu (Anonymous)', 'Keep my identity anonymous', 'ስሜ በምስጢር ይያዝልኝ (Anonymous Evaluation)')}
+                    </span>
                   </label>
                 </div>
               </div>
@@ -437,20 +491,28 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
               <div className="bg-gradient-to-r from-slate-900 to-emerald-950 text-white p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md border border-emerald-800/40">
                 <div className="space-y-1 text-center sm:text-left">
                   <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wide">
-                    አጠቃላይ የምዘና ውጤት (Total Score)
+                    {t3('Bu\'aa Madaallii Waliigalaa (Total Score)', 'Total Evaluation Score', 'አጠቃላይ የምዘና ውጤት (Total Score)')}
                   </span>
                   <div className="flex items-baseline gap-2 justify-center sm:justify-start">
                     <span className="text-3xl sm:text-4xl font-black text-white">{totalScore}</span>
-                    <span className="text-sm font-semibold text-slate-300">/ 60 ነጥብ</span>
+                    <span className="text-sm font-semibold text-slate-300">
+                      / 60 {t3('qabxii', 'pts', 'ነጥብ')}
+                    </span>
                     <span className="text-xl font-bold text-emerald-400 ml-2">({percentage}%)</span>
                   </div>
                   <p className="text-[11px] text-slate-300">
-                    6 መስፈርቶች × እያንዳንዳቸው በ 10 ነጥብ የተመዘኑ
+                    {t3(
+                      'Ulaagaalee 6 × tokkoon tokkoon isaanii qabxii 10n madaalaman',
+                      '6 criteria × 10 points each',
+                      '6 መስፈርቶች × እያንዳንዳቸው በ 10 ነጥብ የተመዘኑ'
+                    )}
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center sm:items-end gap-1.5">
-                  <span className="text-[10px] text-slate-300">የደረጃ ምድብ (Rating Tier):</span>
+                  <span className="text-[10px] text-slate-300">
+                    {t3('Ramaddii Sadarkaa (Rating Tier):', 'Rating Tier:', 'የደረጃ ምድብ (Rating Tier):')}
+                  </span>
                   <span className={`px-3 py-1 rounded-full text-xs font-black border ${getTierLabel(ratingTier).color}`}>
                     {getTierLabel(ratingTier).label}
                   </span>
@@ -461,10 +523,14 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
               <div className="space-y-3.5">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                   <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide">
-                    የግምገማ መስፈርቶች ዝርዝር (6 Core Criteria · እያንዳንዳቸው 10 ነጥብ)
+                    {t3(
+                      'Tarreeffama Ulaagaalee Madaallii (Ulaagaa Ijoo 6 · Qabxii 10)',
+                      'Evaluation Criteria Breakdown (6 Core Criteria · 10 Pts Each)',
+                      'የግምገማ መስፈርቶች ዝርዝር (6 Core Criteria · እያንዳንዳቸው 10 ነጥብ)'
+                    )}
                   </h4>
                   <span className="text-[11px] text-slate-500 font-semibold">
-                    ነጥብ ለመስጠት ጠቅ ያድርጉ ወይም ተንሸራታቹን ይጠቀሙ
+                    {t3('Qabxii kennuuf cuqaasaa ykn mucuca fayyadamaa', 'Click or drag slider to score', 'ነጥብ ለመስጠት ጠቅ ያድርጉ ወይም ተንሸራታቹን ይጠቀሙ')}
                   </span>
                 </div>
 
@@ -485,11 +551,11 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                                   #{cfg.number}
                                 </span>
                                 <h5 className="text-xs font-bold text-slate-900 leading-tight">
-                                  {cfg.titleAm}
+                                  {isOm ? cfg.titleOm : isEn ? cfg.titleEn : cfg.titleAm}
                                 </h5>
                               </div>
                               <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                                {cfg.descriptionAm}
+                                {isOm ? cfg.descriptionOm : isEn ? cfg.descriptionEn : cfg.descriptionAm}
                               </p>
                             </div>
                           </div>
@@ -541,32 +607,44 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
               {/* 4. Qualitative Written Feedback & Bureau Recommendation */}
               <div className="space-y-3 pt-2">
                 <h4 className="text-xs sm:text-sm font-black text-slate-900 border-b border-slate-200 pb-2">
-                  የፅሁፍ አስተያየት እና ለትምህርት ቢሮ የሚተላለፍ ግብዓት (Qualitative Appraisal Feedback)
+                  {t3(
+                    'Yaada Barreeffamaa fi Galtee Biiroo Barnootaaf Dabru (Qualitative Appraisal Feedback)',
+                    'Qualitative Appraisal Feedback & Recommendation',
+                    'የፅሁፍ አስተያየት እና ለትምህርት ቢሮ የሚተላለፍ ግብዓት (Qualitative Appraisal Feedback)'
+                  )}
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      የመምህሩ ዋና ዋና ጥንካሬዎች (Key Strengths):
+                      {t3('Ciminaalee Ijoo Barsiisaa (Key Strengths):', 'Key Strengths:', 'የመምህሩ ዋና ዋና ጥንካሬዎች (Key Strengths):')}
                     </label>
                     <textarea
                       rows={2}
                       value={strengthsFeedback}
                       onChange={(e) => setStrengthsFeedback(e.target.value)}
-                      placeholder="ምሳሌ፡ ትምህርቱን በሚገባ ያስረዳል፣ የተማሪዎችን ጥያቄ በትዕግስት ያዳምጣል..."
+                      placeholder={t3(
+                        'Fkn: Barnoota sirnaan ibsa, gaaffii barattootaa obsaan dhaggeeffata...',
+                        'e.g., Explains lessons clearly, listens patiently to student questions...',
+                        'ምሳሌ፡ ትምህርቱን በሚገባ ያስረዳል፣ የተማሪዎችን ጥያቄ በትዕግስት ያዳምጣል...'
+                      )}
                       className="w-full p-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 bg-white"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      መምህሩ ወደፊት ሊያሻሽላቸው የሚገቡ ነጥቦች (Areas for Improvement):
+                      {t3('Qabxiilee Fooyya\'uu Qaban (Areas for Improvement):', 'Areas for Improvement:', 'መምህሩ ወደፊት ሊያሻሽላቸው የሚገቡ ነጥቦች (Areas for Improvement):')}
                     </label>
                     <textarea
                       rows={2}
                       value={improvementAreas}
                       onChange={(e) => setImprovementAreas(e.target.value)}
-                      placeholder="ምሳሌ፡ የቤት ስራ ፈተና ከመድረሱ በፊት ቀደም ብሎ ቢያርም መልካም ነው..."
+                      placeholder={t3(
+                        'Fkn: Hojii manee qormaataan dura yeroon osoo sirreessee gaariidha...',
+                        'e.g., Would be helpful to grade homework before exams...',
+                        'ምሳሌ፡ የቤት ስራ ፈተና ከመድረሱ በፊት ቀደም ብሎ ቢያርም መልካም ነው...'
+                      )}
                       className="w-full p-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 bg-white"
                     />
                   </div>
@@ -574,13 +652,21 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    ለትምህርት ቢሮ የመምህራን መመዘኛ ኮሚቴ የሚሰጥ ምክረ-ሀሳብ (Recommendation to Education Bureau):
+                    {t3(
+                      'Yaada Gorsaa Koree Madaallii Barsiisotaa Biiroo Barnootaaf Kennamu:',
+                      'Recommendation to Education Bureau Evaluation Committee:',
+                      'ለትምህርት ቢሮ የመምህራን መመዘኛ ኮሚቴ የሚሰጥ ምክረ-ሀሳብ (Recommendation to Education Bureau):'
+                    )}
                   </label>
                   <input
                     type="text"
                     value={recommendations}
                     onChange={(e) => setRecommendations(e.target.value)}
-                    placeholder="ምሳሌ፡ ለዚህ መምህር የላቀ ማበረታቻ ወይም ተጨማሪ የስልጠና እድል እንዲመቻችለት እንጠይቃለን..."
+                    placeholder={t3(
+                      'Fkn: Barsiisaa kanaaf jajjabina ol\'aanaa ykn carraa leenjii dabalataa akka mijatuuf gaafanna...',
+                      'e.g., We recommend recognition or additional training opportunities for this teacher...',
+                      'ምሳሌ፡ ለዚህ መምህር የላቀ ማበረታቻ ወይም ተጨማሪ የስልጠና እድል እንዲመቻችለት እንጠይቃለን...'
+                    )}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 bg-white"
                   />
                 </div>
@@ -590,7 +676,13 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
               <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>ግምገማው ኦፍላይንም ይሰራል፤ መስመር ሲመጣ ከትምህርት ቢሮው ጋር ይመሳሰላል</span>
+                  <span>
+                    {t3(
+                      'Madaalliin of-laayiniinis ni hojjeta; yeroo intarneetiin argamu Biiroo waliin wal-sima',
+                      'Works offline too; automatically syncs with the Bureau when online',
+                      'ግምገማው ኦፍላይንም ይሰራል፤ መስመር ሲመጣ ከትምህርት ቢሮው ጋር ይመሳሰላል'
+                    )}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -599,7 +691,7 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                     onClick={onClose}
                     className="flex-1 sm:flex-none px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                   >
-                    ተመለስ (Cancel)
+                    {t3('Deebi\'i (Cancel)', 'Cancel', 'ተመለስ (Cancel)')}
                   </button>
 
                   <button
@@ -608,7 +700,13 @@ export const TeacherEvaluationModal: React.FC<TeacherEvaluationModalProps> = ({
                     className="flex-1 sm:flex-none px-6 py-2.5 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4 text-amber-300" />
-                    <span>ግምገማውን ወደ ትምህርት ቢሮ ላክ ({totalScore}/60)</span>
+                    <span>
+                      {t3(
+                        `Madaallii Gara Biiroo Barnootaatti Ergi (${totalScore}/60)`,
+                        `Submit Appraisal to Bureau (${totalScore}/60)`,
+                        `ግምገማውን ወደ ትምህርት ቢሮ ላክ (${totalScore}/60)`
+                      )}
+                    </span>
                   </button>
                 </div>
               </div>

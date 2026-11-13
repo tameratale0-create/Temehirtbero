@@ -58,6 +58,10 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
   currentUser,
   currentLang
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const isBureauRole = currentUser?.role === 'bureau_admin' || currentUser?.role === 'bureau_staff';
   const [activeTab, setActiveTab] = useState<'admissions' | 'structure' | 'id_cards'>('admissions');
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,9 +112,21 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
     const parentAccessCode = `PAR-${fullName.slice(0, 4).toUpperCase().replace(/[^A-Z]/g, 'PAR')}-${Math.floor(10 + Math.random() * 90)}`;
 
     const shiftSchedules: Record<'morning' | 'afternoon' | 'evening', string> = {
-      morning: 'ሰኞ - አርብ | 2:00 - 6:30 ጧት (Morning: 8:00 AM - 12:30 PM)',
-      afternoon: 'ሰኞ - አርብ | 6:30 - 11:30 ከሰዓት (Afternoon: 12:30 PM - 5:30 PM)',
-      evening: 'ሰኞ - አርብ | 11:30 - 3:00 ማታ (Evening: 5:30 PM - 9:00 PM)'
+      morning: t3(
+        'Wiixata - Jimaata | Ganama 8:00 AM - 12:30 PM',
+        'Mon - Fri | Morning: 8:00 AM - 12:30 PM',
+        'ሰኞ - አርብ | 2:00 - 6:30 ጧት (Morning: 8:00 AM - 12:30 PM)'
+      ),
+      afternoon: t3(
+        'Wiixata - Jimaata | Waaree Booda 12:30 PM - 5:30 PM',
+        'Mon - Fri | Afternoon: 12:30 PM - 5:30 PM',
+        'ሰኞ - አርብ | 6:30 - 11:30 ከሰዓት (Afternoon: 12:30 PM - 5:30 PM)'
+      ),
+      evening: t3(
+        'Wiixata - Jimaata | Galgala 5:30 PM - 9:00 PM',
+        'Mon - Fri | Evening: 5:30 PM - 9:00 PM',
+        'ሰኞ - አርብ | 11:30 - 3:00 ማታ (Evening: 5:30 PM - 9:00 PM)'
+      )
     };
 
     const newStudent: StudentRecord = {
@@ -128,8 +144,12 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
       parentAccessCode: parentAccessCode,
       shift: studentShift,
       nightProgramType: isNight ? 'secondary_night' : undefined,
-      occupation: isNight ? (studentOccupation.trim() || 'የግል ስራ (Self-Employed)') : undefined,
-      workplace: isNight ? (studentWorkplace.trim() || 'ሻሸመኔ') : undefined,
+      occupation: isNight
+        ? studentOccupation.trim() || t3('Hojii Dhuunfaa (Self-Employed)', 'Self-Employed', 'የግል ስራ (Self-Employed)')
+        : undefined,
+      workplace: isNight
+        ? studentWorkplace.trim() || t3('Shaashamannee', 'Shashemene', 'ሻሸመኔ')
+        : undefined,
       shiftSchedule: shiftSchedules[studentShift],
       emergencyContact: parentPhone.trim(),
       scores: [
@@ -157,9 +177,13 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
       newStudent.id,
       newStudent,
       {
-        authorName: currentUser?.name || 'ሬጅስትራር',
+        authorName: currentUser?.name || t3('Rejistraara', 'Registrar', 'ሬጅስትራር'),
         schoolName: school.name,
-        description: `የተማሪ ${newStudent.fullName} (ክፍል ${newStudent.grade}${newStudent.section}) የውጤትና ምዝገባ መረጃ`
+        description: t3(
+          `Odeeffannoo galmee fi qabxii barataa ${newStudent.fullName} (Kutaa ${newStudent.grade}${newStudent.section})`,
+          `Registration and score record for ${newStudent.fullName} (Grade ${newStudent.grade}${newStudent.section})`,
+          `የተማሪ ${newStudent.fullName} (ክፍል ${newStudent.grade}${newStudent.section}) የውጤትና ምዝገባ መረጃ`
+        )
       }
     );
 
@@ -252,14 +276,27 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-900/80 border border-blue-400/40 rounded-full text-xs font-semibold text-blue-200">
               <Users className="w-3.5 h-3.5 text-blue-300" />
-              <span>የተማሪዎች ቅበላ፣ ምዝገባ እና የትምህርት ቤት መዋቅር</span>
+              <span>
+                {t3(
+                  'Simannaa Barattootaa, Galmee fi Caasaa Mana Barumsaa',
+                  'Student Admissions, Registration & School Structure',
+                  'የተማሪዎች ቅበላ፣ ምዝገባ እና የትምህርት ቤት መዋቅር'
+                )}
+              </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              የሬጅስትራር ጽሕፈት ቤት (Registrar & Admissions Hub)
+              {t3(
+                'Waajjira Rejistraaraa fi Simannaa (Registrar & Admissions Hub)',
+                'Registrar & Admissions Hub',
+                'የሬጅስትራር ጽሕፈት ቤት (Registrar & Admissions Hub)'
+              )}
             </h2>
             <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
-              አዳዲስ ተማሪዎችን የመመዝገብ፣ ክፍልና ሴክሽን የመመደብ፣ ይፋዊ የተማሪዎች መታወቂያ ካርድ (Student ID
-              Card) የማተም እና የት/ቤቱን ሙሉ የአስተዳደር መዋቅር የማስተዳደር ስልጣን
+              {t3(
+                'Barattoota haaraa galmeessuu, kutaa fi daree ramaduu, waraqaa eenyummaa barattootaa (Student ID Card) maxxansuu fi caasaa bulchiinsa mana barumsaa guutuu hogganuu.',
+                'Register new students, assign grades and sections, print official Student ID cards, and oversee the school administrative hierarchy.',
+                'አዳዲስ ተማሪዎችን የመመዝገብ፣ ክፍልና ሴክሽን የመመደብ፣ ይፋዊ የተማሪዎች መታወቂያ ካርድ (Student ID Card) የማተም እና የት/ቤቱን ሙሉ የአስተዳደር መዋቅር የማስተዳደር ስልጣን'
+              )}
             </p>
           </div>
 
@@ -271,12 +308,12 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>አዲስ ተማሪ መዝግብ (Admit Student)</span>
+                <span>{t3('Barataa Haaraa Galmeessi (Admit)', 'Admit New Student', 'አዲስ ተማሪ መዝግብ (Admit Student)')}</span>
               </button>
             ) : (
               <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 text-amber-200 border border-amber-400/40 rounded-xl text-xs font-bold">
                 <Lock className="w-4 h-4 text-amber-300" />
-                <span>የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)</span>
+                <span>{t3('Ilaalcha Biiroo Barnootaa (Dubbisuu Qofa)', 'Bureau View (Read-Only)', 'የትምህርት ቢሮ እይታ (ማየት ብቻ - Read-Only)')}</span>
               </div>
             )}
           </div>
@@ -295,7 +332,13 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
           }`}
         >
           <GraduationCap className="w-4 h-4" />
-          <span>የተማሪዎች መዝገብ እና ቅበላ ({students.length})</span>
+          <span>
+            {t3(
+              `Galmee fi Simannaa Barattootaa (${students.length})`,
+              `Student Roster & Admissions (${students.length})`,
+              `የተማሪዎች መዝገብ እና ቅበላ (${students.length})`
+            )}
+          </span>
         </button>
 
         <button
@@ -308,7 +351,13 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
           }`}
         >
           <Building2 className="w-4 h-4" />
-          <span>የትምህርት ቤት መዋቅር እና የስራ ድርሻ (Organizational Hierarchy)</span>
+          <span>
+            {t3(
+              'Caasaa Mana Barumsaa fi Gahee Hojii (Hierarchy)',
+              'School Structure & Job Roles (Hierarchy)',
+              'የትምህርት ቤት መዋቅር እና የስራ ድርሻ (Organizational Hierarchy)'
+            )}
+          </span>
         </button>
       </div>
 
@@ -334,8 +383,12 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     <Sunrise className="w-4 h-4 text-amber-700" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black text-slate-900">የጧት ፈረቃ (Morning)</h4>
-                    <span className="text-[10px] text-slate-500 font-mono">2:00 - 6:30 ቀን</span>
+                    <h4 className="text-xs font-black text-slate-900">
+                      {t3('Shifftii Ganamaa (Morning)', 'Morning Shift', 'የጧት ፈረቃ (Morning)')}
+                    </h4>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {t3('8:00 AM - 12:30 PM', '8:00 AM - 12:30 PM', '2:00 - 6:30 ቀን')}
+                    </span>
                   </div>
                 </div>
                 <span className="text-xl font-black text-amber-950 font-mono">
@@ -343,7 +396,9 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </span>
               </div>
               <div className="mt-2.5 flex items-center justify-between text-[11px] pt-2 border-t border-amber-200/60">
-                <span className="text-slate-600">መደበኛ የቀን ተማሪዎች</span>
+                <span className="text-slate-600">
+                  {t3('Barattoota Guyyaa Idilee', 'Regular Day Students', 'መደበኛ የቀን ተማሪዎች')}
+                </span>
                 <span className="font-bold text-amber-800">
                   {students.length > 0 ? Math.round((shiftCounts.morning / students.length) * 100) : 0}%
                 </span>
@@ -367,8 +422,12 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     <Sun className="w-4 h-4 text-orange-700" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black text-slate-900">የከሰዓት ፈረቃ (Afternoon)</h4>
-                    <span className="text-[10px] text-slate-500 font-mono">6:30 - 11:30 ቀን</span>
+                    <h4 className="text-xs font-black text-slate-900">
+                      {t3('Shifftii Waaree Booda (Afternoon)', 'Afternoon Shift', 'የከሰዓት ፈረቃ (Afternoon)')}
+                    </h4>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {t3('12:30 PM - 5:30 PM', '12:30 PM - 5:30 PM', '6:30 - 11:30 ቀን')}
+                    </span>
                   </div>
                 </div>
                 <span className="text-xl font-black text-orange-950 font-mono">
@@ -376,7 +435,9 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </span>
               </div>
               <div className="mt-2.5 flex items-center justify-between text-[11px] pt-2 border-t border-orange-200/60">
-                <span className="text-slate-600">ተዘዋዋሪ ፈረቃ</span>
+                <span className="text-slate-600">
+                  {t3('Shifftii Jijjiiramaa', 'Rotating Shift', 'ተዘዋዋሪ ፈረቃ')}
+                </span>
                 <span className="font-bold text-orange-800">
                   {students.length > 0 ? Math.round((shiftCounts.afternoon / students.length) * 100) : 0}%
                 </span>
@@ -401,12 +462,16 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h4 className="text-xs font-black text-amber-300">የማታ ፈረቃ (Evening)</h4>
+                      <h4 className="text-xs font-black text-amber-300">
+                        {t3('Shifftii Galgalaa (Evening)', 'Evening Shift', 'የማታ ፈረቃ (Evening)')}
+                      </h4>
                       <span className="px-1.5 py-0.2 bg-amber-400 text-slate-950 text-[9px] font-black rounded-sm">
                         Night
                       </span>
                     </div>
-                    <span className="text-[10px] text-indigo-200/80 font-mono">11:30 - 3:00 ማታ</span>
+                    <span className="text-[10px] text-indigo-200/80 font-mono">
+                      {t3('5:30 PM - 9:00 PM', '5:30 PM - 9:00 PM', '11:30 - 3:00 ማታ')}
+                    </span>
                   </div>
                 </div>
                 <span className="text-xl font-black text-white font-mono">
@@ -414,9 +479,12 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </span>
               </div>
               <div className="mt-2.5 flex items-center justify-between text-[11px] pt-2 border-t border-indigo-800/80">
-                <span className="text-indigo-200">የስራ ተሰማሪ አዋቂዎች</span>
+                <span className="text-indigo-200">
+                  {t3('Gaheessota Hojjettoota', 'Working Adults', 'የስራ ተሰማሪ አዋቂዎች')}
+                </span>
                 <span className="font-bold text-amber-300">
-                  {students.filter((s) => resolveStudentShiftCategory(s) === 'evening' && s.occupation).length} ሰራተኞች
+                  {students.filter((s) => resolveStudentShiftCategory(s) === 'evening' && s.occupation).length}{' '}
+                  {t3('Hojjettoota', 'Workers', 'ሰራተኞች')}
                 </span>
               </div>
             </div>
@@ -430,7 +498,11 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ተማሪ በስም፣ በመለያ ቁጥር፣ በኮድ ወይም በወላጅ ፈልግ..."
+                  placeholder={t3(
+                    'Barataa maqaan, lakkoofsa eenyummaan, koodiin ykn maatiin barbaadi...',
+                    'Search student by name, ID number, code, or parent...',
+                    'ተማሪ በስም፣ በመለያ ቁጥር፣ በኮድ ወይም በወላጅ ፈልግ...'
+                  )}
                   className="w-full pl-9 pr-8 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
                 {searchQuery && (
@@ -462,10 +534,10 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   }}
                   className="px-3 py-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 focus:outline-hidden"
                 >
-                  <option value="all">ሁሉም ክፍሎች ({students.length})</option>
+                  <option value="all">{t3(`Kutaalee Hunda (${students.length})`, `All Grades (${students.length})`, `ሁሉም ክፍሎች (${students.length})`)}</option>
                   {availableGrades.map((g) => (
                     <option key={g} value={g}>
-                      {g}ኛ ክፍል ({students.filter((s) => s.grade === g).length})
+                      {t3(`Kutaa ${g}ffaa`, `Grade ${g}`, `${g}ኛ ክፍል`)} ({students.filter((s) => s.grade === g).length})
                     </option>
                   ))}
                 </select>
@@ -476,10 +548,10 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   onChange={(e) => setSectionFilter(e.target.value)}
                   className="px-3 py-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 focus:outline-hidden"
                 >
-                  <option value="all">ሁሉም ሴክሽኖች</option>
+                  <option value="all">{t3('Dareewwan Hunda', 'All Sections', 'ሁሉም ሴክሽኖች')}</option>
                   {availableSections.map((sec) => (
                     <option key={sec} value={sec}>
-                      ሴክሽን {sec} ({students.filter((s) => (gradeFilter === 'all' || s.grade === gradeFilter) && s.section.toUpperCase() === sec).length})
+                      {t3(`Daree ${sec}`, `Section ${sec}`, `ሴክሽን ${sec}`)} ({students.filter((s) => (gradeFilter === 'all' || s.grade === gradeFilter) && s.section.toUpperCase() === sec).length})
                     </option>
                   ))}
                 </select>
@@ -490,10 +562,10 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   onChange={(e) => setShiftFilter(e.target.value as any)}
                   className="px-3 py-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 focus:outline-hidden"
                 >
-                  <option value="all">ሁሉንም ፈረቃዎች ({students.length})</option>
-                  <option value="morning">🌅 የጧት ፈረቃ ({shiftCounts.morning})</option>
-                  <option value="afternoon">☀️ የከሰዓት ፈረቃ ({shiftCounts.afternoon})</option>
-                  <option value="evening">🌙 የማታ ፈረቃ ({shiftCounts.evening})</option>
+                  <option value="all">{t3(`Shifftii Hunda (${students.length})`, `All Shifts (${students.length})`, `ሁሉንም ፈረቃዎች (${students.length})`)}</option>
+                  <option value="morning">🌅 {t3(`Shifftii Ganamaa (${shiftCounts.morning})`, `Morning Shift (${shiftCounts.morning})`, `የጧት ፈረቃ (${shiftCounts.morning})`)}</option>
+                  <option value="afternoon">☀️ {t3(`Shifftii Waaree Booda (${shiftCounts.afternoon})`, `Afternoon Shift (${shiftCounts.afternoon})`, `የከሰዓት ፈረቃ (${shiftCounts.afternoon})`)}</option>
+                  <option value="evening">🌙 {t3(`Shifftii Galgalaa (${shiftCounts.evening})`, `Evening Shift (${shiftCounts.evening})`, `የማታ ፈረቃ (${shiftCounts.evening})`)}</option>
                 </select>
 
                 {/* Sort By */}
@@ -502,13 +574,13 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="px-3 py-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 focus:outline-hidden"
                 >
-                  <option value="grade_asc">ደርድር፡ ክፍል (ዝቅተኛ → ከፍተኛ)</option>
-                  <option value="grade_desc">ደርድር፡ ክፍል (ከፍተኛ → ዝቅተኛ)</option>
-                  <option value="section_asc">ደርድር፡ ሴክሽን (A → Z)</option>
-                  <option value="section_desc">ደርድር፡ ሴክሽን (Z → A)</option>
-                  <option value="name_asc">ደርድር፡ ስም (A → Z)</option>
-                  <option value="name_desc">ደርድር፡ ስም (Z → A)</option>
-                  <option value="id_asc">ደርድር፡ መለያ ቁጥር</option>
+                  <option value="grade_asc">{t3('Tartiiba: Kutaa (Xiqqaa → Guddaa)', 'Sort: Grade (Low → High)', 'ደርድር፡ ክፍል (ዝቅተኛ → ከፍተኛ)')}</option>
+                  <option value="grade_desc">{t3('Tartiiba: Kutaa (Guddaa → Xiqqaa)', 'Sort: Grade (High → Low)', 'ደርድር፡ ክፍል (ከፍተኛ → ዝቅተኛ)')}</option>
+                  <option value="section_asc">{t3('Tartiiba: Daree (A → Z)', 'Sort: Section (A → Z)', 'ደርድር፡ ሴክሽን (A → Z)')}</option>
+                  <option value="section_desc">{t3('Tartiiba: Daree (Z → A)', 'Sort: Section (Z → A)', 'ደርድር፡ ሴክሽን (Z → A)')}</option>
+                  <option value="name_asc">{t3('Tartiiba: Maqaa (A → Z)', 'Sort: Name (A → Z)', 'ደርድር፡ ስም (A → Z)')}</option>
+                  <option value="name_desc">{t3('Tartiiba: Maqaa (Z → A)', 'Sort: Name (Z → A)', 'ደርድር፡ ስም (Z → A)')}</option>
+                  <option value="id_asc">{t3('Tartiiba: Lakkoofsa Eenyummaa', 'Sort: ID Number', 'ደርድር፡ መለያ ቁጥር')}</option>
                 </select>
 
                 {/* Reset Filters */}
@@ -525,7 +597,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     className="inline-flex items-center gap-1 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-xl text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
-                    <span>አፅዳ</span>
+                    <span>{t3('Qulqulleessi', 'Reset', 'አፅዳ')}</span>
                   </button>
                 )}
               </div>
@@ -536,7 +608,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
                   <Filter className="w-3 h-3 text-emerald-700" />
-                  <span>ፈረቃ (Shift)፡</span>
+                  <span>{t3('Shifftii (Shift):', 'Shift:', 'ፈረቃ (Shift)፡')}</span>
                 </span>
                 <button
                   type="button"
@@ -547,7 +619,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  ሁሉም ({students.length})
+                  {t3('Hunda', 'All', 'ሁሉም')} ({students.length})
                 </button>
                 <button
                   type="button"
@@ -559,7 +631,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   }`}
                 >
                   <Sunrise className="w-3 h-3" />
-                  <span>🌅 የጧት ፈረቃ ({shiftCounts.morning})</span>
+                  <span>🌅 {t3(`Ganama (${shiftCounts.morning})`, `Morning (${shiftCounts.morning})`, `የጧት ፈረቃ (${shiftCounts.morning})`)}</span>
                 </button>
                 <button
                   type="button"
@@ -571,7 +643,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   }`}
                 >
                   <Sun className="w-3 h-3" />
-                  <span>☀️ የከሰዓት ፈረቃ ({shiftCounts.afternoon})</span>
+                  <span>☀️ {t3(`Waaree Booda (${shiftCounts.afternoon})`, `Afternoon (${shiftCounts.afternoon})`, `የከሰዓት ፈረቃ (${shiftCounts.afternoon})`)}</span>
                 </button>
                 <button
                   type="button"
@@ -583,12 +655,18 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   }`}
                 >
                   <Moon className="w-3 h-3 text-amber-400" />
-                  <span>🌙 የማታ ፈረቃ ({shiftCounts.evening})</span>
+                  <span>🌙 {t3(`Galgala (${shiftCounts.evening})`, `Evening (${shiftCounts.evening})`, `የማታ ፈረቃ (${shiftCounts.evening})`)}</span>
                 </button>
               </div>
 
               <div className="text-[11px] text-slate-500 font-semibold">
-                <span>{filteredStudents.length} ተማሪዎች ተጣርተዋል (ከ {students.length})</span>
+                <span>
+                  {t3(
+                    `Barattoonni ${filteredStudents.length} filatamaniiru (keessaa ${students.length})`,
+                    `${filteredStudents.length} students filtered (of ${students.length})`,
+                    `${filteredStudents.length} ተማሪዎች ተጣርተዋል (ከ ${students.length})`
+                  )}
+                </span>
               </div>
             </div>
           </div>
@@ -602,7 +680,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     onClick={() => setSortBy(sortBy === 'id_asc' ? 'grade_asc' : 'id_asc')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>የተማሪ መለያ ቁጥር</span>
+                      <span>{t3('Lakkoofsa Eenyummaa Barataa', 'Student ID Number', 'የተማሪ መለያ ቁጥር')}</span>
                       {sortBy === 'id_asc' && <ArrowUp className="w-3 h-3 text-emerald-800" />}
                     </div>
                   </th>
@@ -611,7 +689,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     onClick={() => setSortBy(sortBy === 'name_asc' ? 'name_desc' : 'name_asc')}
                   >
                     <div className="flex items-center gap-1">
-                      <span>ሙሉ ስም</span>
+                      <span>{t3('Maqaa Guutuu', 'Full Name', 'ሙሉ ስም')}</span>
                       {sortBy === 'name_asc' ? (
                         <ArrowUp className="w-3 h-3 text-emerald-800" />
                       ) : sortBy === 'name_desc' ? (
@@ -621,7 +699,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                       )}
                     </div>
                   </th>
-                  <th className="py-3 px-3">ጾታ</th>
+                  <th className="py-3 px-3">{t3('Saala', 'Gender', 'ጾታ')}</th>
                   <th
                     className="py-3 px-3 cursor-pointer hover:bg-slate-100 transition-colors"
                     onClick={() => {
@@ -632,7 +710,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     }}
                   >
                     <div className="flex items-center gap-1">
-                      <span>ክፍል & ሴክሽን</span>
+                      <span>{t3('Kutaa & Daree', 'Grade & Section', 'ክፍል & ሴክሽን')}</span>
                       {sortBy === 'grade_asc' || sortBy === 'section_asc' ? (
                         <ArrowUp className="w-3 h-3 text-emerald-800" />
                       ) : sortBy === 'grade_desc' || sortBy === 'section_desc' ? (
@@ -642,11 +720,11 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                       )}
                     </div>
                   </th>
-                  <th className="py-3 px-3">ፈረቃ (Shift)</th>
-                  <th className="py-3 px-3">የወላጅ ስም</th>
-                  <th className="py-3 px-3">የወላጅ ስልክ</th>
-                  <th className="py-3 px-3">የተማሪ ኮድ</th>
-                  <th className="py-3 px-3 text-right">የመታወቂያ ካርድ</th>
+                  <th className="py-3 px-3">{t3('Shifftii (Shift)', 'Shift', 'ፈረቃ (Shift)')}</th>
+                  <th className="py-3 px-3">{t3('Maqaa Maatii', 'Parent Name', 'የወላጅ ስም')}</th>
+                  <th className="py-3 px-3">{t3('Bilbila Maatii', 'Parent Phone', 'የወላጅ ስልክ')}</th>
+                  <th className="py-3 px-3">{t3('Koodii Barataa', 'Student Code', 'የተማሪ ኮድ')}</th>
+                  <th className="py-3 px-3 text-right">{t3('Waraqaa Eenyummaa', 'ID Card', 'የመታወቂያ ካርድ')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -654,7 +732,13 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   <tr>
                     <td colSpan={9} className="py-10 text-center text-slate-500">
                       <GraduationCap className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                      <p className="text-xs font-bold text-slate-700">በተመረጠው የፈረቃ፣ ክፍል ደረጃ ወይም ሴክሽን ምንም ተማሪ አልተገኘም</p>
+                      <p className="text-xs font-bold text-slate-700">
+                        {t3(
+                          'Shifftii, sadarkaa kutaa ykn daree filatameen barataan tokkollee hin argamne',
+                          'No students found for the selected shift, grade, or section',
+                          'በተመረጠው የፈረቃ፣ ክፍል ደረጃ ወይም ሴክሽን ምንም ተማሪ አልተገኘም'
+                        )}
+                      </p>
                       <button
                         type="button"
                         onClick={() => {
@@ -666,7 +750,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                         }}
                         className="mt-2 text-xs text-emerald-800 font-bold hover:underline cursor-pointer"
                       >
-                        ሁሉንም ተማሪዎች አሳይ
+                        {t3('Barattoota Hunda Agarsiisi', 'Show All Students', 'ሁሉንም ተማሪዎች አሳይ')}
                       </button>
                     </td>
                   </tr>
@@ -687,12 +771,14 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                                 : 'bg-blue-100 text-blue-800'
                             }`}
                           >
-                            {st.gender === 'F' ? 'ሴት' : 'ወንድ'}
+                            {st.gender === 'F'
+                              ? t3('Dubara', 'Female', 'ሴት')
+                              : t3('Dhiira', 'Male', 'ወንድ')}
                           </span>
                         </td>
                         <td className="py-3 px-3 font-semibold text-slate-700">
                           <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md font-bold">
-                            {st.grade}ኛ ({st.section})
+                            {t3(`${st.grade}ffaa`, `G${st.grade}`, `${st.grade}ኛ`)} ({st.section})
                           </span>
                         </td>
                         <td className="py-3 px-3">
@@ -700,7 +786,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                             <div>
                               <span className="px-2 py-0.5 bg-indigo-950 text-amber-300 rounded-md text-[10px] font-extrabold inline-flex items-center gap-1 shadow-2xs">
                                 <Moon className="w-2.5 h-2.5 text-amber-300" />
-                                <span>ማታ (11:30 - 3:00)</span>
+                                <span>{t3('Galgala (5:30 - 9:00 PM)', 'Evening (5:30 - 9:00 PM)', 'ማታ (11:30 - 3:00)')}</span>
                               </span>
                               {st.occupation && (
                                 <div
@@ -714,12 +800,12 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                           ) : shiftCat === 'afternoon' ? (
                             <span className="px-2 py-0.5 bg-orange-100 text-orange-900 border border-orange-200 rounded-md text-[10px] font-bold inline-flex items-center gap-1">
                               <Sun className="w-2.5 h-2.5 text-orange-700" />
-                              <span>ከሰዓት (6:30 - 11:30)</span>
+                              <span>{t3('Waaree Booda (12:30 - 5:30 PM)', 'Afternoon (12:30 - 5:30 PM)', 'ከሰዓት (6:30 - 11:30)')}</span>
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-200 rounded-md text-[10px] font-bold inline-flex items-center gap-1">
                               <Sunrise className="w-2.5 h-2.5 text-amber-700" />
-                              <span>ጧት (2:00 - 6:30)</span>
+                              <span>{t3('Ganama (8:00 AM - 12:30 PM)', 'Morning (8:00 AM - 12:30 PM)', 'ጧት (2:00 - 6:30)')}</span>
                             </span>
                           )}
                         </td>
@@ -735,7 +821,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                             className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
                           >
                             <Printer className="w-3 h-3" />
-                            <span>መታወቂያ አትም</span>
+                            <span>{t3('Eenyummaa Maxxansi', 'Print ID', 'መታወቂያ አትም')}</span>
                           </button>
                         </td>
                       </tr>
@@ -753,10 +839,18 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-base font-black text-slate-900">
-              የትምህርት ቤት የተሟላ የአስተዳደር መዋቅር፣ የስራ ክፍሎች እና ኃላፊነቶች
+              {t3(
+                'Caasaa Bulchiinsa Mana Barumsaa Guutuu, Kutaalee Hojii fi Itti Gaafatamummaa',
+                'Complete School Administrative Structure, Departments & Responsibilities',
+                'የትምህርት ቤት የተሟላ የአስተዳደር መዋቅር፣ የስራ ክፍሎች እና ኃላፊነቶች'
+              )}
             </h3>
             <p className="text-xs text-slate-500">
-              ተማሪንና መምህርን ማን ይመዘግባል? ምን ምን ሰራተኞችስ ያስፈልጋሉ?
+              {t3(
+                'Barataa fi barsiisaa eenyutu galmeessa? Hojjettoonni akkamiihoo barbaachisu?',
+                'Who registers students and teachers? What key staff roles are required?',
+                'ተማሪንና መምህርን ማን ይመዘግባል? ምን ምን ሰራተኞችስ ያስፈልጋሉ?'
+              )}
             </p>
           </div>
 
@@ -769,18 +863,50 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-blue-950 uppercase tracking-wider">
-                    1. ሬጅስትራር / የተማሪዎች መዝጋቢ (School Registrar)
+                    {t3(
+                      '1. Rejistraara / Galmeessaa Barattootaa (School Registrar)',
+                      '1. School Registrar & Admissions Officer',
+                      '1. ሬጅስትራር / የተማሪዎች መዝጋቢ (School Registrar)'
+                    )}
                   </h4>
                   <p className="text-[11px] text-blue-800 font-semibold">
-                    ተማሪን ማን ይመዘግባል? ለሚለው ጥያቄ ቀጥተኛ ኃላፊ
+                    {t3(
+                      'Gaaffii "Barataa eenyutu galmeessa?" jedhuuf itti gaafatamaa kallattii',
+                      'Directly responsible for student admissions and official records',
+                      'ተማሪን ማን ይመዘግባል? ለሚለው ጥያቄ ቀጥተኛ ኃላፊ'
+                    )}
                   </p>
                 </div>
               </div>
               <ul className="text-xs text-blue-900 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li>አዳዲስ እና ነባር ተማሪዎችን በሲስተም መመዝገብ እና የፋይል ቁጥር መስጠት</li>
-                <li>የክፍል እና የሴክሽን ምደባዎችን ማካሄድ</li>
-                <li>ይፋዊ የተማሪዎች መታወቂያ ካርድ (Student ID Card) በፎቶና በባርኮድ ማተም</li>
-                <li>የትምህርት ውጤት ሰነዶችን፣ ትራንስክሪፕት እና የተማሪ ዝውውር (Transfer) ማዘጋጀት</li>
+                <li>
+                  {t3(
+                    'Barattoota haaraa fi duraanii sirna keessatti galmeessuu fi lakkoofsa faayilaa kennuu',
+                    'Register new and returning students in the system and issue file numbers',
+                    'አዳዲስ እና ነባር ተማሪዎችን በሲስተም መመዝገብ እና የፋይል ቁጥር መስጠት'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Ramaddii kutaa fi daree gaggeessuu',
+                    'Manage grade level and section placements',
+                    'የክፍል እና የሴክሽን ምደባዎችን ማካሄድ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Waraqaa eenyummaa barattootaa idilee (Student ID Card) suuraa fi baarkoodiin maxxansuu',
+                    'Print official photo and barcode/QR Student ID Cards',
+                    'ይፋዊ የተማሪዎች መታወቂያ ካርድ (Student ID Card) በፎቶና በባርኮድ ማተም'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Sanadoota qabxii barnootaa, tiraanskiriippii fi jijjiirraa barataa (Transfer) qopheessuu',
+                    'Prepare academic score sheets, transcripts, and student transfers',
+                    'የትምህርት ውጤት ሰነዶችን፣ ትራንስክሪፕት እና የተማሪ ዝውውር (Transfer) ማዘጋጀት'
+                  )}
+                </li>
               </ul>
             </div>
 
@@ -792,18 +918,50 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-teal-950 uppercase tracking-wider">
-                    2. ምክትል ርዕሰ መምህር እና የሰው ኃይል (Vice Principal / HR)
+                    {t3(
+                      '2. Itti Aanaa Daayirektaraa fi Humna Namaa (Vice Principal / HR)',
+                      '2. Vice Principal & Human Resources (HR)',
+                      '2. ምክትል ርዕሰ መምህር እና የሰው ኃይል (Vice Principal / HR)'
+                    )}
                   </h4>
                   <p className="text-[11px] text-teal-800 font-semibold">
-                    አስተማሪን ማን ይመዘግባል? ለሚለው ጥያቄ ቀጥተኛ ኃላፊ
+                    {t3(
+                      'Gaaffii "Barsiisaa eenyutu galmeessa?" jedhuuf itti gaafatamaa kallattii',
+                      'Directly responsible for teacher recruitment and onboarding',
+                      'አስተማሪን ማን ይመዘግባል? ለሚለው ጥያቄ ቀጥተኛ ኃላፊ'
+                    )}
                   </p>
                 </div>
               </div>
               <ul className="text-xs text-teal-900 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li>አዳዲስ መምህራንን መቅጠር፣ ማስተማሪያ ፈቃዳቸውን (License) እና ዲግሪያቸውን ማረጋገጥ</li>
-                <li>መምህራንን በየክፍሉና በየትምህርት አይነቱ ማስተማሪያ ክፍለ-ጊዜ መመደብ</li>
-                <li>የመምህራን የስራ አፈጻጸም፣ መገኘት እና ሙያዊ ብቃት ምዘና ማካሄድ</li>
-                <li>ከዳይሬክተር ጋር በመተባበር ለመምህራን የመግቢያ ኮድ መስጠት</li>
+                <li>
+                  {t3(
+                    'Barsiisota haaraa qacaruu, hayyama barsiisuu (License) fi digrii isaanii mirkaneessuu',
+                    'Recruit new teachers and verify teaching licenses and degrees',
+                    'አዳዲስ መምህራንን መቅጠር፣ ማስተማሪያ ፈቃዳቸውን (License) እና ዲግሪያቸውን ማረጋገጥ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Barsiisota kutaalee fi gosa barnootaan wayitii barsiisuu ramaduu',
+                    'Assign teachers to classes and subjects by teaching period',
+                    'መምህራንን በየክፍሉና በየትምህርት አይነቱ ማስተማሪያ ክፍለ-ጊዜ መመደብ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Madaallii raawwii hojii, argama fi ga’umsa ogummaa barsiisotaa gaggeessuu',
+                    'Conduct teacher performance, attendance, and competency evaluations',
+                    'የመምህራን የስራ አፈጻጸም፣ መገኘት እና ሙያዊ ብቃት ምዘና ማካሄድ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Daayirektara waliin ta’uun barsiisotaaf koodii seensaa kennuu',
+                    'Coordinate with the Director to issue teacher portal access codes',
+                    'ከዳይሬክተር ጋር በመተባበር ለመምህራን የመግቢያ ኮድ መስጠት'
+                  )}
+                </li>
               </ul>
             </div>
 
@@ -815,18 +973,50 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                    3. ዋና ሒሳብ ሹም / ፋይናንስ (Accountant & Bursar)
+                    {t3(
+                      '3. Ogeessa Herregaa / Faayinaansii (Accountant & Bursar)',
+                      '3. Chief Accountant & Bursar (Finance)',
+                      '3. ዋና ሒሳብ ሹም / ፋይናንስ (Accountant & Bursar)'
+                    )}
                   </h4>
                   <p className="text-[11px] text-emerald-800 font-semibold">
-                    የትምህርት ቤቱን ገቢና ወጪ የሚቆጣጠር
+                    {t3(
+                      'Galii fi baasii mana barumsaa kan to’atu',
+                      'Oversees all school revenue and expenditure',
+                      'የትምህርት ቤቱን ገቢና ወጪ የሚቆጣጠር'
+                    )}
                   </p>
                 </div>
               </div>
               <ul className="text-xs text-emerald-900 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li>የተማሪዎችን ወርሃዊ ክፍያ በቴሌብር፣ በሲቢኢ ብርና በጥሬ ገንዘብ መሰብሰብ</li>
-                <li>ይፋዊ ዲጂታል ደረሰኞችን መቁረጥ እና ለወላጆች ማድረስ</li>
-                <li>የትምህርት ቤቱን አስተዳደራዊ ወጪዎች (ደሞዝ፣ መብራት፣ ውሃ፣ ጥገና) መመዝገብ</li>
-                <li>ለዳይሬክተር እና ለቦርዱ ወርሃዊ እና ዓመታዊ የፋይናንስ ሪፖርት ማቅረብ</li>
+                <li>
+                  {t3(
+                    'Kaffaltii ji’aa barattootaa Telebirr, CBE Birr fi maallaqa callaadhaan walitti qabuu',
+                    'Collect monthly student tuition via Telebirr, CBE Birr, and cash',
+                    'የተማሪዎችን ወርሃዊ ክፍያ በቴሌብር፣ በሲቢኢ ብርና በጥሬ ገንዘብ መሰብሰብ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Nagahee dijitaalaa idilee muruu fi maatiif erguu',
+                    'Issue official digital receipts and deliver them to parents',
+                    'ይፋዊ ዲጂታል ደረሰኞችን መቁረጥ እና ለወላጆች ማድረስ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Baasiiwwan bulchiinsaa mana barumsaa (mindaa, ibsaa, bishaan, suphaa) galmeessuu',
+                    'Record administrative expenses (payroll, utilities, maintenance)',
+                    'የትምህርት ቤቱን አስተዳደራዊ ወጪዎች (ደሞዝ፣ መብራት፣ ውሃ፣ ጥገና) መመዝገብ'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Daayirektaraa fi boordiif gabaasa faayinaansii ji’aa fi waggaa dhiyeessuu',
+                    'Submit monthly and annual financial reports to the Director and Board',
+                    'ለዳይሬክተር እና ለቦርዱ ወርሃዊ እና ዓመታዊ የፋይናንስ ሪፖርት ማቅረብ'
+                  )}
+                </li>
               </ul>
             </div>
 
@@ -838,17 +1028,43 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-amber-950 uppercase tracking-wider">
-                    4. ቤተ-መጻሕፍት እና ላብራቶሪ ባለሙያዎች (Librarian & Lab IT)
+                    {t3(
+                      '4. Ogeessota Mana Kitaabaa fi Laabooraatoorii (Librarian & Lab IT)',
+                      '4. Librarian & Laboratory / IT Specialists',
+                      '4. ቤተ-መጻሕፍት እና ላብራቶሪ ባለሙያዎች (Librarian & Lab IT)'
+                    )}
                   </h4>
                   <p className="text-[11px] text-amber-800 font-semibold">
-                    የትምህርት ግብአቶችን እና የቴክኖሎጂ ላብራቶሪን የሚመራ
+                    {t3(
+                      'Galteewwan barnootaa fi laabooraatoorii teeknoloojii kan hogganu',
+                      'Manages learning resources and science/IT laboratories',
+                      'የትምህርት ግብአቶችን እና የቴክኖሎጂ ላብራቶሪን የሚመራ'
+                    )}
                   </p>
                 </div>
               </div>
               <ul className="text-xs text-amber-900 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li>ስርዓተ-ትምህርታዊ መማሪያ መጻሕፍትን ማደራጀትና ለተማሪዎች ማከፋፈል</li>
-                <li>የኮምፒውተር እና የሳይንስ (ፊዚክስ/ኬሚስትሪ/ባዮሎጂ) ላብራቶሪ ሙከራዎችን ማስተባበር</li>
-                <li>የትምህርት ቤቱን ዲጂታል የመረጃ ቋት እና የፋይዳ ብሔራዊ መታወቂያ መዝገብ መጠበቅ</li>
+                <li>
+                  {t3(
+                    'Kitaabota barnootaa sirna barnootaa qindeessuu fi barattootaaf raabsuu',
+                    'Organize curriculum textbooks and distribute them to students',
+                    'ስርዓተ-ትምህርታዊ መማሪያ መጻሕፍትን ማደራጀትና ለተማሪዎች ማከፋፈል'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Yaaliiwwan laabooraatoorii kompiitaraa fi saayinsii (Fiiziksii/Keemistirii/Baayoolojii) qindeessuu',
+                    'Coordinate computer and science (Physics/Chemistry/Biology) lab sessions',
+                    'የኮምፒውተር እና የሳይንስ (ፊዚክስ/ኬሚስትሪ/ባዮሎጂ) ላብራቶሪ ሙከራዎችን ማስተባበር'
+                  )}
+                </li>
+                <li>
+                  {t3(
+                    'Kuusaa odeeffannoo dijitaalaa mana barumsaa fi galmee eenyummaa biyyaalessaa Fayda eeguu',
+                    'Maintain the school digital database and Fayda national ID records',
+                    'የትምህርት ቤቱን ዲጂታል የመረጃ ቋት እና የፋይዳ ብሔራዊ መታወቂያ መዝገብ መጠበቅ'
+                  )}
+                </li>
               </ul>
             </div>
           </div>
@@ -862,7 +1078,9 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
             <div className="bg-gradient-to-r from-blue-900 to-teal-950 px-6 py-5 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <GraduationCap className="w-5 h-5 text-amber-300" />
-                <h3 className="font-bold text-base">አዲስ ተማሪ ምዝገባ (Student Admission)</h3>
+                <h3 className="font-bold text-base">
+                  {t3('Galmee Barataa Haaraa (Student Admission)', 'New Student Admission', 'አዲስ ተማሪ ምዝገባ (Student Admission)')}
+                </h3>
               </div>
               <button
                 type="button"
@@ -876,14 +1094,14 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
             <form onSubmit={handleRegisterStudent} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የተማሪው ሙሉ ስም (የአያት ስም ጨምሮ) *
+                  {t3('Maqaa Guutuu Barataa (Maqaa Akaakayyuu Dabalatee) *', 'Student Full Name *', 'የተማሪው ሙሉ ስም (የአያት ስም ጨምሮ) *')}
                 </label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="ምሳሌ፡ ኪያር ጀማል ሁሴን"
+                  placeholder={t3('Fakkeenyaaf: Kiyaar Jamaal Huseen', 'e.g., Kiyar Jemal Hussein', 'ምሳሌ፡ ኪያር ጀማል ሁሴን')}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
@@ -891,7 +1109,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
               {/* Shift Selector: Morning, Afternoon, Evening */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
                 <label className="block text-xs font-bold text-slate-800">
-                  የትምህርት ፈረቃ (Shift / Program) *
+                  {t3('Shifftii Barnootaa (Shift / Program) *', 'Study Shift / Program *', 'የትምህርት ፈረቃ (Shift / Program) *')}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
@@ -907,7 +1125,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     }`}
                   >
                     <Sunrise className="w-3.5 h-3.5" />
-                    <span>🌅 የጧት (2:00 - 6:30)</span>
+                    <span>🌅 {t3('Ganama (8:00 - 12:30)', 'Morning (8:00 - 12:30)', 'የጧት (2:00 - 6:30)')}</span>
                   </button>
 
                   <button
@@ -923,7 +1141,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     }`}
                   >
                     <Sun className="w-3.5 h-3.5" />
-                    <span>☀️ የከሰዓት (6:30 - 11:30)</span>
+                    <span>☀️ {t3('Waaree Booda (12:30 - 5:30)', 'Afternoon (12:30 - 5:30)', 'የከሰዓት (6:30 - 11:30)')}</span>
                   </button>
 
                   <button
@@ -939,7 +1157,7 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                     }`}
                   >
                     <Moon className="w-3.5 h-3.5 text-amber-300" />
-                    <span>🌙 የማታ (11:30 - 3:00)</span>
+                    <span>🌙 {t3('Galgala (5:30 - 9:00 PM)', 'Evening (5:30 - 9:00 PM)', 'የማታ (11:30 - 3:00)')}</span>
                   </button>
                 </div>
 
@@ -947,25 +1165,25 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200">
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                        የቀን ስራ / ሞያ (Occupation)
+                        {t3('Hojii Guyyaa / Ogummaa (Occupation)', 'Daytime Occupation', 'የቀን ስራ / ሞያ (Occupation)')}
                       </label>
                       <input
                         type="text"
                         value={studentOccupation}
                         onChange={(e) => setStudentOccupation(e.target.value)}
-                        placeholder="ለምሳሌ፡ ነጋዴ፣ ሰራተኛ..."
+                        placeholder={t3('Fakkeenyaaf: Daldalaa, Hojjetaa...', 'e.g., Merchant, Employee...', 'ለምሳሌ፡ ነጋዴ፣ ሰራተኛ...')}
                         className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-xl bg-white"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                        የስራ ቦታ (Workplace)
+                        {t3('Bakka Hojii (Workplace)', 'Workplace', 'የስራ ቦታ (Workplace)')}
                       </label>
                       <input
                         type="text"
                         value={studentWorkplace}
                         onChange={(e) => setStudentWorkplace(e.target.value)}
-                        placeholder="ለምሳሌ፡ ሻሸመኔ ገበያ"
+                        placeholder={t3('Fakkeenyaaf: Gabaa Shaashamannee', 'e.g., Shashemene Market', 'ለምሳሌ፡ ሻሸመኔ ገበያ')}
                         className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-xl bg-white"
                       />
                     </div>
@@ -976,37 +1194,37 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ጾታ *
+                    {t3('Saala *', 'Gender *', 'ጾታ *')}
                   </label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as 'M' | 'F')}
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value="M">ወንድ (M)</option>
-                    <option value="F">ሴት (F)</option>
+                    <option value="M">{t3('Dhiira (M)', 'Male (M)', 'ወንድ (M)')}</option>
+                    <option value="F">{t3('Dubara (F)', 'Female (F)', 'ሴት (F)')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የክፍል ደረጃ *
+                    {t3('Sadarkaa Kutaa *', 'Grade Level *', 'የክፍል ደረጃ *')}
                   </label>
                   <select
                     value={grade}
                     onChange={(e) => setGrade(Number(e.target.value))}
                     className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                   >
-                    <option value={9}>9ኛ ክፍል</option>
-                    <option value={10}>10ኛ ክፍል</option>
-                    <option value={11}>11ኛ ክፍል</option>
-                    <option value={12}>12ኛ ክፍል</option>
+                    <option value={9}>{t3('Kutaa 9ffaa', 'Grade 9', '9ኛ ክፍል')}</option>
+                    <option value={10}>{t3('Kutaa 10ffaa', 'Grade 10', '10ኛ ክፍል')}</option>
+                    <option value={11}>{t3('Kutaa 11ffaa', 'Grade 11', '11ኛ ክፍል')}</option>
+                    <option value={12}>{t3('Kutaa 12ffaa', 'Grade 12', '12ኛ ክፍል')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ሴክሽን *
+                    {t3('Daree *', 'Section *', 'ሴክሽን *')}
                   </label>
                   <select
                     value={section}
@@ -1023,21 +1241,21 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    የወላጅ / አሳዳጊ ሙሉ ስም *
+                    {t3('Maqaa Guutuu Maatii / Guddistuu *', 'Parent / Guardian Full Name *', 'የወላጅ / አሳዳጊ ሙሉ ስም *')}
                   </label>
                   <input
                     type="text"
                     required
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}
-                    placeholder="ምሳሌ፡ አቶ ጀማል ሁሴን"
+                    placeholder={t3('Fakkeenyaaf: Obbo Jamaal Huseen', 'e.g., Ato Jemal Hussein', 'ምሳሌ፡ አቶ ጀማል ሁሴን')}
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    የወላጅ ስልክ ቁጥር *
+                    {t3('Lakkoofsa Bilbilaa Maatii *', 'Parent Phone Number *', 'የወላጅ ስልክ ቁጥር *')}
                   </label>
                   <input
                     type="tel"
@@ -1051,7 +1269,11 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
               </div>
 
               <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                ℹ️ ሲስተሙ ለተማሪው እና ለወላጁ ራስ-ሰር የመግቢያ ኮድ (Access Code) እና ይፋዊ የመታወቂያ ቁጥር ያመነጫል።
+                {t3(
+                  'ℹ️ Sirni kun barataa fi maatiif ofumaan koodii seensaa (Access Code) fi lakkoofsa eenyummaa idilee ni maddisiisa.',
+                  'ℹ️ The system automatically generates an Access Code and official Student ID number for the student and parent.',
+                  'ℹ️ ሲስተሙ ለተማሪው እና ለወላጁ ራስ-ሰር የመግቢያ ኮድ (Access Code) እና ይፋዊ የመታወቂያ ቁጥር ያመነጫል።'
+                )}
               </p>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -1060,14 +1282,14 @@ export const SchoolRegistrarView: React.FC<SchoolRegistrarViewProps> = ({
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  ሰርዝ
+                  {t3('Haqi', 'Cancel', 'ሰርዝ')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                  <span>ተማሪውን መዝግብ እና መታወቂያ አትም</span>
+                  <span>{t3('Barataa Galmeessi & Eenyummaa Maxxansi', 'Register & Print ID', 'ተማሪውን መዝግብ እና መታወቂያ አትም')}</span>
                 </button>
               </div>
             </form>

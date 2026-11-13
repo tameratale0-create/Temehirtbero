@@ -28,6 +28,10 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
   school,
   onSaveLogo
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const [selectedLogo, setSelectedLogo] = useState<string | undefined>(school.logoUrl);
   const [activeTab, setActiveTab] = useState<'upload' | 'preset' | 'url'>('upload');
   const [urlInput, setUrlInput] = useState<string>('');
@@ -44,9 +48,11 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
 
     if (!file.type.startsWith('image/')) {
       setErrorMessage(
-        currentLang === 'om'
-          ? 'Mee faayilii fakkii (PNG, JPG, WebP) qofa filadhaa.'
-          : 'እባክዎ ትክክለኛ የፎቶ ፋይል (PNG, JPG, WebP) ይምረጡ።'
+        t3(
+          'Mee faayilii fakkii (PNG, JPG, WebP) qofa filadhaa.',
+          'Please select a valid image file (PNG, JPG, WebP).',
+          'እባክዎ ትክክለኛ የፎቶ ፋይል (PNG, JPG, WebP) ይምረጡ።'
+        )
       );
       return;
     }
@@ -54,9 +60,11 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
     // Max 4MB raw file size check
     if (file.size > 4 * 1024 * 1024) {
       setErrorMessage(
-        currentLang === 'om'
-          ? 'Hangi fakkii 4MB ol ta’uu hin danda’u.'
-          : 'የፎቶው መጠን ከ 4MB መብለጥ የለበትም።'
+        t3(
+          'Hangi fakkii 4MB ol ta’uu hin danda’u.',
+          'Image size must not exceed 4MB.',
+          'የፎቶው መጠን ከ 4MB መብለጥ የለበትም።'
+        )
       );
       return;
     }
@@ -111,7 +119,9 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
     };
     reader.onerror = () => {
       setIsProcessing(false);
-      setErrorMessage('የፋይል ንባብ ስህተት አጋጥሟል።');
+      setErrorMessage(
+        t3('Dogoggorri dubbisuu faayilaa uumameera.', 'Error reading the selected file.', 'የፋይል ንባብ ስህተት አጋጥሟል።')
+      );
     };
     reader.readAsDataURL(file);
   };
@@ -142,7 +152,11 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold leading-tight">
-                የትምህርት ቤት ፕሮፋይል አርማ ማስገቢያ
+                {t3(
+                  'Galmee Asxaa Piroofaayilii Mana Barumsaa',
+                  'School Profile Logo Manager',
+                  'የትምህርት ቤት ፕሮፋይል አርማ ማስገቢያ'
+                )}
               </h3>
               <p className="text-[11px] text-emerald-200">
                 {school.name}
@@ -170,13 +184,15 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
               />
               <div>
                 <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider block">
-                  የቀጥታ እይታ (Live Preview)
+                  {t3('Ilaalcha Kallattii (Live Preview)', 'Live Preview', 'የቀጥታ እይታ (Live Preview)')}
                 </span>
                 <h4 className="text-sm font-bold text-white line-clamp-1">
                   {school.name}
                 </h4>
                 <p className="text-[11px] text-slate-300">
-                  {selectedLogo ? 'አርማ ተመርጧል' : 'መደበኛ ይፋዊ ማኅተም'}
+                  {selectedLogo
+                    ? t3('Asxaan filatameera', 'Logo selected', 'አርማ ተመርጧል')
+                    : t3('Chaappaa Seeraa Idilee', 'Default Official Emblem', 'መደበኛ ይፋዊ ማኅተም')}
                 </p>
               </div>
             </div>
@@ -186,10 +202,10 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
                 type="button"
                 onClick={handleRemove}
                 className="px-2.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg border border-red-500/40 text-[11px] font-semibold flex items-center gap-1 transition-colors"
-                title="አርማውን አስወግድ"
+                title={t3('Asxaa haqi', 'Remove logo', 'አርማውን አስወግድ')}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">አስወግድ</span>
+                <span className="hidden sm:inline">{t3('Haqi', 'Remove', 'አስወግድ')}</span>
               </button>
             )}
           </div>
@@ -206,7 +222,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
               }`}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>ፎቶ ጫን</span>
+              <span>{t3('Suuraa Fe\'i', 'Upload Photo', 'ፎቶ ጫን')}</span>
             </button>
             <button
               type="button"
@@ -218,7 +234,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>የተዘጋጁ አርማዎች</span>
+              <span>{t3('Asxaawwan Qophaa\'an', 'Preset Logos', 'የተዘጋጁ አርማዎች')}</span>
             </button>
             <button
               type="button"
@@ -230,7 +246,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
               }`}
             >
               <LinkIcon className="w-3.5 h-3.5" />
-              <span>የፎቶ ሊንክ (URL)</span>
+              <span>{t3('Liinkii Suuraa (URL)', 'Image URL', 'የፎቶ ሊንክ (URL)')}</span>
             </button>
           </div>
 
@@ -260,10 +276,18 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 text-xs sm:text-sm">
-                    የትምህርት ቤት አርማ ፎቶ ለመጫን እዚህ ይጫኑ
+                    {t3(
+                      'Asxaa mana barumsaa fe\'uuf asitti cuqaasaa',
+                      'Click here to upload school logo image',
+                      'የትምህርት ቤት አርማ ፎቶ ለመጫን እዚህ ይጫኑ'
+                    )}
                   </p>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    ከሞባይል ስልክ ጋለሪ፣ ካሜራ ወይም ኮምፒተር (PNG, JPG, WebP)
+                    {t3(
+                      'Gaalarii bilbilaa, kaameeraa ykn kompiitara irraa (PNG, JPG, WebP)',
+                      'From phone gallery, camera, or computer (PNG, JPG, WebP)',
+                      'ከሞባይል ስልክ ጋለሪ፣ ካሜራ ወይም ኮምፒተር (PNG, JPG, WebP)'
+                    )}
                   </p>
                 </div>
                 <button
@@ -271,13 +295,13 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
                   className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs inline-flex items-center gap-1.5 shadow-xs transition-colors"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>ፎቶ ምረጥ</span>
+                  <span>{t3('Suuraa Filadhu', 'Select Photo', 'ፎቶ ምረጥ')}</span>
                 </button>
               </div>
 
               {isProcessing && (
                 <div className="text-center text-xs text-emerald-700 font-semibold py-2">
-                  ፎቶው እየተዘጋጀ ነው...
+                  {t3('Suuraan qophaa\'aa jira...', 'Processing image...', 'ፎቶው እየተዘጋጀ ነው...')}
                 </div>
               )}
             </div>
@@ -287,7 +311,11 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
           {activeTab === 'preset' && (
             <div className="space-y-2.5">
               <p className="text-slate-600 text-[11px]">
-                የትምህርት ቤትዎን መገለጫ የሚወክል ይፋዊ አርማ ይምረጡ፡
+                {t3(
+                  'Asxaa seeraa mana barumsaa keessan bakka bu\'u filadhaa:',
+                  'Select an official emblem representing your school:',
+                  'የትምህርት ቤትዎን መገለጫ የሚወክል ይፋዊ አርማ ይምረጡ፡'
+                )}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {SCHOOL_LOGO_PRESETS.map((preset) => {
@@ -309,7 +337,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
                         size={48}
                       />
                       <span className="text-[11px] font-bold text-slate-800 leading-tight">
-                        {currentLang === 'om' ? preset.labelOm : preset.labelAm}
+                        {isOm ? preset.labelOm : isEn ? preset.labelEn : preset.labelAm}
                       </span>
                     </button>
                   );
@@ -323,7 +351,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
             <form onSubmit={handleApplyUrl} className="space-y-3">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  የኦንላይን ፎቶ አድራሻ (Direct Image URL)
+                  {t3('Teessoo Suuraa Toora Irraa (Direct Image URL)', 'Direct Image URL', 'የኦንላይን ፎቶ አድራሻ (Direct Image URL)')}
                 </label>
                 <input
                   type="url"
@@ -337,13 +365,17 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
                 type="submit"
                 className="w-full py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl transition-colors"
               >
-                ፎቶውን ተግብር
+                {t3('Suuraa Hojiirra Oolchi', 'Apply Photo', 'ፎቶውን ተግብር')}
               </button>
             </form>
           )}
 
           <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900">
-            ℹ️ የተመረጠው አርማ በትምህርት ቤቱ መነሻ ገጽ፣ በተማሪዎች መታወቂያ ካርድ እና በውጤት ካርዶች ላይ በቀጥታ ይታያል።
+            {t3(
+              'ℹ️ Asxaan filatame fuula duraa mana barumsaa, kaardii eenyummaa barattootaa fi kaardii qabxii irratti kallattiin ni mul\'ata.',
+              'ℹ️ The selected logo appears directly on the school portal home page, student ID cards, and report cards.',
+              'ℹ️ የተመረጠው አርማ በትምህርት ቤቱ መነሻ ገጽ፣ በተማሪዎች መታወቂያ ካርድ እና በውጤት ካርዶች ላይ በቀጥታ ይታያል።'
+            )}
           </div>
         </div>
 
@@ -354,7 +386,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
           >
-            ሰርዝ
+            {t3('Dhiisi', 'Cancel', 'ሰርዝ')}
           </button>
           <button
             type="button"
@@ -362,7 +394,7 @@ export const SchoolLogoModal: React.FC<SchoolLogoModalProps> = ({
             className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs flex items-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
-            <span>አርማውን መዝግብ</span>
+            <span>{t3('Asxaa Galmeessi', 'Save Logo', 'አርማውን መዝግብ')}</span>
           </button>
         </div>
       </div>

@@ -143,16 +143,24 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
     setSelectedSubject(teacherAssignment.primarySubject);
   }, [teacherAssignment]);
 
-  // Available subjects in system
+  // Available subjects in system (canonical keys + localized display)
   const availableSubjects = [
-    'Mathematics (ሂሳብ)',
-    'Afaan Oromoo (ኦሮሚኛ)',
-    'English (እንግሊዝኛ)',
-    'Physics & Chemistry (ሳይንስ)',
-    'Biology (ባዮሎጂ)',
-    'Citizenship & Social Studies (ስነ-ዜጋ)',
-    'General Pedagogy & CPD (አጠቃላይ ስነ-ዘዴ)'
+    { key: 'Mathematics (ሂሳብ)', om: 'Herrega (Mathematics)', en: 'Mathematics', am: 'Mathematics (ሂሳብ)' },
+    { key: 'Afaan Oromoo (ኦሮሚኛ)', om: 'Afaan Oromoo', en: 'Afaan Oromoo', am: 'Afaan Oromoo (ኦሮሚኛ)' },
+    { key: 'English (እንግሊዝኛ)', om: 'Ingiliffa (English)', en: 'English', am: 'English (እንግሊዝኛ)' },
+    { key: 'Physics & Chemistry (ሳይንስ)', om: 'Fiiziksii fi Keemistirii (Saayinsii)', en: 'Physics & Chemistry', am: 'Physics & Chemistry (ሳይንስ)' },
+    { key: 'Biology (ባዮሎጂ)', om: 'Baayoloojii (Biology)', en: 'Biology', am: 'Biology (ባዮሎጂ)' },
+    { key: 'Citizenship & Social Studies (ስነ-ዜጋ)', om: 'Barnoota Lammummaa fi Hawaasaa', en: 'Citizenship & Social Studies', am: 'Citizenship & Social Studies (ስነ-ዜጋ)' },
+    { key: 'General Pedagogy & CPD (አጠቃላይ ስነ-ዘዴ)', om: 'Mala Barsiisuu Waliigalaa fi CPD', en: 'General Pedagogy & CPD', am: 'General Pedagogy & CPD (አጠቃላይ ስነ-ዘዴ)' }
   ];
+
+  const getSubjectDisplay = (rawSub: string) => {
+    const found = availableSubjects.find(
+      (s) => s.key === rawSub || rawSub.toLowerCase().includes(s.key.toLowerCase().split(' ')[0])
+    );
+    if (!found) return rawSub;
+    return currentLang === 'om' ? found.om : currentLang === 'en' ? found.en : found.am;
+  };
 
   // Filter materials based on current scope, subject, grade level, and search query
   const filteredMaterials = useMemo(() => {
@@ -168,8 +176,6 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
 
       // Scope matching
       if (scopeFilter === 'my_subject') {
-        // Strict Subject AND Grade Level matching:
-        // "መምህሩ እንደሚያስተምረው የትምህርት አይነቶች እና የ ክፍል ደረጃ ብቻ የስልጠና ማንዋል (ጽሑፍ) እንዲደርሰው አድርጉ"
         return isTrainingMaterialForTeacher(m, {
           ...teacherAssignment,
           primarySubject: selectedSubject,
@@ -240,17 +246,28 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
       {
         authorName: currentUser?.name || teacherIdentifier,
         schoolName: school.name,
-        description: `የመምህር ${currentUser?.name || 'መምህር'} የCPD ስልጠና ማጠናቀቂያ ምዝገባ`
+        description:
+          currentLang === 'om'
+            ? `Galmee xumura leenjii CPD barsiisaa ${currentUser?.name || 'Barsiisaa'}`
+            : currentLang === 'en'
+            ? `CPD training completion record for ${currentUser?.name || 'Teacher'}`
+            : `የመምህር ${currentUser?.name || 'መምህር'} የCPD ስልጠና ማጠናቀቂያ ምዝገባ`
       }
     );
 
     if (result.completed) {
-      setCompletionNotice('ስልጠናውን በተሳካ ሁኔታ አጠናቀዋል! የCPD የሙያ ማሻሻያ ነጥብዎ ተመዝግቧል።');
+      setCompletionNotice(
+        currentLang === 'om'
+          ? 'Leenjii milkaa\'inaan xumurtaniittu! Qabxiin fooyya\'iinsa ogummaa CPD keessan galmaa\'eera.'
+          : currentLang === 'en'
+          ? 'Training completed successfully! Your CPD credit has been recorded.'
+          : 'ስልጠናውን በተሳካ ሁኔታ አጠናቀዋል! የCPD የሙያ ማሻሻያ ነጥብዎ ተመዝግቧል።'
+      );
       setTimeout(() => setCompletionNotice(null), 3500);
     }
   };
 
-  // Direct file download for offline study: "ፅሁፍን አውርዶ ( ዳውንሎድ ) አርጉ ያጠናል"
+  // Direct file download for offline study
   const handleDownloadDocument = (mat: TrainingMaterial, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
 
@@ -268,13 +285,79 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setCompletionNotice(`"${firstAttWithUrl.fileName}" በተሳካ ሁኔታ ወርዷል (Downloaded)! አሁን ማጥናት ይችላሉ።`);
+      setCompletionNotice(
+        currentLang === 'om'
+          ? `"${firstAttWithUrl.fileName}" milkaa'inaan buufameera (Downloaded)! Amma qo'achuu dandeessu.`
+          : currentLang === 'en'
+          ? `"${firstAttWithUrl.fileName}" downloaded successfully! Ready for study.`
+          : `"${firstAttWithUrl.fileName}" በተሳካ ሁኔታ ወርዷል (Downloaded)! አሁን ማጥናት ይችላሉ።`
+      );
       setTimeout(() => setCompletionNotice(null), 4000);
       return;
     }
 
-    // Otherwise create a formatted study document text file (.doc / .txt)
-    const contentToDownload = `========================================================================
+    const defaultTeacherName =
+      currentUser?.name ||
+      (currentLang === 'om' ? 'Barsiisaa' : currentLang === 'en' ? 'Teacher' : 'መምህር');
+
+    const contentToDownload =
+      currentLang === 'om'
+        ? `========================================================================
+Mootummaa Naannoo Oromiyaa · Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee
+Sanada Leenjii Ifaa Sirna Barnootaa fi Fooyya'iinsa Ogummaa Walitti Fufaa (CPD)
+========================================================================
+
+Mata-duree (Title): ${mat.title}
+Gosa Barnootaa (Subject): ${mat.subject}
+Sadarkaa Kutaa (Grade Level): ${mat.gradeLevels}
+Kutaan Erge (Author): ${mat.authorDepartment}
+Guyyaa Ergame (Date): ${mat.uploadedAt}
+Barsiisaa Ergameef: ${defaultTeacherName}
+
+------------------------------------------------------------------------
+Cuunfaa Waliigalaa (Summary):
+------------------------------------------------------------------------
+${mat.summary}
+
+------------------------------------------------------------------------
+Qabiyyee Barreeffama Leenjii Guutuu fi Qajeelfama (Full Pedagogical Content):
+------------------------------------------------------------------------
+${mat.fullContent}
+
+========================================================================
+Sanadni kun poortaala diijitaalaa Biiroo Barnootaa Magaalaa Shaashamannee irraa kallattiin barsiisaaf buufame.
+Guyyaa fi Sa'aatii Buufame: ${new Date().toLocaleString('en-US')}
+========================================================================
+`
+        : currentLang === 'en'
+        ? `========================================================================
+Oromia Regional State · Shashemene City Administration Education Bureau
+Official Curriculum & Continuous Professional Development (CPD) Training Document
+========================================================================
+
+Title: ${mat.title}
+Subject: ${mat.subject}
+Grade Level: ${mat.gradeLevels}
+Author Department: ${mat.authorDepartment}
+Date: ${mat.uploadedAt}
+Assigned Teacher: ${defaultTeacherName}
+
+------------------------------------------------------------------------
+Summary:
+------------------------------------------------------------------------
+${mat.summary}
+
+------------------------------------------------------------------------
+Full Pedagogical Content & Guide:
+------------------------------------------------------------------------
+${mat.fullContent}
+
+========================================================================
+Official training manual downloaded from Shashemene Education Bureau Portal.
+Downloaded at: ${new Date().toLocaleString('en-US')}
+========================================================================
+`
+        : `========================================================================
 የኦሮሚያ ብሔራዊ ክልላዊ መንግሥት · የሻሸመኔ ከተማ አስተዳደር ትምህርት ጽሕፈት ቤት
 የስርዓተ-ትምህርትና መምህራን ቀጣይነት ያለው የሙያ ማሻሻያ (CPD) ይፋዊ የስልጠና ሰነድ
 ========================================================================
@@ -284,7 +367,7 @@ export const TeacherSubjectTrainingDesk: React.FC<TeacherSubjectTrainingDeskProp
 የክፍል ደረጃ (Grade Level): ${mat.gradeLevels}
 የላከው ክፍል (Author): ${mat.authorDepartment}
 የተላከበት ቀን (Date): ${mat.uploadedAt}
-የተላከለት መምህር: ${currentUser?.name || 'መምህር'}
+የተላከለት መምህር: ${defaultTeacherName}
 
 ------------------------------------------------------------------------
 አጠቃላይ ማጠቃለያ (Summary):
@@ -307,18 +390,23 @@ ${mat.fullContent}
     const link = document.createElement('a');
     link.href = url;
     const cleanTitle = mat.title.replace(/[^a-zA-Z0-9\u1200-\u137F]/g, '_').substring(0, 40);
-    link.download = `${cleanTitle}_የስልጠና_ሰነድ.txt`;
+    link.download = `${cleanTitle}_${currentLang === 'om' ? 'Sanada_Leenjii' : currentLang === 'en' ? 'Training_Doc' : 'የስልጠና_ሰነድ'}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    setCompletionNotice(`"${mat.title}" የስልጠና ሰነድ በተሳካ ሁኔታ ወርዷል (Downloaded)! አሁን አውርደው ማጥናት ይችላሉ።`);
+    setCompletionNotice(
+      currentLang === 'om'
+        ? `Sanadni leenjii "${mat.title}" milkaa'inaan buufameera (Downloaded)! Amma buuftanii qo'achuu dandeessu.`
+        : currentLang === 'en'
+        ? `Training document "${mat.title}" downloaded successfully! You can now study it offline.`
+        : `"${mat.title}" የስልጠና ሰነድ በተሳካ ሁኔታ ወርዷል (Downloaded)! አሁን አውርደው ማጥናት ይችላሉ።`
+    );
     setTimeout(() => setCompletionNotice(null), 4000);
   };
 
   const handlePrint = (mat: TrainingMaterial) => {
-    // Avoid window.open in iframe environments by using a hidden iframe
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.right = '0';
@@ -334,18 +422,42 @@ ${mat.fullContent}
       return;
     }
 
+    const defaultTeacherName =
+      currentUser?.name ||
+      (currentLang === 'om' ? 'Barsiisaa' : currentLang === 'en' ? 'Teacher' : 'መምህር');
+
+    const headerTitle =
+      currentLang === 'om'
+        ? 'Mootummaa Naannoo Oromiyaa · Biiroo Barnootaa Magaalaa Shaashamannee'
+        : currentLang === 'en'
+        ? 'Oromia Regional State · Shashemene City Administration Education Bureau'
+        : 'የኦሮሚያ ብሔራዊ ክልላዊ መንግሥት · የሻሸመኔ ከተማ አስተዳደር ትምህርት ጽሕፈት ቤት';
+
+    const subTitle =
+      currentLang === 'om'
+        ? 'Sanada Leenjii Ifaa Sirna Barnootaa fi Fooyya\'iinsa Ogummaa (CPD)'
+        : currentLang === 'en'
+        ? 'Official Curriculum & Continuous Professional Development (CPD) Training Document'
+        : 'የስርዓተ-ትምህርትና መምህራን ቀጣይነት ያለው የሙያ ማሻሻያ (CPD) ይፋዊ የስልጠና ሰነድ';
+
     doc.open();
     doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${mat.title} - የሻሸመኔ ትምህርት ቢሮ ስልጠና</title>
+          <title>${mat.title} - ${
+      currentLang === 'om'
+        ? 'Leenjii Biiroo Barnootaa Shaashamannee'
+        : currentLang === 'en'
+        ? 'Shashemene Education Bureau Training'
+        : 'የሻሸመኔ ትምህርት ቢሮ ስልጠና'
+    }</title>
           <style>
             body { font-family: sans-serif; padding: 30px; line-height: 1.6; color: #1e293b; }
             .header { border-bottom: 3px double #0f766e; padding-bottom: 15px; margin-bottom: 25px; text-align: center; }
             .bureau-title { font-size: 20px; font-weight: 800; color: #134e4a; text-transform: uppercase; }
             .sub-title { font-size: 13px; color: #047857; margin-top: 4px; font-weight: 600; }
-            .meta-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; font-size: 12px; }
+            .meta-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; font-size: 12px; gap: 10px; flex-wrap: wrap; }
             .title { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 12px; }
             .summary { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; font-size: 14px; font-style: italic; margin-bottom: 20px; }
             .content { white-space: pre-line; font-size: 14px; }
@@ -354,25 +466,30 @@ ${mat.fullContent}
         </head>
         <body>
           <div class="header">
-            <div class="bureau-title">የኦሮሚያ ብሔራዊ ክልላዊ መንግሥት · የሻሸመኔ ከተማ አስተዳደር ትምህርት ጽሕፈት ቤት</div>
-            <div class="sub-title">የስርዓተ-ትምህርትና መምህራን ቀጣይነት ያለው የሙያ ማሻሻያ (CPD) ይፋዊ የስልጠና ሰነድ</div>
+            <div class="bureau-title">${headerTitle}</div>
+            <div class="sub-title">${subTitle}</div>
           </div>
 
           <div class="meta-box">
-            <div><strong>የትምህርት አይነት:</strong> ${mat.subject}</div>
-            <div><strong>የክፍል ደረጃ:</strong> ${mat.gradeLevels}</div>
-            <div><strong>የላከው ክፍል:</strong> ${mat.authorDepartment}</div>
-            <div><strong>የተላከለት መምህር:</strong> ${currentUser?.name || 'መምህር'}</div>
+            <div><strong>${currentLang === 'om' ? 'Gosa Barnootaa:' : currentLang === 'en' ? 'Subject:' : 'የትምህርት አይነት:'}</strong> ${mat.subject}</div>
+            <div><strong>${currentLang === 'om' ? 'Sadarkaa Kutaa:' : currentLang === 'en' ? 'Grade Level:' : 'የክፍል ደረጃ:'}</strong> ${mat.gradeLevels}</div>
+            <div><strong>${currentLang === 'om' ? 'Kutaan Erge:' : currentLang === 'en' ? 'Department:' : 'የላከው ክፍል:'}</strong> ${mat.authorDepartment}</div>
+            <div><strong>${currentLang === 'om' ? 'Barsiisaa:' : currentLang === 'en' ? 'Teacher:' : 'የተላከለት መምህር:'}</strong> ${defaultTeacherName}</div>
           </div>
 
           <div class="title">${mat.title}</div>
-          <div class="summary"><strong>አጠቃላይ ማጠቃለያ፡</strong> ${mat.summary}</div>
+          <div class="summary"><strong>${currentLang === 'om' ? 'Cuunfaa Waliigalaa:' : currentLang === 'en' ? 'Summary:' : 'አጠቃላይ ማጠቃለያ፡'}</strong> ${mat.summary}</div>
 
           <div class="content">${mat.fullContent}</div>
 
           <div class="footer">
-            ይህ ሰነድ ከሻሸመኔ ከተማ ትምህርት ቢሮ ዲጂታል ፖርታል በቀጥታ ለመምህሩ ገጽ የተላከ ይፋዊ የማስተማሪያ መመሪያ ነው።<br/>
-            የወረደበት ቀን፡ ${new Date().toLocaleDateString('am-ET')} · የሰነድ መለያ ቁጥር፡ ${mat.id}
+            ${
+              currentLang === 'om'
+                ? `Sanadni kun poortaala diijitaalaa Biiroo Barnootaa Magaalaa Shaashamannee irraa kallattiin fuula barsiisaatti ergame.<br/>Guyyaa Buufame: ${new Date().toLocaleDateString('en-US')} · ID Sanadaa: ${mat.id}`
+                : currentLang === 'en'
+                ? `Official instructional guide dispatched directly from Shashemene City Education Bureau Portal.<br/>Date: ${new Date().toLocaleDateString('en-US')} · Doc ID: ${mat.id}`
+                : `ይህ ሰነድ ከሻሸመኔ ከተማ ትምህርት ቢሮ ዲጂታል ፖርታል በቀጥታ ለመምህሩ ገጽ የተላከ ይፋዊ የማስተማሪያ መመሪያ ነው።<br/>የወረደበት ቀን፡ ${new Date().toLocaleDateString('am-ET')} · የሰነድ መለያ ቁጥር፡ ${mat.id}`
+            }
           </div>
         </body>
       </html>
@@ -392,7 +509,16 @@ ${mat.fullContent}
     <div className="space-y-6">
       {/* Real-time Bureau Training Dispatch Toast Alert */}
       {activeToast && (
-        <aside aria-label="አዲስ የስልጠና ማሳወቂያ" className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+        <aside
+          aria-label={
+            currentLang === 'om'
+              ? 'Beeksisa leenjii haaraa'
+              : currentLang === 'en'
+              ? 'New training notification'
+              : 'አዲስ የስልጠና ማሳወቂያ'
+          }
+          className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300"
+        >
           <div className="bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-950 text-white rounded-2xl p-4 sm:p-4.5 shadow-2xl border-2 border-amber-400 ring-4 ring-amber-500/20 space-y-3 relative overflow-hidden">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
@@ -401,13 +527,20 @@ ${mat.fullContent}
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
-                    አዲስ የስልጠና ጽሑፍ ከትምህርት ቢሮ
+                    {currentLang === 'om'
+                      ? 'Barreeffama Leenjii Haaraa Biiroo Barnootaa Irraa'
+                      : currentLang === 'en'
+                      ? 'New Training Material from Education Bureau'
+                      : 'አዲስ የስልጠና ጽሑፍ ከትምህርት ቢሮ'}
                   </span>
                   <h4 className="text-xs sm:text-sm font-black text-white mt-1 leading-snug">
                     {activeToast.materialTitle}
                   </h4>
                   <p className="text-[11px] text-amber-200 mt-0.5">
-                    የትምህርት አይነት፡ {activeToast.subject} · ደረጃ፡ {activeToast.gradeLevels}
+                    {currentLang === 'om' ? 'Gosa Barnootaa:' : currentLang === 'en' ? 'Subject:' : 'የትምህርት አይነት፡'}{' '}
+                    {activeToast.subject} ·{' '}
+                    {currentLang === 'om' ? 'Sadarkaa:' : currentLang === 'en' ? 'Grade:' : 'ደረጃ፡'}{' '}
+                    {activeToast.gradeLevels}
                   </p>
                 </div>
               </div>
@@ -433,7 +566,13 @@ ${mat.fullContent}
                 className="px-4 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>አውርድና አጥና (Download & Study)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Buusiitii Qo\'adhu (Download & Study)'
+                    : currentLang === 'en'
+                    ? 'Download & Study'
+                    : 'አውርድና አጥና (Download & Study)'}
+                </span>
               </button>
             </div>
           </div>
@@ -449,46 +588,111 @@ ${mat.fullContent}
           <div className="space-y-2.5 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-900/80 border border-emerald-400/40 rounded-full text-xs font-semibold text-emerald-200">
               <Building2 className="w-3.5 h-3.5 text-emerald-300" />
-              <span>የሻሸመኔ ከተማ ትምህርት ቢሮ ይፋዊ የስልጠና ማስተላለፊያ</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Tamsaasa Leenjii Ifaa Biiroo Barnootaa Magaalaa Shaashamannee'
+                  : currentLang === 'en'
+                  ? 'Shashemene City Education Bureau Official Training Dispatch'
+                  : 'የሻሸመኔ ከተማ ትምህርት ቢሮ ይፋዊ የስልጠና ማስተላለፊያ'}
+              </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black tracking-tight leading-snug">
-              ከትምህርት ቢሮ ለርሶ የተላኩ ይፋዊ የስልጠና ሞጁሎች
+              {currentLang === 'om'
+                ? 'Mooduulota Leenjii Ifaa Biiroo Barnootaa Irraa Isiniif Ergaman'
+                : currentLang === 'en'
+                ? 'Official Training Modules Dispatched by Education Bureau'
+                : 'ከትምህርት ቢሮ ለርሶ የተላኩ ይፋዊ የስልጠና ሞጁሎች'}
             </h2>
 
             <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-              የትምህርት ቢሮው እንደሚያስተምሩት የትምህርት አይነት{' '}
-              <strong className="text-amber-300 font-bold underline underline-offset-2">
-                [{selectedSubject}]
-              </strong>{' '}
-              እና የክፍል ደረጃ{' '}
-              <strong className="text-emerald-300 font-bold underline underline-offset-2">
-                [{teacherAssignment.primaryGradeLabel}]
-              </strong>{' '}
-              ብቻ ለይቶ ያዘጋጃቸው የሙያ ማሻሻያ (CPD) እና የስርዓተ-ትምህርት ማስተማሪያ ማንዋሎች (ጽሑፎች) በቀጥታ እዚህ ደርሰውዎታል!
+              {currentLang === 'om' ? (
+                <>
+                  Biiroon Barnootaa akka gosa barnootaa barsiistan{' '}
+                  <strong className="text-amber-300 font-bold underline underline-offset-2">
+                    [{getSubjectDisplay(selectedSubject)}]
+                  </strong>{' '}
+                  fi sadarkaa kutaa{' '}
+                  <strong className="text-emerald-300 font-bold underline underline-offset-2">
+                    [{teacherAssignment.primaryGradeLabel}]
+                  </strong>{' '}
+                  qofa addaan baasee qopheesse maanuwaalonni fooyya&apos;iinsa ogummaa (CPD) fi barnootaa kallattiin asitti isin qaqqabaniiru!
+                </>
+              ) : currentLang === 'en' ? (
+                <>
+                  CPD and curriculum training manuals filtered specifically by the Education Bureau for your subject{' '}
+                  <strong className="text-amber-300 font-bold underline underline-offset-2">
+                    [{getSubjectDisplay(selectedSubject)}]
+                  </strong>{' '}
+                  and grade level{' '}
+                  <strong className="text-emerald-300 font-bold underline underline-offset-2">
+                    [{teacherAssignment.primaryGradeLabel}]
+                  </strong>{' '}
+                  are delivered right here!
+                </>
+              ) : (
+                <>
+                  የትምህርት ቢሮው እንደሚያስተምሩት የትምህርት አይነት{' '}
+                  <strong className="text-amber-300 font-bold underline underline-offset-2">
+                    [{selectedSubject}]
+                  </strong>{' '}
+                  እና የክፍል ደረጃ{' '}
+                  <strong className="text-emerald-300 font-bold underline underline-offset-2">
+                    [{teacherAssignment.primaryGradeLabel}]
+                  </strong>{' '}
+                  ብቻ ለይቶ ያዘጋጃቸው የሙያ ማሻሻያ (CPD) እና የስርዓተ-ትምህርት ማስተማሪያ ማንዋሎች (ጽሑፎች) በቀጥታ እዚህ ደርሰውዎታል!
+                </>
+              )}
             </p>
 
             {/* Teacher Details Bar */}
             <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
               <span className="px-2.5 py-1 rounded-lg bg-emerald-900/60 border border-emerald-600/40 text-emerald-100 flex items-center gap-1.5 font-medium">
                 <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
-                <span>መምህር፡ <strong>{currentUser?.name || 'መ/ር በፈቃዱ ጥላሁን'}</strong></span>
+                <span>
+                  {currentLang === 'om' ? 'Barsiisaa:' : currentLang === 'en' ? 'Teacher:' : 'መምህር፡'}{' '}
+                  <strong>
+                    {currentUser?.name ||
+                      (currentLang === 'om'
+                        ? 'B/saa Bafaqaaduu Xilaahun'
+                        : currentLang === 'en'
+                        ? 'Mr. Befekadu Tilahun'
+                        : 'መ/ር በፈቃዱ ጥላሁን')}
+                  </strong>
+                </span>
               </span>
 
               <span className="px-2.5 py-1 rounded-lg bg-emerald-900/60 border border-emerald-600/40 text-emerald-100 flex items-center gap-1.5 font-medium">
                 <Award className="w-3.5 h-3.5 text-amber-300" />
-                <span>የተመደቡበት ክፍል፡ <strong>{teacherAssignment.primaryGradeLabel}</strong></span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Kutaa Ramadame:'
+                    : currentLang === 'en'
+                    ? 'Assigned Grade:'
+                    : 'የተመደቡበት ክፍል፡'}{' '}
+                  <strong>{teacherAssignment.primaryGradeLabel}</strong>
+                </span>
               </span>
 
               <span className="px-2.5 py-1 rounded-lg bg-emerald-900/60 border border-emerald-600/40 text-emerald-100 flex items-center gap-1.5 font-medium">
                 <Building2 className="w-3.5 h-3.5 text-teal-300" />
-                <span>ት/ቤት፡ <strong>{school.name}</strong></span>
+                <span>
+                  {currentLang === 'om' ? 'M/B:' : currentLang === 'en' ? 'School:' : 'ት/ቤት፡'}{' '}
+                  <strong>{school.name}</strong>
+                </span>
               </span>
 
               <span className="px-2.5 py-1 rounded-lg bg-amber-400/20 border border-amber-300/40 text-amber-200 flex items-center gap-1.5 font-bold">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-                <span>የተጠናቀቁ ስልጠናዎች፡ {completedIds.length}</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Leenjii Xumurame:'
+                    : currentLang === 'en'
+                    ? 'Completed:'
+                    : 'የተጠናቀቁ ስልጠናዎች፡'}{' '}
+                  {completedIds.length}
+                </span>
               </span>
 
               {/* Bureau Messages & Dispatch Notifications Button */}
@@ -501,13 +705,26 @@ ${mat.fullContent}
                       ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-black ring-2 ring-amber-300'
                       : 'bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-500/40'
                   }`}
-                  title="ከትምህርት ቢሮ የተላኩ የስልጠና መልእክቶች"
+                  title={
+                    currentLang === 'om'
+                      ? 'Ergaalee leenjii Biiroo Barnootaa irraa ergaman'
+                      : currentLang === 'en'
+                      ? 'Training messages from Education Bureau'
+                      : 'ከትምህርት ቢሮ የተላኩ የስልጠና መልእክቶች'
+                  }
                 >
                   <Bell className={`w-3.5 h-3.5 ${unreadNotifsCount > 0 ? 'fill-slate-950 text-slate-950' : 'text-amber-300'}`} />
-                  <span>የቢሮ መልእክቶች</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Ergaalee Biiroo'
+                      : currentLang === 'en'
+                      ? 'Bureau Messages'
+                      : 'የቢሮ መልእክቶች'}
+                  </span>
                   {unreadNotifsCount > 0 ? (
                     <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
-                      {unreadNotifsCount} አዲስ
+                      {unreadNotifsCount}{' '}
+                      {currentLang === 'om' ? 'haaraa' : currentLang === 'en' ? 'new' : 'አዲስ'}
                     </span>
                   ) : (
                     <span className="text-[10px] text-emerald-300 font-mono">
@@ -522,7 +739,13 @@ ${mat.fullContent}
                     <div className="p-3.5 bg-gradient-to-r from-emerald-950 to-teal-900 text-white flex items-center justify-between border-b border-emerald-800">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-amber-300" />
-                        <h4 className="text-xs font-bold">ከትምህርት ቢሮ የተላኩ ይፋዊ የስልጠና ማሳወቂያዎች</h4>
+                        <h4 className="text-xs font-bold">
+                          {currentLang === 'om'
+                            ? 'Beeksisa Leenjii Ifaa Biiroo Barnootaa'
+                            : currentLang === 'en'
+                            ? 'Official Bureau Training Notifications'
+                            : 'ከትምህርት ቢሮ የተላኩ ይፋዊ የስልጠና ማሳወቂያዎች'}
+                        </h4>
                       </div>
                       {unreadNotifsCount > 0 && (
                         <button
@@ -533,7 +756,11 @@ ${mat.fullContent}
                           }}
                           className="text-[10px] text-amber-300 hover:underline cursor-pointer"
                         >
-                          ሁሉንም አንብብ
+                          {currentLang === 'om'
+                            ? 'Hunda dubbisi'
+                            : currentLang === 'en'
+                            ? 'Mark all read'
+                            : 'ሁሉንም አንብብ'}
                         </button>
                       )}
                     </div>
@@ -541,7 +768,11 @@ ${mat.fullContent}
                     <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 p-1">
                       {trainingNotifs.length === 0 ? (
                         <div className="p-6 text-center text-xs text-slate-500">
-                          እስካሁን ምንም አዲስ የስልጠና ማሳወቂያ የለም
+                          {currentLang === 'om'
+                            ? 'Hanga ammaatti beeksisni leenjii haaraan hin jiru'
+                            : currentLang === 'en'
+                            ? 'No new training notifications yet'
+                            : 'እስካሁን ምንም አዲስ የስልጠና ማሳወቂያ የለም'}
                         </div>
                       ) : (
                         trainingNotifs.map((notif) => {
@@ -582,7 +813,13 @@ ${mat.fullContent}
                                     }}
                                     className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
                                   >
-                                    <span>አውርድና አንብብ</span>
+                                    <span>
+                                      {currentLang === 'om'
+                                        ? 'Buusiitii Dubbisi'
+                                        : currentLang === 'en'
+                                        ? 'Download & Read'
+                                        : 'አውርድና አንብብ'}
+                                    </span>
                                     <ChevronRight className="w-3 h-3" />
                                   </button>
                                 )}
@@ -605,7 +842,13 @@ ${mat.fullContent}
                 className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black flex items-center gap-2 shadow-md transition-all cursor-pointer text-xs"
               >
                 <Upload className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>+ የስልጠና ጽሑፍ / አታችመንት ጫን</span>
+                <span>
+                  {currentLang === 'om'
+                    ? '+ Barreeffama Leenjii / Faayila Fe\'i'
+                    : currentLang === 'en'
+                    ? '+ Upload Training / Attachment'
+                    : '+ የስልጠና ጽሑፍ / አታችመንት ጫን'}
+                </span>
               </button>
             </div>
           </div>
@@ -615,10 +858,20 @@ ${mat.fullContent}
             <div className="flex items-center justify-between text-xs">
               <span className="text-emerald-300 font-bold flex items-center gap-1">
                 <Filter className="w-3.5 h-3.5" />
-                <span>የሚያስተምሩት የትምህርት መስክ:</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Damee Barnootaa Barsiistan:'
+                    : currentLang === 'en'
+                    ? 'Teaching Subject:'
+                    : 'የሚያስተምሩት የትምህርት መስክ:'}
+                </span>
               </span>
               <span className="text-[10px] text-amber-300 font-mono font-bold bg-amber-950/70 px-2 py-0.5 rounded-full border border-amber-500/30">
-                ቀጥታ የተጣመረ
+                {currentLang === 'om'
+                  ? 'Kallattiin Hidhame'
+                  : currentLang === 'en'
+                  ? 'Live Synced'
+                  : 'ቀጥታ የተጣመረ'}
               </span>
             </div>
 
@@ -628,14 +881,18 @@ ${mat.fullContent}
               className="w-full bg-slate-950 text-white border border-emerald-500/50 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-emerald-400 focus:outline-hidden cursor-pointer"
             >
               {availableSubjects.map((sub) => (
-                <option key={sub} value={sub} className="bg-slate-900 text-white">
-                  {sub}
+                <option key={sub.key} value={sub.key} className="bg-slate-900 text-white">
+                  {currentLang === 'om' ? sub.om : currentLang === 'en' ? sub.en : sub.am}
                 </option>
               ))}
             </select>
 
             <p className="text-[10px] text-slate-400 leading-tight">
-              * በርካታ የትምህርት ክፍሎችን ወይም ተጨማሪ የትምህርት አይነት የሚያስተምሩ ከሆነ ከላይ በመቀያየር ተዛማጅ ስልጠናዎችን መመልከት ይችላሉ።
+              {currentLang === 'om'
+                ? '* Yoo kutaalee hedduu ykn gosoota barnootaa dabalataa barsiistan ta\'e gubbaa irratti jijjiiruun leenjiiwwan walqabatan ilaaluu dandeessu.'
+                : currentLang === 'en'
+                ? '* If you teach multiple classes or subjects, switch above to view corresponding training manuals.'
+                : '* በርካታ የትምህርት ክፍሎችን ወይም ተጨማሪ የትምህርት አይነት የሚያስተምሩ ከሆነ ከላይ በመቀያየር ተዛማጅ ስልጠናዎችን መመልከት ይችላሉ።'}
             </p>
           </div>
         </div>
@@ -668,7 +925,13 @@ ${mat.fullContent}
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>ለኔ ትምህርት የተላኩ ({mySubjectCount})</span>
+            <span>
+              {currentLang === 'om'
+                ? `Kan Gosa Barnootaa Kootiif Ergame (${mySubjectCount})`
+                : currentLang === 'en'
+                ? `Sent for My Subject (${mySubjectCount})`
+                : `ለኔ ትምህርት የተላኩ (${mySubjectCount})`}
+            </span>
           </button>
 
           <button
@@ -681,7 +944,13 @@ ${mat.fullContent}
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5 text-teal-400" />
-            <span>አጠቃላይ ስነ-ዘዴ & CPD ({pedagogyCount})</span>
+            <span>
+              {currentLang === 'om'
+                ? `Mala Barsiisuu Waliigalaa & CPD (${pedagogyCount})`
+                : currentLang === 'en'
+                ? `General Pedagogy & CPD (${pedagogyCount})`
+                : `አጠቃላይ ስነ-ዘዴ & CPD (${pedagogyCount})`}
+            </span>
           </button>
 
           <button
@@ -694,7 +963,13 @@ ${mat.fullContent}
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>ሁሉንም ስልጠናዎች ({materials.length})</span>
+            <span>
+              {currentLang === 'om'
+                ? `Leenjiiwwan Hunda (${materials.length})`
+                : currentLang === 'en'
+                ? `All Trainings (${materials.length})`
+                : `ሁሉንም ስልጠናዎች (${materials.length})`}
+            </span>
           </button>
         </div>
 
@@ -705,7 +980,13 @@ ${mat.fullContent}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ስልጠና በቁልፍ ቃል ፈልግ..."
+            placeholder={
+              currentLang === 'om'
+                ? 'Leenjii jecha ijoodhaan barbaadi...'
+                : currentLang === 'en'
+                ? 'Search training by keyword...'
+                : 'ስልጠና በቁልፍ ቃል ፈልግ...'
+            }
             className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden"
           />
         </div>
@@ -715,9 +996,19 @@ ${mat.fullContent}
       {filteredMaterials.length === 0 ? (
         <div className="bg-white rounded-3xl p-10 border border-slate-200 text-center space-y-3">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="text-sm font-bold text-slate-800">ምንም የተገኘ የስልጠና ሰነድ የለም</h3>
+          <h3 className="text-sm font-bold text-slate-800">
+            {currentLang === 'om'
+              ? 'Sanadni leenjii argame hin jiru'
+              : currentLang === 'en'
+              ? 'No training documents found'
+              : 'ምንም የተገኘ የስልጠና ሰነድ የለም'}
+          </h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            ለዚህ የትምህርት አይነት ወይም የፍለጋ ቃል የተመዘገበ ሰነድ የለም። ከላይ ያለውን "ሁሉንም ስልጠናዎች" በመምረጥ የሌሎች ትምህርቶችን ሰነዶች መመልከት ይችላሉ።
+            {currentLang === 'om'
+              ? 'Gosa barnootaa kanaaf ykn jecha barbaachaa kanaaf sanadni galmaa’e hin jiru. Gubaarraa "Leenjiiwwan Hunda" filachuudhaan sanadoota gosa barnootaa biroo ilaaluu dandeessu.'
+              : currentLang === 'en'
+              ? 'No documents registered for this subject or search query. Select "All Trainings" above to view documents from other subjects.'
+              : 'ለዚህ የትምህርት አይነት ወይም የፍለጋ ቃል የተመዘገበ ሰነድ የለም። ከላይ ያለውን "ሁሉንም ስልጠናዎች" በመምረጥ የሌሎች ትምህርቶችን ሰነዶች መመልከት ይችላሉ።'}
           </p>
           <button
             type="button"
@@ -725,9 +1016,13 @@ ${mat.fullContent}
               setScopeFilter('all');
               setSearchQuery('');
             }}
-            className="px-4 py-2 bg-emerald-800 text-white text-xs font-bold rounded-xl hover:bg-emerald-900 transition-colors"
+            className="px-4 py-2 bg-emerald-800 text-white text-xs font-bold rounded-xl hover:bg-emerald-900 transition-colors cursor-pointer"
           >
-            ሁሉንም ሰነዶች አሳይ
+            {currentLang === 'om'
+              ? 'Sanadoota Hunda Agarsiisi'
+              : currentLang === 'en'
+              ? 'Show All Documents'
+              : 'ሁሉንም ሰነዶች አሳይ'}
           </button>
         </div>
       ) : (
@@ -759,19 +1054,31 @@ ${mat.fullContent}
                           : 'bg-emerald-100 text-emerald-950 border-emerald-300'
                       }`}
                     >
-                      {mat.subject}
+                      {getSubjectDisplay(mat.subject)}
                     </span>
 
                     <div className="flex items-center gap-1.5">
                       {isCompleted ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white shadow-xs">
                           <Check className="w-3 h-3 stroke-[3]" />
-                          <span>ተጠናቋል (Completed)</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? 'Xumurameera'
+                              : currentLang === 'en'
+                              ? 'Completed'
+                              : 'ተጠናቋል (Completed)'}
+                          </span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300">
                           <Clock className="w-3 h-3 text-amber-600" />
-                          <span>አዲስ ሞጁል</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? 'Mojuula Haaraa'
+                              : currentLang === 'en'
+                              ? 'New Module'
+                              : 'አዲስ ሞጁል'}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -799,9 +1106,21 @@ ${mat.fullContent}
                       <div className="flex items-center justify-between text-[11px] font-bold text-emerald-950">
                         <span className="flex items-center gap-1.5">
                           <Paperclip className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>የተያያዙ የስልጠና ጽሑፎች ({mat.attachments.length})</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? `Barreeffamoota Leenjii Maxxaansaman (${mat.attachments.length})`
+                              : currentLang === 'en'
+                              ? `Attached Training Documents (${mat.attachments.length})`
+                              : `የተያያዙ የስልጠና ጽሑፎች (${mat.attachments.length})`}
+                          </span>
                         </span>
-                        <span className="text-[10px] text-emerald-700 font-medium">ለማንበብ ይጫኑ</span>
+                        <span className="text-[10px] text-emerald-700 font-medium">
+                          {currentLang === 'om'
+                            ? 'Dubbisuuf cuqaasi'
+                            : currentLang === 'en'
+                            ? 'Click to read'
+                            : 'ለማንበብ ይጫኑ'}
+                        </span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {mat.attachments.map((att) => (
@@ -814,7 +1133,13 @@ ${mat.fullContent}
                               setViewerMaterialTitle(mat.title);
                             }}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-emerald-300 text-slate-800 text-[11px] font-medium hover:bg-emerald-100 hover:border-emerald-500 transition-colors cursor-pointer group shadow-2xs"
-                            title={`${att.fileName} - ለማንበብ ይጫኑ`}
+                            title={
+                              currentLang === 'om'
+                                ? `${att.fileName} - Dubbisuuf cuqaasi`
+                                : currentLang === 'en'
+                                ? `${att.fileName} - Click to read`
+                                : `${att.fileName} - ለማንበብ ይጫኑ`
+                            }
                           >
                             <span className="font-bold text-[9px] uppercase px-1 py-0.5 rounded bg-emerald-200 text-emerald-900 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
                               {att.fileType}
@@ -832,7 +1157,14 @@ ${mat.fullContent}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
                       <Clock className="w-3 h-3 text-slate-400" />
-                      <span>{mat.readTimeMinutes} ደቂቃ ንባብ</span>
+                      <span>
+                        {mat.readTimeMinutes}{' '}
+                        {currentLang === 'om'
+                          ? 'Daqiiqaa Dubbisuu'
+                          : currentLang === 'en'
+                          ? 'min read'
+                          : 'ደቂቃ ንባብ'}
+                      </span>
                     </span>
                     <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                       {mat.gradeLevels}
@@ -861,7 +1193,19 @@ ${mat.fullContent}
                         isCompleted ? 'text-emerald-700' : 'text-slate-400'
                       }`}
                     />
-                    <span>{isCompleted ? 'ማጠናቀቁን ሰርዝ' : 'አንብቤ ጨርሻለሁ'}</span>
+                    <span>
+                      {isCompleted
+                        ? currentLang === 'om'
+                          ? 'Xumura Haqi'
+                          : currentLang === 'en'
+                          ? 'Undo Complete'
+                          : 'ማጠናቀቁን ሰርዝ'
+                        : currentLang === 'om'
+                        ? 'Dubbisee Xumureera'
+                        : currentLang === 'en'
+                        ? 'Mark Completed'
+                        : 'አንብቤ ጨርሻለሁ'}
+                    </span>
                   </button>
 
                   <div className="flex items-center gap-1.5">
@@ -873,7 +1217,13 @@ ${mat.fullContent}
                         setShowUploadModal(true);
                       }}
                       className="p-1.5 text-slate-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
-                      title="ተጨማሪ የስልጠና ጽሑፍ / አታችመንት አያይዝ"
+                      title={
+                        currentLang === 'om'
+                          ? 'Barreeffama leenjii / faayila dabalataa maxxansi'
+                          : currentLang === 'en'
+                          ? 'Attach additional training document'
+                          : 'ተጨማሪ የስልጠና ጽሑፍ / አታችመንት አያይዝ'
+                      }
                     >
                       <Paperclip className="w-4 h-4 text-emerald-700" />
                     </button>
@@ -882,10 +1232,22 @@ ${mat.fullContent}
                       type="button"
                       onClick={(e) => handleDownloadDocument(mat, e)}
                       className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-xs cursor-pointer border border-amber-600/30"
-                      title="የስልጠናውን ጽሑፍ አውርድና አጥና (Download & Study Document)"
+                      title={
+                        currentLang === 'om'
+                          ? "Barreeffama leenjii buufadhuutii qo'adhu"
+                          : currentLang === 'en'
+                          ? 'Download & Study Document'
+                          : 'የስልጠናውን ጽሑፍ አውርድና አጥና (Download & Study Document)'
+                      }
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>አውርድ (Download)</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'Buufadhu'
+                          : currentLang === 'en'
+                          ? 'Download'
+                          : 'አውርድ (Download)'}
+                      </span>
                     </button>
 
                     <button
@@ -895,7 +1257,13 @@ ${mat.fullContent}
                         handlePrint(mat);
                       }}
                       className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                      title="አትም / PDF አውርድ"
+                      title={
+                        currentLang === 'om'
+                          ? 'Maxxansi / PDF buufadhu'
+                          : currentLang === 'en'
+                          ? 'Print / Download PDF'
+                          : 'አትም / PDF አውርድ'
+                      }
                     >
                       <Printer className="w-4 h-4" />
                     </button>
@@ -905,7 +1273,13 @@ ${mat.fullContent}
                       onClick={() => handleOpenReading(mat)}
                       className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
                     >
-                      <span>ስልጠናውን አንብብ</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'Leenjii Dubbisi'
+                          : currentLang === 'en'
+                          ? 'Read Training'
+                          : 'ስልጠናውን አንብብ'}
+                      </span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -926,17 +1300,41 @@ ${mat.fullContent}
                 <div className="space-y-1.5">
                   <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-800/80 border border-emerald-400/40 text-[10px] font-bold text-emerald-200">
                     <Building2 className="w-3 h-3 text-emerald-300" />
-                    <span>የሻሸመኔ ትምህርት ቢሮ ይፋዊ የስልጠና ሰነድ · {activeReading.authorDepartment}</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? `Sanada Leenjii Idilee Biiroo Barnootaa Shaashamannee · ${activeReading.authorDepartment}`
+                        : currentLang === 'en'
+                        ? `Shashemene Education Bureau Official Training Document · ${activeReading.authorDepartment}`
+                        : `የሻሸመኔ ትምህርት ቢሮ ይፋዊ የስልጠና ሰነድ · ${activeReading.authorDepartment}`}
+                    </span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
                     {activeReading.title}
                   </h3>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-emerald-200 pt-1 font-medium">
-                    <span className="font-bold text-amber-300">የትምህርት አይነት፡ {activeReading.subject}</span>
+                    <span className="font-bold text-amber-300">
+                      {currentLang === 'om'
+                        ? `Gosa Barnootaa: ${getSubjectDisplay(activeReading.subject)}`
+                        : currentLang === 'en'
+                        ? `Subject: ${getSubjectDisplay(activeReading.subject)}`
+                        : `የትምህርት አይነት፡ ${activeReading.subject}`}
+                    </span>
                     <span>·</span>
-                    <span>ደረጃ፡ {activeReading.gradeLevels}</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? `Sadarkaa: ${activeReading.gradeLevels}`
+                        : currentLang === 'en'
+                        ? `Level: ${activeReading.gradeLevels}`
+                        : `ደረጃ፡ ${activeReading.gradeLevels}`}
+                    </span>
                     <span>·</span>
-                    <span>የንባብ ጊዜ፡ {activeReading.readTimeMinutes} ደቂቃ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? `Yeroo Dubbii: Daqiiqaa ${activeReading.readTimeMinutes}`
+                        : currentLang === 'en'
+                        ? `Read Time: ${activeReading.readTimeMinutes} min`
+                        : `የንባብ ጊዜ፡ ${activeReading.readTimeMinutes} ደቂቃ`}
+                    </span>
                   </div>
                 </div>
 
@@ -955,7 +1353,11 @@ ${mat.fullContent}
               {/* Summary Callout */}
               <div className="bg-amber-50/90 border-l-4 border-amber-500 p-4 rounded-r-2xl">
                 <h4 className="font-black text-amber-950 text-xs uppercase tracking-wider mb-1">
-                  የስልጠናው ዋና ዓላማና ማጠቃለያ
+                  {currentLang === 'om'
+                    ? 'Kaayyoo Ijoo fi Cuunfaa Leenjii'
+                    : currentLang === 'en'
+                    ? 'Training Objective & Summary'
+                    : 'የስልጠናው ዋና ዓላማና ማጠቃለያ'}
                 </h4>
                 <p className="text-amber-900 text-xs sm:text-sm">{activeReading.summary}</p>
               </div>
@@ -964,7 +1366,13 @@ ${mat.fullContent}
               <div className="space-y-3">
                 <h4 className="font-black text-slate-900 text-sm border-b border-slate-200 pb-2 flex items-center gap-2">
                   <FileCheck className="w-4 h-4 text-emerald-700" />
-                  <span>ተግባራዊ የማስተማሪያ መመሪያና የስልጠና ዝርዝር</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Qajeelfama Barsiisummaa Qabatamaa fi Bal’ina Leenjii'
+                      : currentLang === 'en'
+                      ? 'Practical Teaching Guide & Training Details'
+                      : 'ተግባራዊ የማስተማሪያ መመሪያና የስልጠና ዝርዝር'}
+                  </span>
                 </h4>
                 <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 whitespace-pre-line font-normal text-slate-800 leading-loose">
                   {activeReading.fullContent}
@@ -975,12 +1383,36 @@ ${mat.fullContent}
               <div className="bg-emerald-50/70 border border-emerald-200 p-4 rounded-2xl space-y-2">
                 <h5 className="font-black text-emerald-950 text-xs flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                  <span>በክፍል ውስጥ የሚተገበሩ ተግባራት (Classroom Action Points)</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Gochaalee Dareen Keessatti Hojjetaman (Classroom Action Points)'
+                      : currentLang === 'en'
+                      ? 'Classroom Action Points'
+                      : 'በክፍል ውስጥ የሚተገበሩ ተግባራት (Classroom Action Points)'}
+                  </span>
                 </h5>
                 <ul className="list-disc list-inside space-y-1 text-emerald-900 text-xs">
-                  <li>የተማሩትን አዲስ ስነ-ዘዴ በሳምንቱ የመጀመሪያ ክፍለ-ጊዜ ላይ በተግባር መሞከር።</li>
-                  <li>የተማሪዎችን አቀባበልና ተሳትፎ በየቀኑ በቤት ስራና በፈተና መለካት።</li>
-                  <li>በትምህርት ክፍሉ ሳምንታዊ ስብሰባ (Department Meeting) ላይ ለባልደረቦች ማካፈል።</li>
+                  <li>
+                    {currentLang === 'om'
+                      ? 'Mala barsiisuu haaraa baratame wayitii jalqabaa torbanii keessatti hojiitti hiikuu.'
+                      : currentLang === 'en'
+                      ? 'Apply the new teaching methodology during the first period of the week.'
+                      : 'የተማሩትን አዲስ ስነ-ዘዴ በሳምንቱ የመጀመሪያ ክፍለ-ጊዜ ላይ በተግባር መሞከር።'}
+                  </li>
+                  <li>
+                    {currentLang === 'om'
+                      ? 'Simannaa fi hirmaannaa barattootaa hojii manaa fi qormaataan guyyaa guyyaan madaaluu.'
+                      : currentLang === 'en'
+                      ? 'Measure student engagement daily through homework and assessments.'
+                      : 'የተማሪዎችን አቀባበልና ተሳትፎ በየቀኑ በቤት ስራና በፈተና መለካት።'}
+                  </li>
+                  <li>
+                    {currentLang === 'om'
+                      ? 'Walga’ii torbanii muummee barnootaa irratti hiriyoota hojiitiif qooduu.'
+                      : currentLang === 'en'
+                      ? 'Share insights with colleagues during the weekly department meeting.'
+                      : 'በትምህርት ክፍሉ ሳምንታዊ ስብሰባ (Department Meeting) ላይ ለባልደረቦች ማካፈል።'}
+                  </li>
                 </ul>
               </div>
 
@@ -989,9 +1421,16 @@ ${mat.fullContent}
                 <div className="flex items-center justify-between">
                   <h5 className="font-black text-slate-900 text-xs sm:text-sm flex items-center gap-2">
                     <Paperclip className="w-4 h-4 text-emerald-700" />
-                    <span>የተያያዙ ይፋዊ የስልጠና ጽሑፎችና ሰነዶች (Attachments)</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Barreeffamootaa fi Sanadoota Leenjii Idilee Maxxaansaman'
+                        : currentLang === 'en'
+                        ? 'Official Attached Training Documents'
+                        : 'የተያያዙ ይፋዊ የስልጠና ጽሑፎችና ሰነዶች (Attachments)'}
+                    </span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                      {activeReading.attachments?.length || 0} ሰነዶች
+                      {activeReading.attachments?.length || 0}{' '}
+                      {currentLang === 'om' ? 'Sanadoota' : currentLang === 'en' ? 'Docs' : 'ሰነዶች'}
                     </span>
                   </h5>
 
@@ -1004,7 +1443,13 @@ ${mat.fullContent}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
                     <Upload className="w-3.5 h-3.5" />
-                    <span>+ ሰነድ / ጽሑፍ አያይዝ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? '+ Sanada / Barreeffama Maxxansi'
+                        : currentLang === 'en'
+                        ? '+ Attach Document'
+                        : '+ ሰነድ / ጽሑፍ አያይዝ'}
+                    </span>
                   </button>
                 </div>
 
@@ -1030,7 +1475,14 @@ ${mat.fullContent}
                           )}
                           {att.uploadedAt && (
                             <p className="text-[10px] text-slate-400">
-                              የተያያዘበት ቀን፡ {new Date(att.uploadedAt).toLocaleDateString('am-ET')}
+                              {currentLang === 'om'
+                                ? 'Guyyaa maxxaansame: '
+                                : currentLang === 'en'
+                                ? 'Attached on: '
+                                : 'የተያያዘበት ቀን፡ '}
+                              {new Date(att.uploadedAt).toLocaleDateString(
+                                currentLang === 'om' ? 'om-ET' : currentLang === 'en' ? 'en-US' : 'am-ET'
+                              )}
                             </p>
                           )}
                         </div>
@@ -1045,7 +1497,13 @@ ${mat.fullContent}
                             className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            <span>ጽሑፉን አንብብ / ተመልከት</span>
+                            <span>
+                              {currentLang === 'om'
+                                ? 'Barreeffama Dubbisi / Ilaali'
+                                : currentLang === 'en'
+                                ? 'Read / View Document'
+                                : 'ጽሑፉን አንብብ / ተመልከት'}
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -1053,7 +1511,11 @@ ${mat.fullContent}
                   </div>
                 ) : (
                   <p className="text-xs text-slate-500 italic bg-white p-3 rounded-xl border border-dashed border-slate-300 text-center">
-                    ለዚህ ስልጠና እስካሁን የተያያዘ ተጨማሪ ሰነድ የለም። ከላይ ያለውን "+ ሰነድ / ጽሑፍ አያይዝ" በመጫን አዲስ አታችመንት ማያያዝ ይችላሉ።
+                    {currentLang === 'om'
+                      ? 'Leenjii kanaaf hanga ammaatti sanadni dabalataa hin maxxaansamne. Qabduu "+ Sanada / Barreeffama Maxxansi" jedhu cuqaasuun maxxansuu dandeessu.'
+                      : currentLang === 'en'
+                      ? 'No additional documents attached to this training yet. Click "+ Attach Document" above to attach one.'
+                      : 'ለዚህ ስልጠና እስካሁን የተያያዘ ተጨማሪ ሰነድ የለም። ከላይ ያለውን "+ ሰነድ / ጽሑፍ አያይዝ" በመጫን አዲስ አታችመንት ማያያዝ ይችላሉ።'}
                   </p>
                 )}
               </div>
@@ -1064,7 +1526,13 @@ ${mat.fullContent}
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
                   <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
-                  <span>ፈተና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው።</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Aangoon qormaata baasuu kan Biiroo Barnootaa qofa.'
+                      : currentLang === 'en'
+                      ? 'Only the Education Bureau has exam authority.'
+                      : 'ፈተና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው።'}
+                  </span>
                 </div>
 
                 <button
@@ -1079,7 +1547,15 @@ ${mat.fullContent}
                   <Check className="w-4 h-4 stroke-[3]" />
                   <span>
                     {completedIds.includes(activeReading.id)
-                      ? '✅ ስልጠናው ተጠናቋል (ተመዝግቧል)'
+                      ? currentLang === 'om'
+                        ? '✅ Leenjiin Xumurameera (Galmaa’eera)'
+                        : currentLang === 'en'
+                        ? '✅ Training Completed (Recorded)'
+                        : '✅ ስልጠናው ተጠናቋል (ተመዝግቧል)'
+                      : currentLang === 'om'
+                      ? 'Leenjii Dubbisee Xumureera / Mirkaneessa Biiroo Argadhu'
+                      : currentLang === 'en'
+                      ? 'Mark as Completed / Receive Bureau Verification'
                       : 'ስልጠናውን አንብቤ ጨርሻለሁ / የቢሮ ማረጋገጫ ተቀበል'}
                   </span>
                 </button>
@@ -1088,10 +1564,22 @@ ${mat.fullContent}
                   type="button"
                   onClick={() => handleDownloadDocument(activeReading)}
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all flex items-center gap-1.5 shadow-md cursor-pointer border border-amber-600/30"
-                  title="የስልጠናውን ጽሑፍ አውርድ (Download Document)"
+                  title={
+                    currentLang === 'om'
+                      ? 'Barreeffama leenjii buufadhu'
+                      : currentLang === 'en'
+                      ? 'Download Document'
+                      : 'የስልጠናውን ጽሑፍ አውርድ (Download Document)'
+                  }
                 >
                   <Download className="w-4 h-4" />
-                  <span>ፅሁፉን አውርድ (Download)</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Barreeffama Buufadhu'
+                      : currentLang === 'en'
+                      ? 'Download Document'
+                      : 'ፅሁፉን አውርድ (Download)'}
+                  </span>
                 </button>
 
                 <button
@@ -1100,7 +1588,13 @@ ${mat.fullContent}
                   className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-4 h-4 text-slate-600" />
-                  <span>ይህን ሰነድ አትም / PDF</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Sanada Kana Maxxansi / PDF'
+                      : currentLang === 'en'
+                      ? 'Print / PDF'
+                      : 'ይህን ሰነድ አትም / PDF'}
+                  </span>
                 </button>
               </div>
 
@@ -1109,7 +1603,7 @@ ${mat.fullContent}
                 onClick={() => setActiveReading(null)}
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                ዝጋ (Close)
+                {currentLang === 'om' ? 'Cufi' : currentLang === 'en' ? 'Close' : 'ዝጋ (Close)'}
               </button>
             </div>
           </div>
@@ -1121,6 +1615,7 @@ ${mat.fullContent}
         attachment={viewerAttachment}
         materialTitle={viewerMaterialTitle}
         onClose={() => setViewerAttachment(null)}
+        currentLang={currentLang}
       />
 
       {/* Attachment Uploader Modal */}
@@ -1133,6 +1628,7 @@ ${mat.fullContent}
         materials={materials}
         preSelectedMaterialId={uploadTargetMaterialId}
         currentUser={currentUser}
+        currentLang={currentLang}
         onAttachmentAdded={(updated) => {
           setMaterials(updated);
           onMaterialsUpdated?.(updated);

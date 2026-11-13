@@ -24,6 +24,10 @@ export const StudentQRAttendanceModal: React.FC<StudentQRAttendanceModalProps> =
   preSelectedStudentId,
   onAttendanceRecorded
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   if (!isOpen) return null;
 
   return (
@@ -37,10 +41,19 @@ export const StudentQRAttendanceModal: React.FC<StudentQRAttendanceModalProps> =
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight">
-                የተማሪዎች ዕለታዊ መገኘት በ QR ኮድ (Student QR Attendance Desk)
+                {t3(
+                  'Hordoffii Argama Guyyaa Barattootaa Koodii QRtiin (QR Attendance)',
+                  'Student Daily QR Code Attendance Desk',
+                  'የተማሪዎች ዕለታዊ መገኘት በ QR ኮድ (Student QR Attendance Desk)'
+                )}
               </h3>
               <p className="text-[11px] text-slate-500">
-                {school.name} · የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ
+                {school.name} ·{' '}
+                {t3(
+                  'Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee',
+                  'Shashemene City Education Bureau',
+                  'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ'
+                )}
               </p>
             </div>
           </div>

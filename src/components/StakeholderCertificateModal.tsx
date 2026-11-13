@@ -35,6 +35,10 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
   currentLang,
   onClose
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const [activeTab, setActiveTab] = useState<'certificate' | 'credentials' | 'fayda'>('certificate');
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
 
@@ -45,18 +49,18 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
   };
 
   const roleLabels: Record<string, string> = {
-    principal: 'ዋና ርዕሰ መምህር / ዳይሬክተር (Head Principal)',
-    vice_principal_academic: 'ምክትል ርዕሰ መምህር - አካዳሚክ (Vice Principal Academic)',
-    vice_principal_admin: 'ምክትል ርዕሰ መምህር - አስተዳደር (Vice Principal Admin)',
-    head_librarian: 'የትምህርት ቤተ-መጻሕፍት ኃላፊ እና የመረጃ ባለሙያ (Chief School Librarian)',
-    lab_technician: 'የሳይንስ እና ቴክኖሎጂ ላብራቶሪ ባለሙያ (Science Lab Specialist)',
-    department_head: 'የትምህርት ክፍል ኃላፊ (Department Head)',
-    teacher: 'ከፍተኛ መምህር (Teacher)',
-    guidance_counselor: 'የስነ-ልቦና እና የተማሪዎች ምክር ባለሙያ (Guidance Counselor)',
-    school_owner_board: 'የትምህርት ቤት ባለቤት / የቦርድ ሰብሳቢ (School Owner / Board Chair)',
-    pta_chair: 'የወላጅ መምህራን ህብረት (PTA) ሰብሳቢ (PTA Chair)',
-    registrar_finance: 'ሬጅስትራር እና ፋይናንስ ሹም (Registrar & Finance Officer)',
-    student_council_leader: 'የተማሪዎች መማክርት ተወካይ (Student Council Leader)'
+    principal: t3('Dura-Taa\'aa / Daarektara Ol\'aanaa', 'Head Principal / Director', 'ዋና ርዕሰ መምህር / ዳይሬክተር (Head Principal)'),
+    vice_principal_academic: t3('Itti Aanaa Dura-Taa\'aa (Akaadaamii)', 'Vice Principal (Academic)', 'ምክትል ርዕሰ መምህር - አካዳሚክ (Vice Principal Academic)'),
+    vice_principal_admin: t3('Itti Aanaa Dura-Taa\'aa (Bulchiinsa)', 'Vice Principal (Admin)', 'ምክትል ርዕሰ መምህር - አስተዳደር (Vice Principal Admin)'),
+    head_librarian: t3('Itti Gaafatamaa Mana Kitaabaa fi Ogeessa Odeeffannoo', 'Chief School Librarian', 'የትምህርት ቤተ-መጻሕፍት ኃላፊ እና የመረጃ ባለሙያ (Chief School Librarian)'),
+    lab_technician: t3('Ogeessa Laaboraatoorii Saayinsii fi Teeknooloojii', 'Science Lab Specialist', 'የሳይንስ እና ቴክኖሎጂ ላብራቶሪ ባለሙያ (Science Lab Specialist)'),
+    department_head: t3('Itti Gaafatamaa Muummee Barnootaa', 'Department Head', 'የትምህርት ክፍል ኃላፊ (Department Head)'),
+    teacher: t3('Barsiisaa Ol\'aanaa', 'Senior Teacher', 'ከፍተኛ መምህር (Teacher)'),
+    guidance_counselor: t3('Ogeessa Gorsaa fi Xiin-Sammuu Barattootaa', 'Guidance Counselor', 'የስነ-ልቦና እና የተማሪዎች ምክር ባለሙያ (Guidance Counselor)'),
+    school_owner_board: t3('Abbaa Mana Barumsaa / Dura-Taa\'aa Boordii', 'School Owner / Board Chair', 'የትምህርት ቤት ባለቤት / የቦርድ ሰብሳቢ (School Owner / Board Chair)'),
+    pta_chair: t3('Dura-Taa\'aa Waldaa Maatii fi Barsiisotaa (PTA)', 'PTA Chair', 'የወላጅ መምህራን ህብረት (PTA) ሰብሳቢ (PTA Chair)'),
+    registrar_finance: t3('Qondaala Rejistraaraa fi Faayinaansii', 'Registrar & Finance Officer', 'ሬጅስትራር እና ፋይናንስ ሹም (Registrar & Finance Officer)'),
+    student_council_leader: t3('Bakka Bu\'aa Mana Maree Barattootaa', 'Student Council Leader', 'የተማሪዎች መማክርት ተወካይ (Student Council Leader)')
   };
 
   return (
@@ -70,7 +74,11 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
             </div>
             <div>
               <h3 className="text-sm font-black text-white leading-tight">
-                የትምህርት ቤት ባለድርሻ አካል ይፋዊ የፕሮፋይል ምስክር ወረቀት
+                {t3(
+                  'Waraqaa Ragaa Piroofaayilii Seera Qabeessa Qooda Fudhattuu',
+                  'Official School Stakeholder Profile Certificate',
+                  'የትምህርት ቤት ባለድርሻ አካል ይፋዊ የፕሮፋይል ምስክር ወረቀት'
+                )}
               </h3>
               <p className="text-[11px] text-slate-300">
                 {stakeholder.fullName} · {stakeholder.officeOrDepartment}
@@ -85,8 +93,10 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">ምስክር ወረቀቱን አትም (Print / PDF)</span>
-              <span className="sm:hidden">አትም</span>
+              <span className="hidden sm:inline">
+                {t3('Waraqaa Ragaa Maxxansi (Print / PDF)', 'Print Certificate (PDF)', 'ምስክር ወረቀቱን አትም (Print / PDF)')}
+              </span>
+              <span className="sm:hidden">{t3('Maxxansi', 'Print', 'አትም')}</span>
             </button>
             <button
               type="button"
@@ -110,7 +120,7 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
             }`}
           >
             <Award className="w-3.5 h-3.5" />
-            <span>ይፋዊ ምስክር ወረቀት (Certificate)</span>
+            <span>{t3('Waraqaa Ragaa Seeraa', 'Official Certificate', 'ይፋዊ ምስክር ወረቀት (Certificate)')}</span>
           </button>
 
           <button
@@ -123,7 +133,9 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" />
-            <span>የተመረቀባቸው ማስረጃዎች ({stakeholder.credentials?.length || 0})</span>
+            <span>
+              {t3('Ragaawwan Eebbaa', 'Graduation Credentials', 'የተመረቀባቸው ማስረጃዎች')} ({stakeholder.credentials?.length || 0})
+            </span>
           </button>
 
           <button
@@ -136,7 +148,9 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            <span>የፋይዳ ዲጂታል መታወቂያ ({stakeholder.faydaNumber})</span>
+            <span>
+              {t3('Eenyummaa Dijitaalaa Fayda', 'Fayda Digital ID', 'የፋይዳ ዲጂታል መታወቂያ')} ({stakeholder.faydaNumber})
+            </span>
           </button>
         </div>
 
@@ -173,17 +187,25 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                   {/* Center: Official Title */}
                   <div className="flex-1">
                     <p className="text-[11px] sm:text-xs font-bold text-emerald-900 uppercase tracking-widest">
-                      የኢትዮጵያ ፌዴራላዊ ዴሞክራሲያዊ ሪፐብሊክ የትምህርት ዘርፍ
+                      {t3(
+                        'Damee Barnootaa Rippabiliika Dimookiraatawaa Federaalaawaa Itoophiyaa',
+                        'Federal Democratic Republic of Ethiopia · Education Sector',
+                        'የኢትዮጵያ ፌዴራላዊ ዴሞክራሲያዊ ሪፐብሊክ የትምህርት ዘርፍ'
+                      )}
                     </p>
                     <h1 className="text-base sm:text-2xl font-black text-slate-900 leading-tight">
                       {school.name}
                     </h1>
                     <p className="text-xs sm:text-sm font-semibold text-emerald-800">
-                      የሻሸመኔ ከተማ አስተዳደር · {school.subcity}
+                      {t3('Bulchiinsa Magaalaa Shaashamannee', 'Shashemene City Administration', 'የሻሸመኔ ከተማ አስተዳደር')} · {school.subcity}
                     </p>
                     <div className="inline-block mt-1 px-3 py-0.5 bg-amber-50 border border-amber-400 rounded-full">
                       <span className="text-[11px] font-black text-amber-900 uppercase tracking-wider">
-                        የባለድርሻ አካል ይፋዊ የሙያና የስራ ማረጋገጫ ምስክር ወረቀት
+                        {t3(
+                          'Waraqaa Ragaa Mirkaneessa Ogummaa fi Hojii Qooda Fudhattuu',
+                          'Official Stakeholder Credential & Service Verification Certificate',
+                          'የባለድርሻ አካል ይፋዊ የሙያና የስራ ማረጋገጫ ምስክር ወረቀት'
+                        )}
                       </span>
                     </div>
                   </div>
@@ -191,20 +213,22 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                   {/* Right: QR Code for Verification */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex flex-col items-center justify-center bg-slate-50 border border-slate-300 rounded-xl p-1 text-center">
                     <QrCode className="w-10 h-10 sm:w-12 sm:h-12 text-slate-800" />
-                    <span className="text-[8px] font-bold text-slate-600 mt-0.5">VERIFIED</span>
+                    <span className="text-[8px] font-bold text-slate-600 mt-0.5">
+                      {t3('MIRKANAA\'AA', 'VERIFIED', 'VERIFIED')}
+                    </span>
                   </div>
                 </div>
 
                 {/* Certificate Number & Date Bar */}
                 <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-100">
                   <span>
-                    የሰነድ ቁጥር (Cert No):{' '}
+                    {t3('Lakk. Ragaa (Cert No):', 'Certificate No:', 'የሰነድ ቁጥር (Cert No):')}{' '}
                     <strong className="text-emerald-950 font-mono font-bold">
                       {stakeholder.certificateNumber || `SHAS-STK-${stakeholder.id.toUpperCase()}`}
                     </strong>
                   </span>
                   <span>
-                    የተመዘገበበት ቀን:{' '}
+                    {t3('Guyyaa Galmee:', 'Registration Date:', 'የተመዘገበበት ቀን:')}{' '}
                     <strong className="text-slate-800 font-medium">
                       {stakeholder.registeredDate}
                     </strong>
@@ -227,7 +251,9 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                       <div className="w-24 h-28 rounded-xl bg-emerald-900 text-white flex flex-col items-center justify-center font-bold text-2xl border-2 border-emerald-700 shadow-md">
                         <span>{stakeholder.fullName.charAt(0)}</span>
                         <span className="text-[10px] tracking-normal font-normal opacity-80 mt-1">
-                          {stakeholder.gender === 'F' ? 'ሴት' : 'ወንድ'}
+                          {stakeholder.gender === 'F'
+                            ? t3('Dhalaa', 'Female', 'ሴት')
+                            : t3('Dhiira', 'Male', 'ወንድ')}
                         </span>
                       </div>
                     )}
@@ -235,7 +261,7 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                     {stakeholder.faydaVerified && (
                       <div
                         className="absolute -bottom-2 -right-2 bg-emerald-600 text-white p-1 rounded-full shadow-md"
-                        title="የፋይዳ ብሔራዊ መታወቂያ የተረጋገጠ"
+                        title={t3('Eenyummaan Biyyaalessaa Fayda Mirkanaa\'eera', 'Fayda National ID Verified', 'የፋይዳ ብሔራዊ መታወቂያ የተረጋገጠ')}
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </div>
@@ -249,7 +275,9 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                         {stakeholder.roleCustomTitle || roleLabels[stakeholder.role] || stakeholder.role}
                       </span>
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 border border-emerald-300">
-                        {stakeholder.status === 'active' ? 'በስራ ላይ ያለ (Active)' : stakeholder.status}
+                        {stakeholder.status === 'active'
+                          ? t3('Hojii Irra Jira (Active)', 'Active', 'በስራ ላይ ያለ (Active)')
+                          : stakeholder.status}
                       </span>
                     </div>
 
@@ -260,17 +288,21 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                     {/* Profile Office / Department */}
                     <div className="bg-white px-3 py-1.5 rounded-xl border border-emerald-200/90 text-xs font-bold text-emerald-950 flex items-center justify-center sm:justify-start gap-2">
                       <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                      <span>የፕሮፋይል ጽሕፈት ቤት: {stakeholder.officeOrDepartment}</span>
+                      <span>
+                        {t3('Waajjira Piroofaayilii:', 'Profile Office:', 'የፕሮፋይል ጽሕፈት ቤት:')} {stakeholder.officeOrDepartment}
+                      </span>
                     </div>
 
                     {/* National Fayda ID Display */}
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs text-slate-700 pt-1">
                       <div className="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-300 font-mono font-bold text-amber-950">
                         <CreditCard className="w-3.5 h-3.5 text-amber-700" />
-                        <span>ፋይዳ ቁጥር: {stakeholder.faydaNumber}</span>
+                        <span>
+                          {t3('Lakk. Fayda:', 'Fayda No:', 'ፋይዳ ቁጥር:')} {stakeholder.faydaNumber}
+                        </span>
                         {stakeholder.faydaVerified && (
                           <span className="text-[10px] text-emerald-700 font-sans font-bold flex items-center gap-0.5">
-                            <CheckCircle2 className="w-3 h-3" /> የተረጋገጠ
+                            <CheckCircle2 className="w-3 h-3" /> {t3('Mirkanaa\'e', 'Verified', 'የተረጋገጠ')}
                           </span>
                         )}
                       </div>
@@ -278,12 +310,19 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                       {stakeholder.professionalLicenseNumber && (
                         <div className="flex items-center gap-1 font-mono text-[11px] text-slate-600">
                           <Shield className="w-3.5 h-3.5 text-slate-500" />
-                          <span>የሙያ ፈቃድ: {stakeholder.professionalLicenseNumber}</span>
+                          <span>
+                            {t3('Hayyama Ogummaa:', 'License:', 'የሙያ ፈቃድ:')} {stakeholder.professionalLicenseNumber}
+                          </span>
                         </div>
                       )}
 
                       <div className="text-[11px] text-slate-600">
-                        <span>የስራ ልምድ: <strong>{stakeholder.experienceYears} ዓመታት</strong></span>
+                        <span>
+                          {t3('Muuxannoo Hojii:', 'Experience:', 'የስራ ልምድ:')}{' '}
+                          <strong>
+                            {stakeholder.experienceYears} {t3('Waggoota', 'Years', 'ዓመታት')}
+                          </strong>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -295,10 +334,17 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs sm:text-sm font-black text-emerald-950 flex items-center gap-1.5 uppercase tracking-wide">
                     <GraduationCap className="w-4 h-4 text-emerald-700" />
-                    <span>የተረጋገጡ የተመረቀባቸው ማስረጃዎች እና የትምህርት ደረጃዎች (Educational Credentials)</span>
+                    <span>
+                      {t3(
+                        'Ragaawwan Eebbaa fi Sadarkaa Barnootaa Mirkanaa\'an',
+                        'Verified Educational Credentials & Degrees',
+                        'የተረጋገጡ የተመረቀባቸው ማስረጃዎች እና የትምህርት ደረጃዎች (Educational Credentials)'
+                      )}
+                    </span>
                   </h3>
                   <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    {stakeholder.credentials?.length || 0} የተመረቀ ማስረጃዎች
+                    {stakeholder.credentials?.length || 0}{' '}
+                    {t3('Ragaawwan Eebbaa', 'Credentials', 'የተመረቀ ማስረጃዎች')}
                   </span>
                 </div>
 
@@ -306,12 +352,12 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                   <table className="w-full text-left text-xs">
                     <thead className="bg-emerald-900 text-white font-bold">
                       <tr>
-                        <th className="py-2.5 px-3">ተ.ቁ</th>
-                        <th className="py-2.5 px-3">የትምህርት ደረጃ</th>
-                        <th className="py-2.5 px-3">የትምህርት መስክ (Field)</th>
-                        <th className="py-2.5 px-3">የተመረቀበት ተቋም / ዩኒቨርሲቲ</th>
-                        <th className="py-2.5 px-3">የምረቃ ዓ.ም</th>
-                        <th className="py-2.5 px-3">የሰነድ ቁጥር</th>
+                        <th className="py-2.5 px-3">{t3('Lakk.', 'No.', 'ተ.ቁ')}</th>
+                        <th className="py-2.5 px-3">{t3('Sadarkaa Barnootaa', 'Level', 'የትምህርት ደረጃ')}</th>
+                        <th className="py-2.5 px-3">{t3('Gosa Barnootaa', 'Field of Study', 'የትምህርት መስክ (Field)')}</th>
+                        <th className="py-2.5 px-3">{t3('Yuunivarsiitii / Dhaabbata', 'Institution', 'የተመረቀበት ተቋም / ዩኒቨርሲቲ')}</th>
+                        <th className="py-2.5 px-3">{t3('Bara Eebbaa', 'Year', 'የምረቃ ዓ.ም')}</th>
+                        <th className="py-2.5 px-3">{t3('Lakk. Sanadaa', 'Doc No.', 'የሰነድ ቁጥር')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white font-medium">
@@ -339,7 +385,7 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                       ) : (
                         <tr>
                           <td colSpan={6} className="py-4 text-center text-slate-500 italic">
-                            ምንም የተመዘገበ የትምህርት ማስረጃ የለም
+                            {t3('Ragaan barnootaa galmaa\'e hin jiru', 'No educational credentials registered', 'ምንም የተመዘገበ የትምህርት ማስረጃ የለም')}
                           </td>
                         </tr>
                       )}
@@ -351,9 +397,23 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
               {/* Certificate Attestation Text */}
               <div className="relative z-10 text-[11px] leading-relaxed text-slate-700 bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-8 italic">
                 <p>
-                  ይህ ይፋዊ የፕሮፋይል ምስክር ወረቀት ከላይ ስማቸውና የፋይዳ ዲጂታል መታወቂያቸው ለተገለጸው ባለድርሻ አካል፣ በ
-                  <strong>{school.name}</strong> ውስጥ በይፋ ተመዝግበው የተመረቁባቸውን ማስረጃዎች እና የሙያ ፈቃዳቸውን በትምህርት ቢሮ
-                  ስርዓት በማረጋገጥ የተሰጠ ህጋዊ ምስክር ወረቀት መሆኑን እናረጋግጣለን።
+                  {isOm ? (
+                    <>
+                      Waraqaan ragaa piroofaayilii seera qabeessi kun qooda fudhattuu maqaa fi lakkoofsa eenyummaa dijitaalaa Fayda olitti ibsameef,{' '}
+                      <strong>{school.name}</strong> keessatti seeraan galmaa\'anii ragaawwan eebbaa fi hayyama ogummaa isaanii sirna Biiroo Barnootaan mirkaneessuun kan kenname ragaa seera qabeessa ta\'uu isaa ni mirkaneessina.
+                    </>
+                  ) : isEn ? (
+                    <>
+                      This official profile certificate confirms that the stakeholder named above with the verified Fayda Digital ID is officially registered at{' '}
+                      <strong>{school.name}</strong>, and their graduation credentials and professional license have been verified through the Education Bureau system.
+                    </>
+                  ) : (
+                    <>
+                      ይህ ይፋዊ የፕሮፋይል ምስክር ወረቀት ከላይ ስማቸውና የፋይዳ ዲጂታል መታወቂያቸው ለተገለጸው ባለድርሻ አካል፣ በ
+                      <strong>{school.name}</strong> ውስጥ በይፋ ተመዝግበው የተመረቁባቸውን ማስረጃዎች እና የሙያ ፈቃዳቸውን በትምህርት ቢሮ
+                      ስርዓት በማረጋገጥ የተሰጠ ህጋዊ ምስክር ወረቀት መሆኑን እናረጋግጣለን።
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -363,17 +423,21 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div className="space-y-1">
                   <div className="h-12 flex items-end justify-center">
                     <span className="font-serif italic text-emerald-950 font-bold border-b border-dashed border-slate-400 pb-1 px-4">
-                      {school.principalName || 'አቶ ጉተማ ዋቆ'}
+                      {school.principalName || t3('Obbo Guttamaa Waaqoo', 'Mr. Gutema Wako', 'አቶ ጉተማ ዋቆ')}
                     </span>
                   </div>
-                  <p className="font-bold text-slate-900">የርዕሰ መምህር ፊርማ</p>
-                  <p className="text-[10px] text-slate-500">የትምህርት ቤቱ ዋና ዳይሬክተር</p>
+                  <p className="font-bold text-slate-900">
+                    {t3('Mallattoo Dura-Taa\'aa', 'Principal Signature', 'የርዕሰ መምህር ፊርማ')}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {t3('Daarektara Ol\'aanaa Mana Barumsaa', 'School Head Director', 'የትምህርት ቤቱ ዋና ዳይሬክተር')}
+                  </p>
                 </div>
 
                 {/* 2. Official Seal Stamp */}
                 <div className="flex flex-col items-center justify-center">
                   <div className="w-16 h-16 rounded-full border-2 border-dashed border-emerald-800/80 flex flex-col items-center justify-center text-[9px] font-bold text-emerald-900 p-1 text-center bg-emerald-50">
-                    <span>ይፋዊ ማህተም</span>
+                    <span>{t3('Chaappaa Seeraa', 'Official Stamp', 'ይፋዊ ማህተም')}</span>
                     <span className="text-[8px] text-amber-700 font-extrabold uppercase">OFFICIAL SEAL</span>
                   </div>
                 </div>
@@ -382,11 +446,15 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div className="space-y-1">
                   <div className="h-12 flex items-end justify-center">
                     <span className="font-serif italic text-emerald-950 font-bold border-b border-dashed border-slate-400 pb-1 px-4">
-                      ሻሸመኔ ትምህርት ቢሮ
+                      {t3('Biiroo Barnootaa Shaashamannee', 'Shashemene Education Bureau', 'ሻሸመኔ ትምህርት ቢሮ')}
                     </span>
                   </div>
-                  <p className="font-bold text-slate-900">የትምህርት ቢሮ ማረጋገጫ</p>
-                  <p className="text-[10px] text-slate-500">የሰው ኃይል እና ስታንዳርድ መምሪያ</p>
+                  <p className="font-bold text-slate-900">
+                    {t3('Mirkaneessa Biiroo Barnootaa', 'Education Bureau Verification', 'የትምህርት ቢሮ ማረጋገጫ')}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {t3('Kutaalee Qabeenya Namaa fi Istaandardii', 'HR & Standards Directorate', 'የሰው ኃይል እና ስታንዳርድ መምሪያ')}
+                  </p>
                 </div>
               </div>
             </div>
@@ -399,14 +467,25 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
                     <GraduationCap className="w-5 h-5 text-emerald-700" />
-                    <span>የተመረቀባቸው ማስረጃዎች ዝርዝር ሰነዶች</span>
+                    <span>
+                      {t3(
+                        'Sanadoota Tarreeffama Ragaa Eebbaa',
+                        'Graduation Credential Documents',
+                        'የተመረቀባቸው ማስረጃዎች ዝርዝር ሰነዶች'
+                      )}
+                    </span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    ባለድርሻ አካሉ ያቀረቧቸው የዲግሪ፣ የማስተርስ፣ የዲፕሎማ እና የሙያ ፈቃድ ማስረጃዎች
+                    {t3(
+                      'Ragaawwan Digirii, Maastarsii, Dippiloomaa fi Hayyama Ogummaa qooda fudhattuun dhiyeessan',
+                      'Degree, Masters, Diploma, and Professional License documents submitted by the stakeholder',
+                      'ባለድርሻ አካሉ ያቀረቧቸው የዲግሪ፣ የማስተርስ፣ የዲፕሎማ እና የሙያ ፈቃድ ማስረጃዎች'
+                    )}
                   </p>
                 </div>
                 <span className="px-3 py-1 bg-emerald-100 text-emerald-900 font-bold text-xs rounded-xl border border-emerald-300 w-fit">
-                  {stakeholder.credentials?.length || 0} ሰነዶች ተያይዘዋል
+                  {stakeholder.credentials?.length || 0}{' '}
+                  {t3('Sanadoonni Qabsiifamaniiru', 'Documents Attached', 'ሰነዶች ተያይዘዋል')}
                 </span>
               </div>
 
@@ -423,7 +502,7 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                             {cred.level}
                           </span>
                           <span className="text-xs font-mono font-bold text-slate-500">
-                            ዓ.ም: {cred.graduationYear}
+                            {t3('Bara:', 'Year:', 'ዓ.ም:')} {cred.graduationYear}
                           </span>
                         </div>
 
@@ -438,7 +517,9 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                           </p>
                           <p className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
                             <FileCheck className="w-3.5 h-3.5 text-slate-400" />
-                            <span>ቁጥር: {cred.credentialDocNumber}</span>
+                            <span>
+                              {t3('Lakkoofsa:', 'Doc No:', 'ቁጥር:')} {cred.credentialDocNumber}
+                            </span>
                           </p>
                         </div>
                       </div>
@@ -459,19 +540,22 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                                 className="absolute inset-0 bg-black/50 text-white flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
                               >
                                 <Eye className="w-4 h-4" />
-                                <span>ትልቅ አድርገህ እይ</span>
+                                <span>{t3('Guddisii Ilaali', 'View Full Size', 'ትልቅ አድርገህ እይ')}</span>
                               </button>
                             </div>
                             <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> ይፋዊ ሰነድ ተያይዟል (Attached)
+                              <CheckCircle2 className="w-3 h-3" />{' '}
+                              {t3('Sanadni Seeraa Qabsiifameera', 'Official Document Attached', 'ይፋዊ ሰነድ ተያይዟል (Attached)')}
                             </span>
                           </div>
                         ) : (
                           <div className="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
                             <FileCheck className="w-6 h-6 mx-auto mb-1 text-slate-400" />
-                            <p className="font-semibold text-slate-700">ዲጂታል ፋይል መረጃ</p>
+                            <p className="font-semibold text-slate-700">
+                              {t3('Odeeffannoo Faayila Dijitaalaa', 'Digital File Record', 'ዲጂታል ፋይል መረጃ')}
+                            </p>
                             <p className="text-[10px] text-slate-500">
-                              መለያ: {cred.credentialDocNumber}
+                              {t3('Adda Baasaa:', 'ID:', 'መለያ:')} {cred.credentialDocNumber}
                             </p>
                           </div>
                         )}
@@ -481,7 +565,9 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 ) : (
                   <div className="col-span-2 p-8 bg-white rounded-2xl border border-slate-200 text-center text-slate-500">
                     <GraduationCap className="w-10 h-10 mx-auto text-slate-400 mb-2" />
-                    <p className="font-bold">ምንም የተመረቀ ማስረጃ አልተያያዘም</p>
+                    <p className="font-bold">
+                      {t3('Ragaan eebbaa qabsiifame hin jiru', 'No graduation credentials attached', 'ምንም የተመረቀ ማስረጃ አልተያያዘም')}
+                    </p>
                   </div>
                 )}
               </div>
@@ -499,7 +585,11 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div className="flex items-center justify-between border-b border-amber-400/40 pb-3 mb-4">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                      የኢትዮጵያ ብሔራዊ ዲጂታል መታወቂያ ስርዓት
+                      {t3(
+                        'Sirna Eenyummaa Dijitaalaa Biyyaalessaa Itoophiyaa',
+                        'Ethiopian National Digital Identity System',
+                        'የኢትዮጵያ ብሔራዊ ዲጂታል መታወቂያ ስርዓት'
+                      )}
                     </p>
                     <h3 className="text-base sm:text-lg font-black tracking-tight text-white">
                       FAYDA NATIONAL DIGITAL ID
@@ -507,7 +597,7 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                   </div>
                   <div className="px-2.5 py-1 bg-white/20 rounded-full border border-white/30 text-[10px] font-bold text-white flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                    <span>VERIFIED</span>
+                    <span>{t3('MIRKANAA\'AA', 'VERIFIED', 'VERIFIED')}</span>
                   </div>
                 </div>
 
@@ -530,13 +620,15 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
 
                   {/* ID Details */}
                   <div className="flex-1 space-y-1">
-                    <p className="text-[10px] text-amber-200 font-semibold uppercase">ሙሉ ስም (Full Name)</p>
+                    <p className="text-[10px] text-amber-200 font-semibold uppercase">
+                      {t3('Maqaa Guutuu (Full Name)', 'Full Name', 'ሙሉ ስም (Full Name)')}
+                    </p>
                     <h4 className="text-base font-black text-white leading-tight">
                       {stakeholder.fullName}
                     </h4>
 
                     <p className="text-[10px] text-amber-200 font-semibold uppercase mt-1">
-                      የስራ ሚና እና ጽ/ቤት (Role & Office)
+                      {t3('Gahee Hojii fi Waajjira (Role & Office)', 'Role & Office', 'የስራ ሚና እና ጽ/ቤት (Role & Office)')}
                     </p>
                     <p className="text-xs font-bold text-amber-100">
                       {stakeholder.officeOrDepartment}
@@ -551,7 +643,11 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div className="bg-black/40 rounded-2xl p-3 border border-amber-300/30 flex items-center justify-between">
                   <div>
                     <span className="text-[9px] uppercase font-bold text-amber-200">
-                      የፋይዳ ዲጂታል መለያ ቁጥር (FIN / FAN)
+                      {t3(
+                        'Lakkoofsa Adda Baasaa Dijitaalaa Fayda (FIN / FAN)',
+                        'Fayda Digital Identification Number (FIN / FAN)',
+                        'የፋይዳ ዲጂታል መለያ ቁጥር (FIN / FAN)'
+                      )}
                     </span>
                     <p className="font-mono text-base sm:text-lg font-black tracking-wider text-amber-300">
                       {stakeholder.faydaNumber}
@@ -566,7 +662,13 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
                   <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                     <CreditCard className="w-4 h-4 text-emerald-700" />
-                    <span>የተያያዘ የፋይዳ መታወቂያ ካርድ ሰነድ</span>
+                    <span>
+                      {t3(
+                        'Sanada Kaardii Eenyummaa Fayda Qabsiifame',
+                        'Attached Fayda ID Card Scan',
+                        'የተያያዘ የፋይዳ መታወቂያ ካርድ ሰነድ'
+                      )}
+                    </span>
                   </h4>
                   <div className="rounded-xl overflow-hidden border border-slate-200 max-h-72">
                     <img
@@ -593,14 +695,14 @@ export const StakeholderCertificateModal: React.FC<StakeholderCertificateModalPr
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
             >
               <Printer className="w-4 h-4" />
-              <span>ምስክር ወረቀቱን አትም (Print)</span>
+              <span>{t3('Waraqaa Ragaa Maxxansi (Print)', 'Print Certificate', 'ምስክር ወረቀቱን አትም (Print)')}</span>
             </button>
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
             >
-              ዝጋ
+              {t3('Cufi', 'Close', 'ዝጋ')}
             </button>
           </div>
         </div>

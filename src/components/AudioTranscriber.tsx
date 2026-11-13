@@ -13,9 +13,28 @@ interface AudioTranscriberProps {
 export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
   currentLang,
   onTranscriptionComplete,
-  title = 'የድምጽ ግብረ-መልስ እና ማስታወሻ (Voice Feedback & Transcription)',
-  placeholder = 'በማይክሮፎን የተናገሩት ንግግር በGemini 3.5 Transcribe ተተርጉሞ እዚህ ይጻፋል...'
+  title,
+  placeholder
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
+  const resolvedTitle =
+    title ||
+    t3(
+      'Yaadannoo fi Duub-deebii Sagalee (Voice Transcription)',
+      'Voice Feedback & Transcription',
+      'የድምጽ ግብረ-መልስ እና ማስታወሻ (Voice Feedback & Transcription)'
+    );
+  const resolvedPlaceholder =
+    placeholder ||
+    t3(
+      'Dubbiin maayikiroofooniin dubbatame barreeffamatti jijjiiramee asitti argama...',
+      'Speech recorded via microphone will be transcribed here...',
+      'በማይክሮፎን የተናገሩት ንግግር ተተርጉሞ እዚህ ይጻፋል...'
+    );
+
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +77,11 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
     } catch (err: any) {
       console.error('Microphone error:', err);
       setErrorMessage(
-        'ማይክሮፎን መክፈት አልተቻለም። እባክዎ የአሳሽዎን የማይክሮፎን ፈቃድ ያረጋግጡ (Please allow microphone access).'
+        t3(
+          'Maayikiroofoonii banuun hin danda\'amne. Hayyama maayikiroofoonii browzera keessanii mirkaneessaa.',
+          'Unable to access microphone. Please allow microphone permission in your browser.',
+          'ማይክሮፎን መክፈት አልተቻለም። እባክዎ የአሳሽዎን የማይክሮፎን ፈቃድ ያረጋግጡ (Please allow microphone access).'
+        )
       );
     }
   };
@@ -93,7 +116,13 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
       reader.readAsDataURL(blob);
     } catch (err: any) {
       console.error('Transcription error:', err);
-      setErrorMessage('የድምጽ ግልባጭ ማከናወን አልተቻለም፡ ' + (err.message || 'ስህተት ተከስቷል'));
+      setErrorMessage(
+        t3(
+          `Sagalee gara barreeffamaatti jijjiiruun hin milkoofne: ${err.message || 'Dogoggora'}`,
+          `Failed to transcribe audio: ${err.message || 'Unknown error'}`,
+          `የድምጽ ግልባጭ ማከናወን አልተቻለም፡ ${err.message || 'ስህተት ተከስቷል'}`
+        )
+      );
       setIsLoading(false);
     }
   };
@@ -119,9 +148,9 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
             <Mic className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-slate-900">{title}</h4>
+            <h4 className="text-xs font-bold text-slate-900">{resolvedTitle}</h4>
             <p className="text-[10px] text-slate-500">
-              Powered by <code className="font-mono text-emerald-800 font-bold">gemini-3.5-transcribe</code>
+              {t3('Gargaarsa sagalee barreeffamaatti jijjiiruu', 'Voice-to-Text Engine', 'የድምጽ ወደ ጽሑፍ መተርጎሚያ')}
             </p>
           </div>
         </div>
@@ -134,12 +163,12 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-700">ተቀድቷል</span>
+                <span className="text-emerald-700">{t3('Garagalfame', 'Copied', 'ተቀድቷል')}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-slate-500" />
-                <span>ጽሑፉን ቅዳ</span>
+                <span>{t3('Barreeffama Garagalchi', 'Copy Text', 'ጽሑፉን ቅዳ')}</span>
               </>
             )}
           </button>
@@ -162,7 +191,7 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
             className="flex items-center gap-2 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-xs"
           >
             <Mic className="w-4 h-4 text-emerald-200" />
-            <span>ድምጽ መቅረጽ ጀምር (Record Voice)</span>
+            <span>{t3('Sagalee Waraabuu Jalqabi (Record Voice)', 'Start Recording', 'ድምጽ መቅረጽ ጀምር (Record Voice)')}</span>
           </button>
         ) : (
           <button
@@ -171,21 +200,33 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
             className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs animate-pulse"
           >
             <Square className="w-4 h-4 fill-white" />
-            <span>ቀረጻ አቁም ({formatSecs(recordingSeconds)})</span>
+            <span>{t3(`Waraabuu Dhaabi (${formatSecs(recordingSeconds)})`, `Stop Recording (${formatSecs(recordingSeconds)})`, `ቀረጻ አቁም (${formatSecs(recordingSeconds)})`)}</span>
           </button>
         )}
 
         {isRecording && (
           <div className="flex items-center gap-2 text-xs font-semibold text-rose-600">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
-            <span>ማይክሮፎኑ እየቀረጸ ነው... ({formatSecs(recordingSeconds)})</span>
+            <span>
+              {t3(
+                `Maayikiroofooniin waraabaa jira... (${formatSecs(recordingSeconds)})`,
+                `Microphone recording... (${formatSecs(recordingSeconds)})`,
+                `ማይክሮፎኑ እየቀረጸ ነው... (${formatSecs(recordingSeconds)})`
+              )}
+            </span>
           </div>
         )}
 
         {isLoading && (
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800">
             <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
-            <span>Gemini 3.5 ድምጹን ወደ ጽሑፍ እየተረጎመ ነው...</span>
+            <span>
+              {t3(
+                'Sagaleen gara barreeffamaatti jijjiiramaa jira...',
+                'Transcribing audio to text...',
+                'ድምጹን ወደ ጽሑፍ እየተረጎመ ነው...'
+              )}
+            </span>
           </div>
         )}
       </div>
@@ -196,7 +237,7 @@ export const AudioTranscriber: React.FC<AudioTranscriberProps> = ({
           readOnly
           rows={3}
           value={transcribedText}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50/70 text-slate-800 focus:outline-hidden leading-relaxed font-sans"
         />
       </div>

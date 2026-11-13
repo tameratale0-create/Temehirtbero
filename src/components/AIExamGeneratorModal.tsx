@@ -158,8 +158,12 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
   onExamCreated,
   onTakeExamNow,
   initialMaterialId,
-  currentLang = 'am'
+  currentLang = 'om'
 }) => {
+  const isOm = currentLang === 'om';
+  const isEn = currentLang === 'en';
+  const t3 = (om: string, en: string, am: string) => (isOm ? om : isEn ? en : am);
+
   const materials = StorageService.getTrainingMaterials();
 
   // Find initial material or fallback to first
@@ -202,13 +206,19 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
   // Config parameters:
   const [numQuestions, setNumQuestions] = useState<number>(5);
   const [numExams, setNumExams] = useState<number>(1);
-  // 1. አንድ ጥያቄ ስንት ደቂቃ ይቆይ (Time per question in minutes, e.g. 1, 2, 3...)
+  // Time per question in minutes
   const [timePerQuestion, setTimePerQuestion] = useState<number>(2);
-  // 2. የፈተናው ሙሉ ጥያቄ ይድረሰው ወይስ አንድን ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ ይደረሰው (Delivery Mode)
+  // Delivery Mode
   const [deliveryMode, setDeliveryMode] = useState<'one_by_one' | 'all_at_once'>('one_by_one');
   const [difficulty, setDifficulty] = useState<'standard' | 'advanced'>('standard');
   const [selectedLang, setSelectedLang] = useState<string>(
-    selectedMaterial?.subject?.toLowerCase().includes('orom') ? 'om' : 'am'
+    selectedMaterial?.subject?.toLowerCase().includes('orom')
+      ? 'om'
+      : currentLang === 'om'
+      ? 'om'
+      : currentLang === 'en'
+      ? 'en'
+      : 'am'
   );
 
   // Custom text option
@@ -238,7 +248,13 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
     const gradeLevelsToUse = useCustomContent ? 'Grades 7 - 12' : selectedMaterial?.gradeLevels;
 
     if (!titleToUse || !contentToUse) {
-      setGenerationError('እባክዎ የስልጠና ርዕስ እና የስልጠናውን ፅሁፍ ይምረጡ ወይም ያስገቡ።');
+      setGenerationError(
+        t3(
+          'Maaloo mata-duree leenjii fi barreeffama leenjichaa filadhaa ykn galchaa.',
+          'Please select or enter a training title and content.',
+          'እባክዎ የስልጠና ርዕስ እና የስልጠናውን ፅሁፍ ይምረጡ ወይም ያስገቡ።'
+        )
+      );
       setIsGenerating(false);
       return;
     }
@@ -275,27 +291,48 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
       const modelLetters = ['A', 'B', 'C', 'D', 'E'];
       const timestamp = Date.now();
 
+      const outLang = selectedLang === 'om' ? 'om' : selectedLang === 'en' ? 'en' : 'am';
+      const outT3 = (om: string, en: string, am: string) => (outLang === 'om' ? om : outLang === 'en' ? en : am);
+
       const createdExams: TeacherExam[] = examSetsFromData.map((exItem: any, eIdx: number) => {
         const mappedQuestions: ExamQuestion[] = (exItem.questions || []).map(
           (q: any, qIdx: number) => ({
             id: `ai-q-${timestamp}-${eIdx}-${qIdx}`,
-            questionText: q.questionText || `ጥያቄ ${qIdx + 1}`,
+            questionText: q.questionText || `${outT3('Gaaffii', 'Question', 'ጥያቄ')} ${qIdx + 1}`,
             options:
               Array.isArray(q.options) && q.options.length >= 2
                 ? q.options
-                : ['ምርጫ 1', 'ምርጫ 2', 'ምርጫ 3', 'ምርጫ 4'],
+                : [
+                    `${outT3('Filannoo', 'Option', 'ምርጫ')} 1`,
+                    `${outT3('Filannoo', 'Option', 'ምርጫ')} 2`,
+                    `${outT3('Filannoo', 'Option', 'ምርጫ')} 3`,
+                    `${outT3('Filannoo', 'Option', 'ምርጫ')} 4`
+                  ],
             correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : 0,
-            explanation: q.explanation || 'ከስልጠናው ይዘት የተወሰደ ማብራሪያ'
+            explanation:
+              q.explanation ||
+              outT3(
+                'Ibsa qabiyyee leenjichaa irraa fudhatame',
+                'Explanation derived from the training material',
+                'ከስልጠናው ይዘት የተወሰደ ማብራሪያ'
+              )
           })
         );
 
         const modelLabel =
-          examSetsFromData.length > 1 ? ` - ሞዴል ${modelLetters[eIdx] || eIdx + 1}` : '';
-        const defaultTitle = `${titleToUse} - የብቃት መመዘኛ ፈተና (በ AI የተዘጋጀ)${modelLabel}`;
+          examSetsFromData.length > 1
+            ? ` - ${outT3('Moodela', 'Model', 'ሞዴል')} ${modelLetters[eIdx] || eIdx + 1}`
+            : '';
+        const defaultTitle = `${titleToUse} - ${outT3(
+          'Qormaata Madaallii Gahumsaa (AI\'n Qophaa\'e)',
+          'Competency Assessment Exam (AI Generated)',
+          'የብቃት መመዘኛ ፈተና (በ AI የተዘጋጀ)'
+        )}${modelLabel}`;
 
-        const calculatedDuration = timePerQuestion > 0
-          ? Math.max(timePerQuestion * safeQuestionsCount, 5)
-          : (exItem.durationMinutes || safeQuestionsCount * 3);
+        const calculatedDuration =
+          timePerQuestion > 0
+            ? Math.max(timePerQuestion * safeQuestionsCount, 5)
+            : exItem.durationMinutes || safeQuestionsCount * 3;
 
         return {
           id: `exam-ai-${timestamp}-${eIdx}`,
@@ -311,7 +348,11 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
           questions: mappedQuestions,
           instructions:
             exItem.instructions ||
-            'ይህ ፈተና ከሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ የስልጠና ሰነድ በቀጥታ በ AI ተዘጋጅቶ የወጣ የመምህራን ብቃት መመዘኛ ነው።',
+            outT3(
+              'Qormaanni kun sanada leenjii seeraa Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee irraa kallattiin AI\'n kan qophaa\'e madaallii gahumsaa barsiisotaati.',
+              'This competency exam was generated by AI directly from official Shashemene Education Bureau training documentation.',
+              'ይህ ፈተና ከሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ ይፋዊ የስልጠና ሰነድ በቀጥታ በ AI ተዘጋጅቶ የወጣ የመምህራን ብቃት መመዘኛ ነው።'
+            ),
           status: 'active',
           createdAt: new Date().toISOString().split('T')[0],
           deadline: '2025-12-30',
@@ -325,7 +366,13 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
       setActiveExamIndex(0);
     } catch (err: any) {
       console.warn('AI Exam generation request note:', err);
-      setGenerationError('ፈተናውን በ AI ለማመንጨት አልተቻለም። እባክዎ እንደገና ይሞክሩ።');
+      setGenerationError(
+        t3(
+          'Qormaata AI\'n maddisiisuun hin danda\'amne. Maaloo irra deebi\'aa yaalaa.',
+          'Unable to generate exam with AI. Please try again.',
+          'ፈተናውን በ AI ለማመንጨት አልተቻለም። እባክዎ እንደገና ይሞክሩ።'
+        )
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -393,15 +440,18 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-[11px] font-bold text-amber-200">
                 <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                <span>የሻሸመኔ ትምህርት ቢሮ ይፋዊ የፈተና ማውጫ · ፈተና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው</span>
+                <span>{t3('Qopheessaa Qormaata Seeraa Biiroo Barnootaa Shaashamannee · Aangoon qormaata baasuu kan Biiroo qofa', 'Shashemene Education Bureau Official Exam Studio', 'የሻሸመኔ ትምህርት ቢሮ ይፋዊ የፈተና ማውጫ · ፈተና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው')}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               </div>
               <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                ከስልጠና ፅሁፍ በ AI ፈተና አውጣ (AI Exam Generator)
+                {t3('Barreeffama Leenjii Irraa AI\'n Qormaata Baasi', 'AI Exam Generator from Training Text', 'ከስልጠና ፅሁፍ በ AI ፈተና አውጣ (AI Exam Generator)')}
               </h2>
               <p className="text-xs text-emerald-100/90 leading-relaxed max-w-xl">
-                ከስልጠና ሰነድ በቀጥታ በ AI ቴክኖሎጂ የሚፈለገውን ያህል የጥያቄዎች እና የፈተና ሞዴሎች ብዛት በማስገባት
-                ፈታኝና ሚዛናዊ የሆኑ የመምህራን ብቃት መመዘኛዎችን ማመንጨት ይችላሉ።
+                {t3(
+                  'Sanada leenjii irraa kallattiin teekinoloojii AI\'tiin baay\'ina gaaffilee fi moodeloota qormaataa barbaaddan galchuun madaallii gahumsaa barsiisotaa madaalawaa maddisiisuu dandeessu.',
+                  'Generate balanced, high-quality teacher competency exams directly from training modules with custom question counts and exam models.',
+                  'ከስልጠና ሰነድ በቀጥታ በ AI ቴክኖሎጂ የሚፈለገውን ያህል የጥያቄዎች እና የፈተና ሞዴሎች ብዛት በማስገባት ፈታኝና ሚዛናዊ የሆኑ የመምህራን ብቃት መመዘኛዎችን ማመንጨት ይችላሉ።'
+                )}
               </p>
             </div>
 
@@ -432,7 +482,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-                  <span>ከትምህርት ቢሮ ይፋዊ የስልጠና ሰነዶች ምረጥ ({materials.length})</span>
+                  <span>{t3('Sanadoota Leenjii Seeraa Biiroo Keessaa Filadhu', 'Choose Bureau Training Module', 'ከትምህርት ቢሮ ይፋዊ የስልጠና ሰነዶች ምረጥ')} ({materials.length})</span>
                 </button>
 
                 <button
@@ -445,7 +495,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                   }`}
                 >
                   <Edit className="w-3.5 h-3.5" />
-                  <span>የራስዎን የስልጠና ፅሁፍ ያስገቡ / የምሳሌ ፅሁፎች</span>
+                  <span>{t3('Barreeffama Keessan Galchaa / Fakkeenyota', 'Custom Text / Sample Templates', 'የራስዎን የስልጠና ፅሁፍ ያስገቡ / የምሳሌ ፅሁፎች')}</span>
                 </button>
               </div>
 
@@ -456,11 +506,11 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                   <div className="flex items-center gap-1.5 flex-wrap pb-1">
                     <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 mr-1">
                       <Filter className="w-3 h-3 text-emerald-600" />
-                      <span>ቋንቋ ይምረጡ፡</span>
+                      <span>{t3('Afaan Filadhu:', 'Filter Language:', 'ቋንቋ ይምረጡ፡')}</span>
                     </span>
                     {[
-                      { key: 'all', label: `ሁሉም (${materials.length})` },
-                      { key: 'am', label: 'አማርኛ (Amharic)' },
+                      { key: 'all', label: `${t3('Hunda', 'All', 'ሁሉም')} (${materials.length})` },
+                      { key: 'am', label: t3('Amaariffa (Amharic)', 'Amharic', 'አማርኛ (Amharic)') },
                       { key: 'om', label: 'Afaan Oromoo' },
                       { key: 'en', label: 'English' }
                     ].map((tab) => (
@@ -516,7 +566,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                      ጥያቄ የሚወጣበት የስልጠና ሞጁል ይምረጡ *
+                      {t3('Moojuulii leenjii gaaffiin irraa bahu filadhaa *', 'Select Training Module for Exam Generation *', 'ጥያቄ የሚወጣበት የስልጠና ሞጁል ይምረጡ *')}
                     </label>
                     <select
                       value={selectedMaterial?.id || selectedMaterialId}
@@ -550,7 +600,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                           {selectedMaterial.subject}
                         </span>
                         <span className="text-[10px] text-slate-500 font-semibold">
-                          ደረጃ፡ {selectedMaterial.gradeLevels} · ንባብ፡ {selectedMaterial.readTimeMinutes} ደቂቃ
+                          {t3('Sadarkaa:', 'Level:', 'ደረጃ፡')} {selectedMaterial.gradeLevels} · {t3('Dubbisa:', 'Read:', 'ንባብ፡')} {selectedMaterial.readTimeMinutes} {t3('daqiiqaa', 'min', 'ደቂቃ')}
                         </span>
                       </div>
                       <h4 className="font-black text-slate-900 text-xs sm:text-sm">
@@ -561,7 +611,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       </p>
                       <div className="pt-1 text-[11px] text-emerald-800 font-semibold flex items-center gap-1.5">
                         <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>አዘጋጅ፡ {selectedMaterial.authorDepartment}</span>
+                        <span>{t3('Qopheessaan:', 'Author:', 'አዘጋጅ፡')} {selectedMaterial.authorDepartment}</span>
                       </div>
                     </div>
                   )}
@@ -574,16 +624,19 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
                         <Sparkles className="w-4 h-4 text-emerald-700" />
-                        <span>የስልጠና ፅሁፍ ምሳሌዎች (Sample Training Texts በአማርኛ እና በኦሮሚኛ)</span>
+                        <span>{t3('Fakkeenyota Barreeffama Leenjii (Afaan Oromoo & Amaariffa)', 'Sample Training Texts (Afaan Oromoo & Amharic)', 'የስልጠና ፅሁፍ ምሳሌዎች (Sample Training Texts በአማርኛ እና በኦሮሚኛ)')}</span>
                       </div>
                       <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                        አንዲን ጠቅ ያድርጉ
+                        {t3('Tokko cuqaasaa', 'Click to load', 'አንዲን ጠቅ ያድርጉ')}
                       </span>
                     </div>
 
                     <p className="text-[11px] text-slate-600">
-                      የ AI ፈተና አወጣጥን ለመሞከር ከዚህ በታች ካሉት አርአያነት ያላቸው የስልጠና ሰነዶች አንዱን ይምረጡ፤
-                      ፎርሙ በቅጽበት ይሞላል፦
+                      {t3(
+                        'Qophii qormaata AI yaaluuf sanadoota fakkeenyaa armaan gadii keessaa tokko filadhaa; foormiin battalumatti ni guutama:',
+                        'Select a sample training document below to test AI exam generation; the form will auto-fill:',
+                        'የ AI ፈተና አወጣጥን ለመሞከር ከዚህ በታች ካሉት አርአያነት ያላቸው የስልጠና ሰነዶች አንዱን ይምረጡ፤ ፎርሙ በቅጽበት ይሞላል፦'
+                      )}
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -615,7 +668,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                                   isSelected ? 'text-amber-200' : 'text-slate-500'
                                 }`}
                               >
-                                {sample.lang === 'om' ? 'Afaan Oromoo' : 'አማርኛ'}
+                                {sample.lang === 'om' ? 'Afaan Oromoo' : t3('Amaariffa', 'Amharic', 'አማርኛ')}
                               </span>
                             </div>
                             <span className="text-xs font-bold line-clamp-1">{sample.label}</span>
@@ -627,7 +680,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     {loadedSampleName && (
                       <div className="bg-emerald-100 text-emerald-950 border border-emerald-300 p-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                        <span>የተመረጠ ምሳሌ፡ "{loadedSampleName}" ተሞልቷል!</span>
+                        <span>{t3('Fakkeenyi filatame:', 'Loaded sample:', 'የተመረጠ ምሳሌ፡')} "{loadedSampleName}" {t3('guutameera!', 'filled!', 'ተሞልቷል!')}</span>
                       </div>
                     )}
                   </div>
@@ -635,25 +688,25 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-800 mb-1">
-                        የስልጠናው ርዕስ (Training Title) *
+                        {t3('Mata-duree Leenjii (Training Title) *', 'Training Title *', 'የስልጠናው ርዕስ (Training Title) *')}
                       </label>
                       <input
                         type="text"
                         value={customTitle}
                         onChange={(e) => setCustomTitle(e.target.value)}
-                        placeholder="ምሳሌ፡ የትምህርት ቤት አመራር እና የስራ ክንውን መገምገሚያ"
+                        placeholder={t3('Fkn: Hoggansa Mana Barumsaa fi Madaallii Raawwii Hojii', 'e.g. School Leadership & Performance Review', 'ምሳሌ፡ የትምህርት ቤት አመራር እና የስራ ክንውን መገምገሚያ')}
                         className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-800 mb-1">
-                        የትምህርት መስክ (Subject)
+                        {t3('Damee Barnootaa (Subject)', 'Subject / Field', 'የትምህርት መስክ (Subject)')}
                       </label>
                       <input
                         type="text"
                         value={customSubject}
                         onChange={(e) => setCustomSubject(e.target.value)}
-                        placeholder="ምሳሌ፡ Educational Leadership / Pedagogy"
+                        placeholder={t3('Fkn: Educational Leadership / Pedagogy', 'e.g. Educational Leadership / Pedagogy', 'ምሳሌ፡ Educational Leadership / Pedagogy')}
                         className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden"
                       />
                     </div>
@@ -661,13 +714,13 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-800 mb-1">
-                      የስልጠናው ይዘት / ፅሁፍ (Training Text) *
+                      {t3('Qabiyyee / Barreeffama Leenjii (Training Text) *', 'Training Content / Text *', 'የስልጠናው ይዘት / ፅሁፍ (Training Text) *')}
                     </label>
                     <textarea
                       rows={6}
                       value={customContent}
                       onChange={(e) => setCustomContent(e.target.value)}
-                      placeholder="የስልጠናውን ፅሁፍ፣ መመሪያዎች ወይም ቁልፍ ነጥቦች እዚህ ይለጥፉ..."
+                      placeholder={t3('Barreeffama leenjichaa, qajeelfamoota ykn qabxiilee ijoo asitti maxxansaa...', 'Paste training text, guidelines, or key points here...', 'የስልጠናውን ፅሁፍ፣ መመሪያዎች ወይም ቁልፍ ነጥቦች እዚህ ይለጥፉ...')}
                       className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden leading-relaxed font-sans"
                     />
                   </div>
@@ -679,20 +732,20 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
                   <Sliders className="w-4 h-4 text-emerald-700" />
                   <span className="font-black text-slate-900 text-xs sm:text-sm">
-                    የፈተና እና የጥያቄዎች ብዛት ማስተካከያ ፎርም (Exam & Question Configuration)
+                    {t3('Foormii Qindaa\'ina Baay\'ina Qormaataa fi Gaaffilee', 'Exam & Question Configuration', 'የፈተና እና የጥያቄዎች ብዛት ማስተካከያ ፎርም (Exam & Question Configuration)')}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* 1. INPUT FIELD: AI የሚያወጣቸው ጥያቄዎች ብዛት ማስገቢያ */}
+                  {/* 1. INPUT FIELD: Questions Count */}
                   <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <label className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
                         <FileText className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>AI የሚያወጣቸው ጥያቄዎች ብዛት (ማስገቢያ)*</span>
+                        <span>{t3('Baay\'ina Gaaffilee AI\'n Baasu*', 'Number of AI Questions*', 'AI የሚያወጣቸው ጥያቄዎች ብዛት (ማስገቢያ)*')}</span>
                       </label>
                       <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        {numQuestions} ጥያቄዎች
+                        {numQuestions} {t3('Gaaffilee', 'Questions', 'ጥያቄዎች')}
                       </span>
                     </div>
 
@@ -701,7 +754,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                         type="button"
                         onClick={() => setNumQuestions((prev) => Math.max(1, prev - 1))}
                         className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                        title="ቀንስ"
+                        title={t3('Hir\'isi', 'Decrease', 'ቀንስ')}
                       >
                         <Minus className="w-4 h-4" />
                       </button>
@@ -726,7 +779,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                         type="button"
                         onClick={() => setNumQuestions((prev) => Math.min(30, prev + 1))}
                         className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                        title="ጨምር"
+                        title={t3('Dabali', 'Increase', 'ጨምር')}
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -734,7 +787,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
 
                     {/* Quick Preset Buttons for Questions Count */}
                     <div className="flex items-center flex-wrap gap-1.5 pt-1">
-                      <span className="text-[10px] font-bold text-slate-500">ፈጣን ምርጫ፡</span>
+                      <span className="text-[10px] font-bold text-slate-500">{t3('Filannoo ariifataa:', 'Quick preset:', 'ፈጣን ምርጫ፡')}</span>
                       {[3, 5, 8, 10, 15, 20].map((preset) => (
                         <button
                           key={preset}
@@ -752,19 +805,25 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     </div>
 
                     <p className="text-[10px] text-slate-500 leading-tight">
-                      በእያንዳንዱ ፈተና ውስጥ የሚካተቱ የጥያቄዎች ብዛት (ከ 1 እስከ 30 ቁጥር ማስገባት ይችላሉ)።
+                      {t3(
+                        'Baay\'ina gaaffilee qormaata tokko keessatti hammataman (lakkoofsa 1 hanga 30 galchuu dandeessu).',
+                        'Number of questions included in each exam (enter 1 to 30).',
+                        'በእያንዳንዱ ፈተና ውስጥ የሚካተቱ የጥያቄዎች ብዛት (ከ 1 እስከ 30 ቁጥር ማስገባት ይችላሉ)።'
+                      )}
                     </p>
                   </div>
 
-                  {/* 2. INPUT FIELD: AI የሚያወጣቸው ፈተና ብዛት የማስገባቢያ ቦታ */}
+                  {/* 2. INPUT FIELD: Exams Count */}
                   <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <label className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
                         <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>AI የሚያወጣቸው ፈተና ብዛት (ማስገቢያ)*</span>
+                        <span>{t3('Baay\'ina Qormaata AI\'n Baasu*', 'Number of AI Exams*', 'AI የሚያወጣቸው ፈተና ብዛት (ማስገቢያ)*')}</span>
                       </label>
                       <span className="text-[10px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                        {numExams === 1 ? '1 ነጠላ ፈተና' : `${numExams} የፈተና ሞዴሎች`}
+                        {numExams === 1
+                          ? t3('Qormaata qeenxee 1', '1 Single Exam', '1 ነጠላ ፈተና')
+                          : `${numExams} ${t3('Moodeloota Qormaataa', 'Exam Models', 'የፈተና ሞዴሎች')}`}
                       </span>
                     </div>
 
@@ -773,7 +832,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                         type="button"
                         onClick={() => setNumExams((prev) => Math.max(1, prev - 1))}
                         className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                        title="ቀንስ"
+                        title={t3('Hir\'isi', 'Decrease', 'ቀንስ')}
                       >
                         <Minus className="w-4 h-4" />
                       </button>
@@ -798,7 +857,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                         type="button"
                         onClick={() => setNumExams((prev) => Math.min(5, prev + 1))}
                         className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                        title="ጨምር"
+                        title={t3('Dabali', 'Increase', 'ጨምር')}
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -806,12 +865,12 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
 
                     {/* Quick Preset Buttons for Exams Count */}
                     <div className="flex items-center flex-wrap gap-1.5 pt-1">
-                      <span className="text-[10px] font-bold text-slate-500">ፈጣን ሞዴል፡</span>
+                      <span className="text-[10px] font-bold text-slate-500">{t3('Moodela ariifataa:', 'Quick model:', 'ፈጣን ሞዴል፡')}</span>
                       {[
-                        { count: 1, label: '1 ፈተና' },
-                        { count: 2, label: '2 ሞዴል (A/B)' },
-                        { count: 3, label: '3 ሞዴል (A/B/C)' },
-                        { count: 4, label: '4 ሞዴል' }
+                        { count: 1, label: t3('Qormaata 1', '1 Exam', '1 ፈተና') },
+                        { count: 2, label: t3('Moodela 2 (A/B)', '2 Models (A/B)', '2 ሞዴል (A/B)') },
+                        { count: 3, label: t3('Moodela 3 (A/B/C)', '3 Models (A/B/C)', '3 ሞዴል (A/B/C)') },
+                        { count: 4, label: t3('Moodela 4', '4 Models', '4 ሞዴል') }
                       ].map((item) => (
                         <button
                           key={item.count}
@@ -829,7 +888,11 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     </div>
 
                     <p className="text-[10px] text-slate-500 leading-tight">
-                      የሚዘጋጁ የተለያዩ የፈተና ሞዴሎች/ስሪቶች ብዛት (ከ 1 እስከ 5 ቁጥር ማስገባት ይችላሉ)።
+                      {t3(
+                        'Baay\'ina moodeloota/gosa qormaataa qophaa\'an (lakkoofsa 1 hanga 5 galchuu dandeessu).',
+                        'Number of distinct exam models/versions to generate (1 to 5).',
+                        'የሚዘጋጁ የተለያዩ የፈተና ሞዴሎች/ስሪቶች ብዛት (ከ 1 እስከ 5 ቁጥር ማስገባት ይችላሉ)።'
+                      )}
                     </p>
                   </div>
                 </div>
@@ -838,43 +901,45 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      የጥያቄዎች ጥልቀት (Difficulty)
+                      {t3('Gadi fageenya Gaaffilee (Difficulty)', 'Question Difficulty', 'የጥያቄዎች ጥልቀት (Difficulty)')}
                     </label>
                     <select
                       value={difficulty}
                       onChange={(e) => setDifficulty(e.target.value as any)}
                       className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl font-bold"
                     >
-                      <option value="standard">መደበኛ ብቃት (Standard Competency)</option>
-                      <option value="advanced">የላቀ / ተንታኝ (Higher Order Pedagogical Thinking)</option>
+                      <option value="standard">{t3('Gahumsa Idilee (Standard Competency)', 'Standard Competency', 'መደበኛ ብቃት (Standard Competency)')}</option>
+                      <option value="advanced">{t3('Sadarkaa Ol\'aanaa / Xiinxalaa (Advanced)', 'Higher Order Thinking (Advanced)', 'የላቀ / ተንታኝ (Higher Order Pedagogical Thinking)')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      የፈተናው ቋንቋ (Exam Language)
+                      {t3('Afaan Qormaataa (Exam Language)', 'Exam Language', 'የፈተናው ቋንቋ (Exam Language)')}
                     </label>
                     <select
                       value={selectedLang}
                       onChange={(e) => setSelectedLang(e.target.value)}
                       className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl font-bold"
                     >
-                      <option value="am">አማርኛ (Amharic)</option>
+                      <option value="am">{t3('Amaariffa (Amharic)', 'Amharic', 'አማርኛ (Amharic)')}</option>
                       <option value="om">Afaan Oromoo</option>
                       <option value="en">English</option>
                     </select>
                   </div>
                 </div>
 
-                {/* 1. አንድ ጥያቄ ስንት ደቂቃ ይቆይ የሚለውን ለመወሰን መሙያ ቦታ */}
+                {/* Time Per Question */}
                 <div className="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200/90 shadow-2xs space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <label className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
                       <Timer className="w-3.5 h-3.5 text-amber-700" />
-                      <span>አንድ ጥያቄ ስንት ደቂቃ ይቆይ? (የእያንዳንዱ ጥያቄ የጊዜ ገደብ)*</span>
+                      <span>{t3('Gaaffiin tokko daqiiqaa meeqa haa turu? (Daangaa Yeroo)*', 'Minutes per Question? (Time Limit)*', 'አንድ ጥያቄ ስንት ደቂቃ ይቆይ? (የእያንዳንዱ ጥያቄ የጊዜ ገደብ)*')}</span>
                     </label>
                     <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
-                      {timePerQuestion > 0 ? `${timePerQuestion} ደቂቃ በ 1 ጥያቄ` : 'ያልተገደበ'}
+                      {timePerQuestion > 0
+                        ? `${timePerQuestion} ${t3('daqiiqaa / gaaffii 1', 'min / question', 'ደቂቃ በ 1 ጥያቄ')}`
+                        : t3('Daangaa hin qabu', 'Unlimited', 'ያልተገደበ')}
                     </span>
                   </div>
 
@@ -883,7 +948,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       type="button"
                       onClick={() => setTimePerQuestion((prev) => Math.max(1, prev - 1))}
                       className="w-9 h-9 rounded-xl bg-white hover:bg-amber-100 text-slate-700 border border-amber-300 font-bold flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                      title="ቀንስ"
+                      title={t3('Hir\'isi', 'Decrease', 'ቀንስ')}
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -908,7 +973,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       type="button"
                       onClick={() => setTimePerQuestion((prev) => Math.min(15, prev + 1))}
                       className="w-9 h-9 rounded-xl bg-white hover:bg-amber-100 text-slate-700 border border-amber-300 font-bold flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                      title="ጨምር"
+                      title={t3('Dabali', 'Increase', 'ጨምር')}
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -916,12 +981,12 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
 
                   {/* Quick Preset Buttons for Time Per Question */}
                   <div className="flex items-center flex-wrap gap-1.5 pt-1">
-                    <span className="text-[10px] font-bold text-slate-600">ፈጣን ምርጫ፡</span>
+                    <span className="text-[10px] font-bold text-slate-600">{t3('Filannoo ariifataa:', 'Quick preset:', 'ፈጣን ምርጫ፡')}</span>
                     {[
-                      { minutes: 1, label: '1 ደቂቃ' },
-                      { minutes: 2, label: '2 ደቂቃ (ተመራጭ)' },
-                      { minutes: 3, label: '3 ደቂቃ' },
-                      { minutes: 5, label: '5 ደቂቃ' }
+                      { minutes: 1, label: t3('Daqiiqaa 1', '1 min', '1 ደቂቃ') },
+                      { minutes: 2, label: t3('Daqiiqaa 2 (Filatamaa)', '2 min (Recommended)', '2 ደቂቃ (ተመራጭ)') },
+                      { minutes: 3, label: t3('Daqiiqaa 3', '3 min', '3 ደቂቃ') },
+                      { minutes: 5, label: t3('Daqiiqaa 5', '5 min', '5 ደቂቃ') }
                     ].map((item) => (
                       <button
                         key={item.minutes}
@@ -939,21 +1004,27 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                   </div>
 
                   <p className="text-[10px] text-slate-600 leading-tight">
-                    መምህሩ በፈተና ወቅት ለእያንዳንዱ ጥያቄ የሚሰጠው የጊዜ ገደብ (ጠቅላላ የፈተናው ጊዜ <strong>{timePerQuestion * numQuestions} ደቂቃ</strong> ይሆናል)።
+                    {isOm ? (
+                      <>Daangaa yeroo yeroo qormaataa gaaffii tokkoon tokkoon isaaf barsiisaaf kennamu (waliigalli yeroo qormaataa <strong>daqiiqaa {timePerQuestion * numQuestions}</strong> ta\'a).</>
+                    ) : isEn ? (
+                      <>Time limit per question during the exam (total exam duration will be <strong>{timePerQuestion * numQuestions} minutes</strong>).</>
+                    ) : (
+                      <>መምህሩ በፈተና ወቅት ለእያንዳንዱ ጥያቄ የሚሰጠው የጊዜ ገደብ (ጠቅላላ የፈተናው ጊዜ <strong>{timePerQuestion * numQuestions} ደቂቃ</strong> ይሆናል)።</>
+                    )}
                   </p>
                 </div>
 
-                {/* 2. የፈተናው ሙሉ ጥያቄ ይድረሰው ወይስ አንድን ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ ይደረሰው የሚለውን ለመወሰን ምርጫ */}
+                {/* Question Delivery Mode */}
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <label className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
                       <ListOrdered className="w-3.5 h-3.5 text-teal-700" />
-                      <span>የጥያቄዎች አቀራረብ ዘዴ (የፈተናው አሰጣጥ ምርጫ)*</span>
+                      <span>{t3('Tooftaa Dhiyeessa Gaaffilee (Filannoo Kenniinsa Qormaataa)*', 'Question Delivery Mode*', 'የጥያቄዎች አቀራረብ ዘዴ (የፈተናው አሰጣጥ ምርጫ)*')}</span>
                     </label>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {/* Option 1: አንድ ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ */}
+                    {/* Option 1: Sequential */}
                     <button
                       type="button"
                       onClick={() => setDeliveryMode('one_by_one')}
@@ -966,7 +1037,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-black text-slate-900">
-                            1. አንድ ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ
+                            {t3('1. Gaaffii tokko xumuruun isa itti aanu', '1. One question at a time', '1. አንድ ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ')}
                           </span>
                           <span
                             className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -981,15 +1052,19 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-600 leading-snug">
-                          መምህሩ አንድን ጥያቄ ሰርቶ 'ቀጣይ ጥያቄ' ሲል ብቻ የሚቀጥለው ይደርሰዋል። የቀደመ ጥያቄ ላይ መመለስ አይፈቀድም።
+                          {t3(
+                            'Barsiisaan gaaffii tokko hojjetee \'Gaaffii itti aanu\' yoo jedhu qofa kan itti aanu argata. Gaaffii darbeetti deebi\'uun hin hayyamamu.',
+                            'The teacher receives the next question only after completing and advancing from the current one. Going back is locked.',
+                            'መምህሩ አንድን ጥያቄ ሰርቶ \'ቀጣይ ጥያቄ\' ሲል ብቻ የሚቀጥለው ይደርሰዋል። የቀደመ ጥያቄ ላይ መመለስ አይፈቀድም።'
+                          )}
                         </p>
                       </div>
                       <span className="mt-2 text-[9px] font-bold text-teal-800 bg-teal-100/70 px-2 py-0.5 rounded w-fit">
-                        🔒 ጥብቅ ቅደም-ተከተል (Sequential)
+                        🔒 {t3('Tartiiba Cimaa (Sequential)', 'Strict Sequential', 'ጥብቅ ቅደም-ተከተል (Sequential)')}
                       </span>
                     </button>
 
-                    {/* Option 2: የፈተናው ሙሉ ጥያቄ በአንድ ጊዜ ይድረሰው */}
+                    {/* Option 2: All at once */}
                     <button
                       type="button"
                       onClick={() => setDeliveryMode('all_at_once')}
@@ -1002,7 +1077,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-black text-slate-900">
-                            2. የፈተናው ሙሉ ጥያቄ በአንድ ጊዜ
+                            {t3('2. Gaaffilee qormaataa hunda yeroo tokkotti', '2. All questions at once', '2. የፈተናው ሙሉ ጥያቄ በአንድ ጊዜ')}
                           </span>
                           <span
                             className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -1017,11 +1092,15 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-600 leading-snug">
-                          መምህሩ ሁሉንም ጥያቄዎች በአንድ ገጽ ላይ ማየት፣ እንደፈለገ መዘዋወርና ከመላኩ በፊት መልሶቹን መከለስ ይችላል።
+                          {t3(
+                            'Barsiisaan gaaffilee hunda fuula tokko irratti ilaaluu, akka barbaadetti naanna\'uu fi osoo hin ergin dura deebiiwwan irra deebi\'ee ilaaluu danda\'a.',
+                            'The teacher can view all questions on one page, navigate freely, and review answers before submitting.',
+                            'መምህሩ ሁሉንም ጥያቄዎች በአንድ ገጽ ላይ ማየት፣ እንደፈለገ መዘዋወርና ከመላኩ በፊት መልሶቹን መከለስ ይችላል።'
+                          )}
                         </p>
                       </div>
                       <span className="mt-2 text-[9px] font-bold text-indigo-800 bg-indigo-100/70 px-2 py-0.5 rounded w-fit">
-                        🔓 ክፍት አቀራረብ (All at once)
+                        🔓 {t3('Dhiyeessa Banaa (All at once)', 'Open Navigation (All at once)', 'ክፍት አቀራረብ (All at once)')}
                       </span>
                     </button>
                   </div>
@@ -1048,14 +1127,22 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>
-                        AI {numExams > 1 ? `${numExams} የፈተና ሞዴሎችን` : 'ፈተናውን'} ({numQuestions} ጥያቄዎች) በማዘጋጀት ላይ ነው...
+                        {t3(
+                          `AI'n ${numExams > 1 ? `Moodeloota Qormaataa ${numExams}` : 'Qormaata'} (Gaaffilee ${numQuestions}) qopheessaa jira...`,
+                          `AI is generating ${numExams > 1 ? `${numExams} Exam Models` : 'Exam'} (${numQuestions} Questions)...`,
+                          `AI ${numExams > 1 ? `${numExams} የፈተና ሞዴሎችን` : 'ፈተናውን'} (${numQuestions} ጥያቄዎች) በማዘጋጀት ላይ ነው...`
+                        )}
                       </span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 text-amber-300" />
                       <span>
-                        ✨ {numExams > 1 ? `${numExams} የፈተና ሞዴሎችን` : 'ፈተናውን'} በ AI አውጣ ({numQuestions} ጥያቄዎች)
+                        ✨ {t3(
+                          `${numExams > 1 ? `Moodeloota Qormaataa ${numExams}` : 'Qormaata'} AI'n Baasi (Gaaffilee ${numQuestions})`,
+                          `Generate ${numExams > 1 ? `${numExams} Exam Models` : 'Exam'} with AI (${numQuestions} Questions)`,
+                          `${numExams > 1 ? `${numExams} የፈተና ሞዴሎችን` : 'ፈተናውን'} በ AI አውጣ (${numQuestions} ጥያቄዎች)`
+                        )}
                       </span>
                     </>
                   )}
@@ -1069,7 +1156,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
               {generatedExams.length > 1 && (
                 <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-1.5 overflow-x-auto">
                   <span className="text-[11px] font-black text-slate-500 px-2 shrink-0">
-                    የተዘጋጁ ሞዴሎች ({generatedExams.length})፡
+                    {t3('Moodeloota Qophaa\'an', 'Generated Models', 'የተዘጋጁ ሞዴሎች')} ({generatedExams.length}):
                   </span>
                   {generatedExams.map((exam, idx) => (
                     <button
@@ -1083,8 +1170,8 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       }`}
                     >
                       <Layers className="w-3.5 h-3.5" />
-                      <span>ፈተና {idx + 1} (ሞዴል {String.fromCharCode(65 + idx)})</span>
-                      <span className="text-[10px] opacity-80">({exam.questions.length} ጥያቄዎች)</span>
+                      <span>{t3('Qormaata', 'Exam', 'ፈተና')} {idx + 1} ({t3('Moodela', 'Model', 'ሞዴል')} {String.fromCharCode(65 + idx)})</span>
+                      <span className="text-[10px] opacity-80">({exam.questions.length} {t3('Gaaffilee', 'Questions', 'ጥያቄዎች')})</span>
                     </button>
                   ))}
                 </div>
@@ -1096,15 +1183,15 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950">
-                        ✨ በ AI የተዘጋጀ
+                        ✨ {t3('AI\'n Qophaa\'e', 'AI Generated', 'በ AI የተዘጋጀ')}
                       </span>
                       {generatedExams.length > 1 && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/80 text-white">
-                          ሞዴል {String.fromCharCode(65 + activeExamIndex)} ({activeExamIndex + 1}/{generatedExams.length})
+                          {t3('Moodela', 'Model', 'ሞዴል')} {String.fromCharCode(65 + activeExamIndex)} ({activeExamIndex + 1}/{generatedExams.length})
                         </span>
                       )}
                       <span className="text-[10px] text-emerald-200">
-                        የጥያቄ ብዛት፡ {currentActiveExam.questions.length} · ጊዜ፡ {currentActiveExam.durationMinutes} ደቂቃ
+                        {t3('Baay\'ina Gaaffilee:', 'Questions:', 'የጥያቄ ብዛት፡')} {currentActiveExam.questions.length} · {t3('Yeroo:', 'Duration:', 'ጊዜ፡')} {currentActiveExam.durationMinutes} {t3('daqiiqaa', 'min', 'ደቂቃ')}
                       </span>
                     </div>
                     <h3 className="text-sm sm:text-base font-black">{currentActiveExam.title}</h3>
@@ -1119,7 +1206,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer shrink-0"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>ቅንብሮችን አስተካክል</span>
+                    <span>{t3('Qindaa\'ina Sirreessi', 'Adjust Settings', 'ቅንብሮችን አስተካክል')}</span>
                   </button>
                 </div>
               )}
@@ -1127,7 +1214,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
               {/* Instructions */}
               {currentActiveExam && (
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600">
-                  <strong>መመሪያ፡</strong> {currentActiveExam.instructions}
+                  <strong>{t3('Qajeelfama:', 'Instructions:', 'መመሪያ፡')}</strong> {currentActiveExam.instructions}
                 </div>
               )}
 
@@ -1138,12 +1225,16 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                     <h4 className="font-black text-slate-900 text-xs sm:text-sm flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                       <span>
-                        በ AI የተዘጋጁ {currentActiveExam.questions.length} ጥያቄዎች (ከታች መገምገም ወይም ማስተካከል ይችላሉ)
+                        {t3(
+                          `Gaaffilee ${currentActiveExam.questions.length} AI'n Qophaa'an (Gadiitti madaaluu ykn sirreessuu dandeessu)`,
+                          `${currentActiveExam.questions.length} AI-Generated Questions (Review or edit below)`,
+                          `በ AI የተዘጋጁ ${currentActiveExam.questions.length} ጥያቄዎች (ከታች መገምገም ወይም ማስተካከል ይችላሉ)`
+                        )}
                       </span>
                     </h4>
                     {generatedExams.length > 1 && (
                       <span className="text-xs font-bold text-slate-500">
-                        የሚታየው፡ ሞዴል {String.fromCharCode(65 + activeExamIndex)}
+                        {t3('Kan mul\'atu:', 'Viewing:', 'የሚታየው፡')} {t3('Moodela', 'Model', 'ሞዴል')} {String.fromCharCode(65 + activeExamIndex)}
                       </span>
                     )}
                   </div>
@@ -1156,7 +1247,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <span className="font-bold text-slate-500 text-xs block mb-1">
-                            ጥያቄ {qIdx + 1}፡
+                            {t3('Gaaffii', 'Question', 'ጥያቄ')} {qIdx + 1}:
                           </span>
                           <input
                             type="text"
@@ -1217,7 +1308,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                               />
                               {isCorrect && (
                                 <span className="text-[10px] text-emerald-700 font-bold px-1.5 py-0.5 rounded-md bg-emerald-100">
-                                  ትክክለኛ
+                                  {t3('Sirrii', 'Correct', 'ትክክለኛ')}
                                 </span>
                               )}
                             </div>
@@ -1228,7 +1319,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                       {/* Explanation */}
                       <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 text-xs text-amber-950">
                         <span className="font-bold text-[11px] block text-amber-900 mb-0.5">
-                          💡 ትክክለኛ ማብራሪያ (Explanation):
+                          💡 {t3('Ibsa Sirrii (Explanation):', 'Explanation:', 'ትክክለኛ ማብራሪያ (Explanation):')}
                         </span>
                         <textarea
                           rows={2}
@@ -1258,7 +1349,7 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
           >
-            ዝጋ (Close)
+            {t3('Cufi', 'Close', 'ዝጋ (Close)')}
           </button>
 
           {generatedExams.length > 0 && currentActiveExam && (
@@ -1271,8 +1362,12 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                 <Check className="w-4 h-4 stroke-[3]" />
                 <span>
                   {generatedExams.length > 1
-                    ? `ሁሉንም (${generatedExams.length}) የፈተና ሞዴሎች መዝግብ`
-                    : 'ወደ ፈተናዎች መዝገብ መዝግብ'}
+                    ? t3(
+                        `Moodeloota Qormaataa Hunda (${generatedExams.length}) Galmeessi`,
+                        `Save All (${generatedExams.length}) Exam Models`,
+                        `ሁሉንም (${generatedExams.length}) የፈተና ሞዴሎች መዝግብ`
+                      )
+                    : t3('Galmee Qormaataatti Olkaa\'i', 'Save to Exam Registry', 'ወደ ፈተናዎች መዝገብ መዝግብ')}
                 </span>
               </button>
 
@@ -1284,8 +1379,12 @@ export const AIExamGeneratorModal: React.FC<AIExamGeneratorModalProps> = ({
                 <Play className="w-4 h-4 fill-white" />
                 <span>
                   {generatedExams.length > 1
-                    ? `ሞዴል ${String.fromCharCode(65 + activeExamIndex)} ፈተናን ጀምር`
-                    : 'ፈተናውን አሁኑኑ ጀምር (Take Exam Now)'}
+                    ? t3(
+                        `Qormaata Moodela ${String.fromCharCode(65 + activeExamIndex)} Jalqabi`,
+                        `Take Model ${String.fromCharCode(65 + activeExamIndex)} Exam Now`,
+                        `ሞዴል ${String.fromCharCode(65 + activeExamIndex)} ፈተናን ጀምር`
+                      )
+                    : t3('Qormaata Ammuma Jalqabi', 'Take Exam Now', 'ፈተናውን አሁኑኑ ጀምር (Take Exam Now)')}
                 </span>
               </button>
             </div>

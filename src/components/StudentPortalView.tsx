@@ -65,7 +65,12 @@ import {
 } from '../types';
 import { translations } from '../data/translations';
 import { StorageService } from '../utils/storage';
-import { getLocalizedSchool, getLocalizedStudents } from '../utils/localizedData';
+import {
+  getLocalizedSchool,
+  getLocalizedStudents,
+  getLocalizedGradeWorkflows,
+  getLocalizedStudentReportNotifications
+} from '../utils/localizedData';
 import { StudentIDCardModal } from './StudentIDCardModal';
 import { StudentQRAttendanceModal } from './StudentQRAttendanceModal';
 import { TeacherEvaluationModal } from './TeacherEvaluationModal';
@@ -104,8 +109,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
 
   // Academic Grade Workflows for Period Tracking & Official Approval Seal
   const schoolGradeWorkflows = useMemo(() => {
-    return StorageService.getGradeWorkflows(student.schoolId);
-  }, [student.schoolId]);
+    return getLocalizedGradeWorkflows(
+      StorageService.getGradeWorkflows(student.schoolId),
+      currentLang
+    );
+  }, [student.schoolId, currentLang]);
 
   const activePeriodWorkflows = useMemo(() => {
     return schoolGradeWorkflows.filter(
@@ -138,19 +146,19 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
   const getPeriodLabel = (p: AcademicPeriodType) => {
     switch (p) {
       case 'quarter_1':
-        return '1ኛ ሩብ ዓመት (Quarter 1)';
+        return currentLang === 'om' ? 'Kurmaana 1ffaa (Quarter 1)' : currentLang === 'en' ? 'Quarter 1' : '1ኛ ሩብ ዓመት (Quarter 1)';
       case 'quarter_2':
-        return '2ኛ ሩብ ዓመት (Quarter 2)';
+        return currentLang === 'om' ? 'Kurmaana 2ffaa (Quarter 2)' : currentLang === 'en' ? 'Quarter 2' : '2ኛ ሩብ ዓመት (Quarter 2)';
       case 'semester_1':
-        return '1ኛ ሴሚስተር (Semester 1)';
+        return currentLang === 'om' ? 'Seemisteera 1ffaa (Semester 1)' : currentLang === 'en' ? 'Semester 1' : '1ኛ ሴሚስተር (Semester 1)';
       case 'quarter_3':
-        return '3ኛ ሩብ ዓመት (Quarter 3)';
+        return currentLang === 'om' ? 'Kurmaana 3ffaa (Quarter 3)' : currentLang === 'en' ? 'Quarter 3' : '3ኛ ሩብ ዓመት (Quarter 3)';
       case 'quarter_4':
-        return '4ኛ ሩብ ዓመት (Quarter 4)';
+        return currentLang === 'om' ? 'Kurmaana 4ffaa (Quarter 4)' : currentLang === 'en' ? 'Quarter 4' : '4ኛ ሩብ ዓመት (Quarter 4)';
       case 'semester_2':
-        return '2ኛ ሴሚስተር (Semester 2)';
+        return currentLang === 'om' ? 'Seemisteera 2ffaa (Semester 2)' : currentLang === 'en' ? 'Semester 2' : '2ኛ ሴሚስተር (Semester 2)';
       case 'annual':
-        return 'የሙሉ ዓመት ማጠቃለያ (Annual)';
+        return currentLang === 'om' ? 'Cuunfaa Waggaa Guutuu (Annual)' : currentLang === 'en' ? 'Annual Summary' : 'የሙሉ ዓመት ማጠቃለያ (Annual)';
       default:
         return p;
     }
@@ -178,7 +186,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       const ctx = new AudioCtx();
       const now = ctx.currentTime;
 
-      // Note 1: E5 (659.25Hz)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = 'sine';
@@ -190,7 +197,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       osc1.start(now);
       osc1.stop(now + 0.45);
 
-      // Note 2: G#5 (830.61Hz)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = 'sine';
@@ -202,7 +208,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       osc2.start(now + 0.12);
       osc2.stop(now + 0.6);
 
-      // Note 3: B5 (987.77Hz)
       const osc3 = ctx.createOscillator();
       const gain3 = ctx.createGain();
       osc3.type = 'sine';
@@ -218,12 +223,14 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
     }
   };
 
-  const unreadNotifications = useMemo(() => {
-    return notifications.filter((n) => !n.isRead);
-  }, [notifications]);
+  const localizedNotifications = useMemo(() => {
+    return getLocalizedStudentReportNotifications(notifications, currentLang);
+  }, [notifications, currentLang]);
 
-  // Real-time Automated Status Update Listener:
-  // When director approves in the School Portal, student/parent portal reacts immediately!
+  const unreadNotifications = useMemo(() => {
+    return localizedNotifications.filter((n) => !n.isRead);
+  }, [localizedNotifications]);
+
   useEffect(() => {
     const handleApprovalEvent = (e: any) => {
       const notif: StudentReportNotification = e.detail;
@@ -235,7 +242,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       });
       setNotifications(refreshed);
 
-      // Trigger interactive visual toast if this belongs to student's school/grade
       if (notif && (!notif.grade || notif.grade === student.grade)) {
         setActiveToast(notif);
         playApprovalChime();
@@ -263,7 +269,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
     };
   }, [student.schoolId, student.grade, student.section, student.id]);
 
-  // Show toast on first entry if there are unread approvals ready for viewing
   useEffect(() => {
     if (!hasShownInitialToast && unreadNotifications.length > 0) {
       setActiveToast(unreadNotifications[0]);
@@ -290,57 +295,60 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
   const averagePercentage =
     student.scores.length > 0 ? (totalEarned / student.scores.length).toFixed(1) : '0';
 
-  // Format short label for XAxis
   const formatShortSubject = (name: string) => {
-    if (name.includes('Mathematics') || name.includes('ሂሳብ')) return 'ሂሳብ (Math)';
-    if (name.includes('English') || name.includes('እንግሊዝኛ')) return 'እንግሊዝኛ (Eng)';
+    if (name.includes('Mathematics') || name.includes('ሂሳብ') || name.includes('Herrega'))
+      return currentLang === 'om' ? 'Herrega (Math)' : currentLang === 'en' ? 'Math' : 'ሂሳብ (Math)';
+    if (name.includes('English') || name.includes('እንግሊዝኛ') || name.includes('Ingiliffa'))
+      return currentLang === 'om' ? 'Ingiliffa (Eng)' : currentLang === 'en' ? 'English' : 'እንግሊዝኛ (Eng)';
     if (name.includes('Afaan Oromoo') || name.includes('ኦሮሚኛ')) return 'Afaan Oromoo';
-    if (name.includes('Physics') || name.includes('ፊዚክስ')) return 'ፊዚክስ (Phys)';
-    if (name.includes('Chemistry') || name.includes('ኬሚስትሪ')) return 'ኬሚስትሪ (Chem)';
-    if (name.includes('Biology') || name.includes('ባዮሎጂ')) return 'ባዮሎጂ (Bio)';
-    if (name.includes('Citizenship') || name.includes('ስነ-ዜጋ')) return 'ስነ-ዜጋ (Civics)';
+    if (name.includes('Physics') || name.includes('ፊዚክስ') || name.includes('Fiiziksii'))
+      return currentLang === 'om' ? 'Fiiziksii (Phys)' : currentLang === 'en' ? 'Physics' : 'ፊዚክስ (Phys)';
+    if (name.includes('Chemistry') || name.includes('ኬሚስትሪ') || name.includes('Keemistirii'))
+      return currentLang === 'om' ? 'Keemistirii (Chem)' : currentLang === 'en' ? 'Chemistry' : 'ኬሚስትሪ (Chem)';
+    if (name.includes('Biology') || name.includes('ባዮሎጂ') || name.includes('Baayoloojii'))
+      return currentLang === 'om' ? 'Baayoloojii (Bio)' : currentLang === 'en' ? 'Biology' : 'ባዮሎጂ (Bio)';
+    if (name.includes('Citizenship') || name.includes('ስነ-ዜጋ') || name.includes('Lammummaa'))
+      return currentLang === 'om' ? 'Lammummaa (Civics)' : currentLang === 'en' ? 'Civics' : 'ስነ-ዜጋ (Civics)';
     return name.split(' ')[0];
   };
 
-  // Prepare data for subject comparative bar chart
   const subjectChartData = useMemo(() => {
     return student.scores.map((sc) => ({
       name: formatShortSubject(sc.subject),
       fullName: sc.subject,
-      quizzes: sc.quiz1 + sc.quiz2, // out of 20
-      midExam: sc.midExam, // out of 30
-      finalExam: sc.finalExam, // out of 50
-      total: sc.total, // out of 100
+      quizzes: sc.quiz1 + sc.quiz2,
+      midExam: sc.midExam,
+      finalExam: sc.finalExam,
+      total: sc.total,
       gradeLetter: sc.gradeLetter
     }));
-  }, [student.scores]);
+  }, [student.scores, currentLang]);
 
-  // Prepare data for assessment timeline progression over time
   const timelineData = useMemo(() => {
     if (selectedSubjectFilter !== 'all') {
       const target = student.scores.find((s) => s.subject === selectedSubjectFilter);
       if (target) {
         return [
           {
-            stage: 'ፈተና 1 (Quiz 1)',
+            stage: currentLang === 'om' ? 'Qormaata 1 (Quiz 1)' : currentLang === 'en' ? 'Quiz 1' : 'ፈተና 1 (Quiz 1)',
             earned: target.quiz1,
             max: 10,
             percentage: (target.quiz1 / 10) * 100
           },
           {
-            stage: 'ፈተና 2 (Quiz 2)',
+            stage: currentLang === 'om' ? 'Qormaata 2 (Quiz 2)' : currentLang === 'en' ? 'Quiz 2' : 'ፈተና 2 (Quiz 2)',
             earned: target.quiz2,
             max: 10,
             percentage: (target.quiz2 / 10) * 100
           },
           {
-            stage: 'ግማሽ ዓመት (Mid-Exam)',
+            stage: currentLang === 'om' ? 'Walakkaa (Mid-Exam)' : currentLang === 'en' ? 'Mid-Exam' : 'ግማሽ ዓመት (Mid-Exam)',
             earned: target.midExam,
             max: 30,
             percentage: Math.round((target.midExam / 30) * 100)
           },
           {
-            stage: 'ማጠቃለያ (Final Exam)',
+            stage: currentLang === 'om' ? 'Xumuraa (Final Exam)' : currentLang === 'en' ? 'Final Exam' : 'ማጠቃለያ (Final Exam)',
             earned: target.finalExam,
             max: 50,
             percentage: Math.round((target.finalExam / 50) * 100)
@@ -349,7 +357,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       }
     }
 
-    // Default average progress across all subjects over the academic term
     const count = student.scores.length || 1;
     const avgQuiz1 = student.scores.reduce((a, b) => a + b.quiz1, 0) / count;
     const avgQuiz2 = student.scores.reduce((a, b) => a + b.quiz2, 0) / count;
@@ -358,33 +365,32 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
 
     return [
       {
-        stage: '1. ፈተና 1 (Quiz 1)',
+        stage: currentLang === 'om' ? '1. Qormaata 1 (Quiz 1)' : currentLang === 'en' ? '1. Quiz 1' : '1. ፈተና 1 (Quiz 1)',
         earned: Number(avgQuiz1.toFixed(1)),
         max: 10,
         percentage: Number(((avgQuiz1 / 10) * 100).toFixed(1))
       },
       {
-        stage: '2. ፈተና 2 (Quiz 2)',
+        stage: currentLang === 'om' ? '2. Qormaata 2 (Quiz 2)' : currentLang === 'en' ? '2. Quiz 2' : '2. ፈተና 2 (Quiz 2)',
         earned: Number(avgQuiz2.toFixed(1)),
         max: 10,
         percentage: Number(((avgQuiz2 / 10) * 100).toFixed(1))
       },
       {
-        stage: '3. ግማሽ ዓመት (Mid-Exam)',
+        stage: currentLang === 'om' ? '3. Walakkaa (Mid-Exam)' : currentLang === 'en' ? '3. Mid-Exam' : '3. ግማሽ ዓመት (Mid-Exam)',
         earned: Number(avgMid.toFixed(1)),
         max: 30,
         percentage: Number(((avgMid / 30) * 100).toFixed(1))
       },
       {
-        stage: '4. የማጠቃለያ ፈተና (Final)',
+        stage: currentLang === 'om' ? '4. Qormaata Xumuraa (Final)' : currentLang === 'en' ? '4. Final Exam' : '4. የማጠቃለያ ፈተና (Final)',
         earned: Number(avgFinal.toFixed(1)),
         max: 50,
         percentage: Number(((avgFinal / 50) * 100).toFixed(1))
       }
     ];
-  }, [student.scores, selectedSubjectFilter]);
+  }, [student.scores, selectedSubjectFilter, currentLang]);
 
-  // Custom Recharts Tooltip
   const CustomBarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -393,19 +399,19 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           <p className="font-bold text-amber-300">{data.fullName || label}</p>
           <div className="divide-y divide-slate-800 text-[11px] pt-1">
             <p className="flex justify-between gap-4 py-0.5 text-sky-300">
-              <span>የክፍል ስራ (Quizzes):</span>
+              <span>{currentLang === 'om' ? 'Hojii Daree (Quizzes):' : currentLang === 'en' ? 'Quizzes:' : 'የክፍል ስራ (Quizzes):'}</span>
               <strong>{data.quizzes} / 20</strong>
             </p>
             <p className="flex justify-between gap-4 py-0.5 text-amber-300">
-              <span>የግማሽ ዓመት (Mid):</span>
+              <span>{currentLang === 'om' ? 'Walakkaa (Mid):' : currentLang === 'en' ? 'Mid-Exam:' : 'የግማሽ ዓመት (Mid):'}</span>
               <strong>{data.midExam} / 30</strong>
             </p>
             <p className="flex justify-between gap-4 py-0.5 text-emerald-300">
-              <span>የማጠቃለያ ፈተና (Final):</span>
+              <span>{currentLang === 'om' ? 'Qormaata Xumuraa (Final):' : currentLang === 'en' ? 'Final Exam:' : 'የማጠቃለያ ፈተና (Final):'}</span>
               <strong>{data.finalExam} / 50</strong>
             </p>
             <p className="flex justify-between gap-4 py-0.5 font-bold text-white">
-              <span>አጠቃላይ ድምር (Total):</span>
+              <span>{currentLang === 'om' ? 'Ida\'ama Waliigalaa (Total):' : currentLang === 'en' ? 'Total:' : 'አጠቃላይ ድምር (Total):'}</span>
               <span>{data.total} / 100 ({data.gradeLetter})</span>
             </p>
           </div>
@@ -435,7 +441,16 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           🔔 AUTOMATED TOAST ALERT: Live Director Approval Notification Toast
          ========================================================================= */}
       {activeToast && (
-        <aside aria-label="ይፋዊ የውጤት ማሳወቂያ" className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+        <aside
+          aria-label={
+            currentLang === 'om'
+              ? 'Beeksisa qabxii ifaa'
+              : currentLang === 'en'
+              ? 'Official grade notification'
+              : 'ይፋዊ የውጤት ማሳወቂያ'
+          }
+          className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300"
+        >
           <div className="bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-950 text-white rounded-2xl p-4 sm:p-4.5 shadow-2xl border-2 border-emerald-400/80 ring-4 ring-emerald-500/20 space-y-3 relative overflow-hidden">
             {/* Ambient glow */}
             <div className="absolute top-0 right-0 -mr-12 -mt-12 w-36 h-36 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
@@ -448,14 +463,22 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/40">
-                      የዳይሬክተር ይፋዊ ማረጋገጫ (Approved)
+                      {currentLang === 'om'
+                        ? 'Mirkaneessa Ifaa Daarektaraa (Approved)'
+                        : currentLang === 'en'
+                        ? 'Director Official Approval'
+                        : 'የዳይሬክተር ይፋዊ ማረጋገጫ (Approved)'}
                     </span>
                     <span className="text-[10px] font-bold text-amber-300 font-mono">
                       {activeToast.periodLabel}
                     </span>
                   </div>
                   <h4 className="text-sm font-black text-white mt-0.5 leading-snug">
-                    የተማሪ የውጤት ሪፖርት ለእይታ ዝግጁ ሆኗል!
+                    {currentLang === 'om'
+                      ? 'Gabaasni qabxii barataa ilaaluuf qophaa\'eera!'
+                      : currentLang === 'en'
+                      ? 'Student grade report is ready to view!'
+                      : 'የተማሪ የውጤት ሪፖርት ለእይታ ዝግጁ ሆኗል!'}
                   </h4>
                 </div>
               </div>
@@ -467,7 +490,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   setActiveToast(null);
                 }}
                 className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                title="ዝጋ"
+                title={currentLang === 'om' ? 'Cufi' : currentLang === 'en' ? 'Close' : 'ዝጋ'}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -479,7 +502,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
 
             <div className="flex items-center justify-between gap-2 pt-2 border-t border-emerald-700/60 relative z-10">
               <span className="text-[10px] font-mono text-emerald-300 truncate">
-                ማህተም፡ {activeToast.sealNumber}
+                {currentLang === 'om' ? 'Chaappaa:' : currentLang === 'en' ? 'Seal:' : 'ማህተም፡'} {activeToast.sealNumber}
               </span>
               <div className="flex items-center gap-1.5">
                 <button
@@ -490,7 +513,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   }}
                   className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-white font-medium rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  አውቄያለሁ
+                  {currentLang === 'om' ? 'Beekeera' : currentLang === 'en' ? 'Got it' : 'አውቄያለሁ'}
                 </button>
                 <button
                   type="button"
@@ -498,7 +521,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>ካርዱን ተመልከት</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Kaardii Ilaali'
+                      : currentLang === 'en'
+                      ? 'View Card'
+                      : 'ካርዱን ተመልከት'}
+                  </span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -520,11 +549,20 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             />
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                የተማሪ እና ወላጅ ፖርታል (Student & Parent Hub)
+                {currentLang === 'om'
+                  ? 'Wiirtuu Barataa fi Maatii (Student & Parent Hub)'
+                  : currentLang === 'en'
+                  ? 'Student & Parent Hub'
+                  : 'የተማሪ እና ወላጅ ፖርታል (Student & Parent Hub)'}
               </span>
               <h2 className="text-xl font-bold tracking-tight">{student.fullName}</h2>
               <p className="text-xs text-slate-300 mt-0.5">
-                {student.schoolName} · ክፍል {student.grade} ክፍልፋይ {student.section} · መታወቂያ: {student.studentIdNumber}
+                {student.schoolName} ·{' '}
+                {currentLang === 'om'
+                  ? `Kutaa ${student.grade} Daree ${student.section} · Waraqaa Eenyummaa: ${student.studentIdNumber}`
+                  : currentLang === 'en'
+                  ? `Grade ${student.grade} Section ${student.section} · ID: ${student.studentIdNumber}`
+                  : `ክፍል ${student.grade} ክፍልፋይ ${student.section} · መታወቂያ: ${student.studentIdNumber}`}
               </p>
             </div>
           </div>
@@ -540,7 +578,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                     ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-black ring-2 ring-amber-300'
                     : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                 }`}
-                title="የዳይሬክተር የውጤት ማሳወቂያዎች"
+                title={
+                  currentLang === 'om'
+                    ? 'Beeksisa qabxii daarektaraa'
+                    : currentLang === 'en'
+                    ? 'Director grade notifications'
+                    : 'የዳይሬክተር የውጤት ማሳወቂያዎች'
+                }
               >
                 <div className="relative">
                   <Bell className={`w-4 h-4 ${unreadNotifications.length > 0 ? 'fill-slate-950 text-slate-950' : 'text-amber-300'}`} />
@@ -548,14 +592,21 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                     <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-600 animate-ping" />
                   )}
                 </div>
-                <span>ማሳወቂያዎች</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Beeksisoota'
+                    : currentLang === 'en'
+                    ? 'Notifications'
+                    : 'ማሳወቂያዎች'}
+                </span>
                 {unreadNotifications.length > 0 ? (
                   <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full shadow-xs">
-                    {unreadNotifications.length} አዲስ
+                    {unreadNotifications.length}{' '}
+                    {currentLang === 'om' ? 'haaraa' : currentLang === 'en' ? 'new' : 'አዲስ'}
                   </span>
                 ) : (
                   <span className="text-[10px] text-emerald-300 font-mono">
-                    ({notifications.length})
+                    ({localizedNotifications.length})
                   </span>
                 )}
               </button>
@@ -566,7 +617,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   <div className="p-3.5 bg-gradient-to-r from-emerald-950 to-teal-900 text-white flex items-center justify-between border-b border-emerald-800">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4 text-amber-300" />
-                      <h4 className="text-xs font-bold">የዳይሬክተር ይፋዊ የውጤት ማሳወቂያዎች</h4>
+                      <h4 className="text-xs font-bold">
+                        {currentLang === 'om'
+                          ? 'Beeksisa Qabxii Ifaa Daarektaraa'
+                          : currentLang === 'en'
+                          ? 'Director Official Grade Notifications'
+                          : 'የዳይሬክተር ይፋዊ የውጤት ማሳወቂያዎች'}
+                      </h4>
                     </div>
                     {unreadNotifications.length > 0 && (
                       <button
@@ -580,18 +637,26 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                         }
                         className="text-[10px] text-amber-300 hover:underline cursor-pointer"
                       >
-                        ሁሉንም አንብብ
+                        {currentLang === 'om'
+                          ? 'Hunda dubbisi'
+                          : currentLang === 'en'
+                          ? 'Mark all read'
+                          : 'ሁሉንም አንብብ'}
                       </button>
                     )}
                   </div>
 
                   <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 p-1">
-                    {notifications.length === 0 ? (
+                    {localizedNotifications.length === 0 ? (
                       <div className="p-6 text-center text-xs text-slate-500">
-                        እስካሁን ምንም የዳይሬክተር ማሳወቂያ የለም
+                        {currentLang === 'om'
+                          ? 'Hanga ammaatti beeksisni daarektaraa hin jiru'
+                          : currentLang === 'en'
+                          ? 'No director notifications yet'
+                          : 'እስካሁን ምንም የዳይሬክተር ማሳወቂያ የለም'}
                       </div>
                     ) : (
-                      notifications.map((notif) => (
+                      localizedNotifications.map((notif) => (
                         <div
                           key={notif.id}
                           className={`p-3 rounded-xl transition-all ${
@@ -605,7 +670,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                               {notif.periodLabel}
                             </span>
                             <span className="text-[9px] text-slate-400">
-                              {notif.approvedAt ? notif.approvedAt.split('T')[0] : 'ቀን'}
+                              {notif.approvedAt
+                                ? notif.approvedAt.split('T')[0]
+                                : currentLang === 'om'
+                                ? 'Guyyaa'
+                                : currentLang === 'en'
+                                ? 'Date'
+                                : 'ቀን'}
                             </span>
                           </div>
                           <p className="text-xs font-bold text-slate-900 mt-1.5 leading-snug">
@@ -618,7 +689,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                               onClick={() => handleViewReportFromNotification(notif)}
                               className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
                             >
-                              <span>ካርዱን ተመልከት</span>
+                              <span>
+                                {currentLang === 'om'
+                                  ? 'Kaardii Ilaali'
+                                  : currentLang === 'en'
+                                  ? 'View Card'
+                                  : 'ካርዱን ተመልከት'}
+                              </span>
                               <ChevronRight className="w-3 h-3" />
                             </button>
                           </div>
@@ -634,10 +711,22 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               type="button"
               onClick={() => setShowDisciplineModal(true)}
               className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer border border-rose-400/50"
-              title="ስነ-ምግባር ችግር ያለባቸውን ተማሪዎች ለትምህርት ቤት ዳይሬክተር በምስጢር ወይም በግልጽ መጠቆሚያ"
+              title={
+                currentLang === 'om'
+                  ? 'Barattoota rakkoo naamusa qaban daarektaraaf himuu'
+                  : currentLang === 'en'
+                  ? 'Confidential or open misconduct reporting to principal'
+                  : 'ስነ-ምግባር ችግር ያለባቸውን ተማሪዎች ለትምህርት ቤት ዳይሬክተር በምስጢር ወይም በግልጽ መጠቆሚያ'
+              }
             >
               <ShieldAlert className="w-4 h-4 text-amber-300" />
-              <span>🚨 የስነ-ምግባር ጥቆማ ለዳይሬክተር (Report Misconduct)</span>
+              <span>
+                {currentLang === 'om'
+                  ? '🚨 Himannaa Naamusaa Daarektaraaf'
+                  : currentLang === 'en'
+                  ? '🚨 Report Misconduct to Principal'
+                  : '🚨 የስነ-ምግባር ጥቆማ ለዳይሬክተር (Report Misconduct)'}
+              </span>
             </button>
             <button
               type="button"
@@ -645,7 +734,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer"
             >
               <Star className="w-4 h-4 fill-slate-950" />
-              <span>መምህራንን ገምግም (Rate Teachers)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Barsiisota Madaali (Rate Teachers)'
+                  : currentLang === 'en'
+                  ? 'Rate Teachers'
+                  : 'መምህራንን ገምግም (Rate Teachers)'}
+              </span>
             </button>
             <button
               type="button"
@@ -653,7 +748,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-teal-400 to-emerald-400 hover:from-teal-300 hover:to-emerald-300 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer"
             >
               <QrCode className="w-4 h-4 text-slate-950" />
-              <span>መገኘት በ QR መዝግብ (Check-in)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Argama QR Galmeessi (Check-in)'
+                  : currentLang === 'en'
+                  ? 'QR Attendance (Check-in)'
+                  : 'መገኘት በ QR መዝግብ (Check-in)'}
+              </span>
             </button>
             <button
               onClick={() => setShowIdCardModal(true)}
@@ -679,7 +780,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               }`}
             >
               <Receipt className="w-4 h-4 text-white" />
-              <span>የወር ክፍያና ደረሰኝ (Tuition Fees)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Kaffaltii Ji\'aa fi Nagahee'
+                  : currentLang === 'en'
+                  ? 'Tuition Fees & Receipts'
+                  : 'የወር ክፍያና ደረሰኝ (Tuition Fees)'}
+              </span>
             </button>
           </div>
         </div>
@@ -697,7 +804,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           }`}
         >
           <GraduationCap className="w-4 h-4 text-emerald-700" />
-          <span>የተማሪ የውጤት ካርድና ትምህርታዊ ትንታኔ (Report Card)</span>
+          <span>
+            {currentLang === 'om'
+              ? 'Kaardii Qabxii Barataa fi Qaaccessa Barnootaa'
+              : currentLang === 'en'
+              ? 'Student Report Card & Academic Analytics'
+              : 'የተማሪ የውጤት ካርድና ትምህርታዊ ትንታኔ (Report Card)'}
+          </span>
         </button>
 
         <button
@@ -710,7 +823,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           }`}
         >
           <Receipt className="w-4 h-4 text-emerald-300" />
-          <span>የአመቱ ሙሉ የወር ክፍያ ሰንጠረዥና ደረሰኝ (Annual Tuition Fees)</span>
+          <span>
+            {currentLang === 'om'
+              ? 'Gabatee Kaffaltii Ji\'aa Waggaa Guutuu fi Nagahee'
+              : currentLang === 'en'
+              ? 'Annual Tuition Fee Table & Receipts'
+              : 'የአመቱ ሙሉ የወር ክፍያ ሰንጠረዥና ደረሰኝ (Annual Tuition Fees)'}
+          </span>
         </button>
       </div>
 
@@ -732,7 +851,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
-                  አዲስ የጸደቀ ሪፖርት
+                  {currentLang === 'om'
+                    ? 'Gabaasa Haaraa Mirkanaa\'e'
+                    : currentLang === 'en'
+                    ? 'Newly Approved Report'
+                    : 'አዲስ የጸደቀ ሪፖርት'}
                 </span>
                 <span className="text-xs font-bold text-emerald-100">
                   {unreadNotifications[0].periodLabel}
@@ -750,7 +873,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             className="w-full sm:w-auto px-4 py-2 bg-white text-emerald-950 font-black text-xs rounded-xl shadow-md hover:bg-emerald-50 transition-all shrink-0 inline-flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Eye className="w-4 h-4 text-emerald-800" />
-            <span>ካርዱን ወዲያውኑ አሳይ</span>
+            <span>
+              {currentLang === 'om'
+                ? 'Kaardii Battalumatti Agarsiisi'
+                : currentLang === 'en'
+                ? 'Show Card Immediately'
+                : 'ካርዱን ወዲያውኑ አሳይ'}
+            </span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -765,14 +894,26 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           <div>
             <div className="flex items-center gap-2 justify-center sm:justify-start">
               <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
-                የትምህርት ቢሮ ይፋዊ የተማሪ/ወላጅ ግብዓት
+                {currentLang === 'om'
+                  ? 'Yaada Ifaa Barataa/Maatii Biiroo Barnootaa'
+                  : currentLang === 'en'
+                  ? 'Official Bureau Student/Parent Feedback'
+                  : 'የትምህርት ቢሮ ይፋዊ የተማሪ/ወላጅ ግብዓት'}
               </span>
             </div>
             <h3 className="text-sm sm:text-base font-black text-slate-900 mt-0.5">
-              መምህራንዎ እንዴት እያስተማሩ ነው? የማስተማር ብቃታቸውን ይመዝኑ
+              {currentLang === 'om'
+                ? 'Barsiisonni keessan akkamitti barsiisaa jiru? Dandeettii barsiisuu isaanii madaalaa'
+                : currentLang === 'en'
+                ? 'How are your teachers performing? Rate their teaching quality'
+                : 'መምህራንዎ እንዴት እያስተማሩ ነው? የማስተማር ብቃታቸውን ይመዝኑ'}
             </h3>
             <p className="text-xs text-slate-600 mt-0.5">
-              የማስተማር ብቃታቸው፣ የትምህርት አሰጣጡ እና ተነሳሽነታቸው ለእያንዳንዳቸው ከ 10 ነጥብ በመመዘን ወደ ሻሸመኔ ትምህርት ቢሮ ይላኩ።
+              {currentLang === 'om'
+                ? 'Dandeettii barsiisuu, haala kenniinsa barnootaa fi kaka\'umsa isaanii tokko tokkoon qabxii 10 keessaa madaaluun gara Biiroo Barnootaa Shaashamanneetti ergaa.'
+                : currentLang === 'en'
+                ? 'Rate each teacher out of 10 on teaching competence, lesson delivery, and motivation and send to Shashemene Education Bureau.'
+                : 'የማስተማር ብቃታቸው፣ የትምህርት አሰጣጡ እና ተነሳሽነታቸው ለእያንዳንዳቸው ከ 10 ነጥብ በመመዘን ወደ ሻሸመኔ ትምህርት ቢሮ ይላኩ።'}
             </p>
           </div>
         </div>
@@ -783,42 +924,96 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
           className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md hover:scale-102 cursor-pointer flex items-center gap-2 shrink-0"
         >
           <Star className="w-4 h-4 fill-slate-950" />
-          <span>መምህራንን ገምግም (Rate Teachers)</span>
+          <span>
+            {currentLang === 'om'
+              ? 'Barsiisota Madaali (Rate Teachers)'
+              : currentLang === 'en'
+              ? 'Rate Teachers'
+              : 'መምህራንን ገምግም (Rate Teachers)'}
+          </span>
         </button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">የክፍል ደረጃ (Rank)</span>
+          <span className="text-[11px] text-slate-500 block mb-1">
+            {currentLang === 'om'
+              ? 'Sadarkaa Kutaa (Rank)'
+              : currentLang === 'en'
+              ? 'Class Rank'
+              : 'የክፍል ደረጃ (Rank)'}
+          </span>
           <span className="text-2xl font-extrabold text-emerald-800">
             #{student.rank}
           </span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">በክፍሉ ውስጥ</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">
+            {currentLang === 'om'
+              ? 'Kutaa keessatti'
+              : currentLang === 'en'
+              ? 'Within class'
+              : 'በክፍሉ ውስጥ'}
+          </span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">አማካይ ውጤት</span>
+          <span className="text-[11px] text-slate-500 block mb-1">
+            {currentLang === 'om'
+              ? 'Qabxii Giddugaleessaa'
+              : currentLang === 'en'
+              ? 'Average Score'
+              : 'አማካይ ውጤት'}
+          </span>
           <span className="text-2xl font-extrabold text-slate-900">
             {averagePercentage}%
           </span>
-          <span className="text-[10px] text-emerald-700 block mt-0.5">የላቀ ውጤት</span>
+          <span className="text-[10px] text-emerald-700 block mt-0.5">
+            {currentLang === 'om'
+              ? 'Qabxii Olaanaa'
+              : currentLang === 'en'
+              ? 'High Performance'
+              : 'የላቀ ውጤት'}
+          </span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">የስነ-ምግባር ውጤት</span>
+          <span className="text-[11px] text-slate-500 block mb-1">
+            {currentLang === 'om'
+              ? 'Qabxii Naamusaa'
+              : currentLang === 'en'
+              ? 'Conduct Grade'
+              : 'የስነ-ምግባር ውጤት'}
+          </span>
           <span className="text-2xl font-extrabold text-emerald-800">
             {student.conduct}
           </span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">ምርጥ ስነ-ምግባር</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">
+            {currentLang === 'om'
+              ? 'Naamusa Gaarii'
+              : currentLang === 'en'
+              ? 'Exemplary Conduct'
+              : 'ምርጥ ስነ-ምግባር'}
+          </span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">የመገኘት ምጣኔ</span>
+          <span className="text-[11px] text-slate-500 block mb-1">
+            {currentLang === 'om'
+              ? 'Hirmannaa Argamaa'
+              : currentLang === 'en'
+              ? 'Attendance Rate'
+              : 'የመገኘት ምጣኔ'}
+          </span>
           <span className="text-2xl font-extrabold text-slate-900">
             {student.attendanceRate}%
           </span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">መደበኛ ተሳትፎ</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">
+            {currentLang === 'om'
+              ? 'Hirmannaa Idilee'
+              : currentLang === 'en'
+              ? 'Regular Attendance'
+              : 'መደበኛ ተሳትፎ'}
+          </span>
         </div>
       </div>
 
@@ -833,10 +1028,18 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">
-                የትምህርት አይነቶች ውጤት እና የምዘና ሂደት ግራፍ (Subject Grades Visualization)
+                {currentLang === 'om'
+                  ? 'Giraafii Qabxii Gosoota Barnootaa fi Adeemsa Madaallii'
+                  : currentLang === 'en'
+                  ? 'Subject Grades & Assessment Progress Visualization'
+                  : 'የትምህርት አይነቶች ውጤት እና የምዘና ሂደት ግራፍ (Subject Grades Visualization)'}
               </h3>
               <p className="text-[11px] text-slate-500">
-                የክፍል ፈተናዎች፣ የግማሽ ዓመት (Mid) እና የማጠቃለያ ፈተናዎችን በግራፍ ተመልከት
+                {currentLang === 'om'
+                  ? 'Qormaata kutaa, walakkaa waggaa (Mid) fi xumuraa (Final) giraafiin ilaali'
+                  : currentLang === 'en'
+                  ? 'Visualize class quizzes, mid-term, and final exam performance'
+                  : 'የክፍል ፈተናዎች፣ የግማሽ ዓመት (Mid) እና የማጠቃለያ ፈተናዎችን በግራፍ ተመልከት'}
               </p>
             </div>
           </div>
@@ -851,7 +1054,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              የውጤት ክፍፍል (Stacked)
+              {currentLang === 'om'
+                ? 'Qoodinsa Qabxii (Stacked)'
+                : currentLang === 'en'
+                ? 'Breakdown (Stacked)'
+                : 'የውጤት ክፍፍል (Stacked)'}
             </button>
             <button
               onClick={() => setChartMode('grouped')}
@@ -861,7 +1068,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              የምዘና ንጽጽር (Grouped)
+              {currentLang === 'om'
+                ? 'Walbira Qabinsa (Grouped)'
+                : currentLang === 'en'
+                ? 'Comparison (Grouped)'
+                : 'የምዘና ንጽጽር (Grouped)'}
             </button>
             <button
               onClick={() => setChartMode('total')}
@@ -871,7 +1082,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              አጠቃላይ (Total)
+              {currentLang === 'om'
+                ? 'Waliigala (Total)'
+                : currentLang === 'en'
+                ? 'Total'
+                : 'አጠቃላይ (Total)'}
             </button>
             <button
               onClick={() => setChartMode('timeline')}
@@ -881,7 +1096,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              በጊዜ ሂደት (Timeline)
+              {currentLang === 'om'
+                ? 'Adeemsa Yeroo (Timeline)'
+                : currentLang === 'en'
+                ? 'Timeline'
+                : 'በጊዜ ሂደት (Timeline)'}
             </button>
           </div>
         </div>
@@ -890,16 +1109,34 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         {chartMode === 'timeline' && (
           <div className="flex items-center gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
             <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold text-slate-600">የትምህርት አይነት ምረጥ፡</span>
+            <span className="font-semibold text-slate-600">
+              {currentLang === 'om'
+                ? 'Gosa Barnootaa Filadhu:'
+                : currentLang === 'en'
+                ? 'Select Subject:'
+                : 'የትምህርት አይነት ምረጥ፡'}
+            </span>
             <select
               value={selectedSubjectFilter}
               onChange={(e) => setSelectedSubjectFilter(e.target.value)}
               className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-800 focus:outline-hidden"
             >
-              <option value="all">ሁሉም የትምህርት አይነቶች አማካይ (All Subjects Average)</option>
+              <option value="all">
+                {currentLang === 'om'
+                  ? 'Giddugaleessa Gosoota Barnootaa Hunda'
+                  : currentLang === 'en'
+                  ? 'All Subjects Average'
+                  : 'ሁሉም የትምህርት አይነቶች አማካይ (All Subjects Average)'}
+              </option>
               {student.scores.map((sc, idx) => (
                 <option key={idx} value={sc.subject}>
-                  {sc.subject} (ድምር፡ {sc.total}%)
+                  {sc.subject} (
+                  {currentLang === 'om'
+                    ? `Ida'ama: ${sc.total}%`
+                    : currentLang === 'en'
+                    ? `Total: ${sc.total}%`
+                    : `ድምር፡ ${sc.total}%`}
+                  )
                 </option>
               ))}
             </select>
@@ -929,8 +1166,14 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 />
                 <Tooltip
                   formatter={(value: any, name: any, item: any) => [
-                    `${value}% (${item.payload.earned} / ${item.payload.max} ነጥብ)`,
-                    'የተመዘገበ ምጣኔ'
+                    `${value}% (${item.payload.earned} / ${item.payload.max} ${
+                      currentLang === 'om' ? 'qabxii' : currentLang === 'en' ? 'pts' : 'ነጥብ'
+                    })`,
+                    currentLang === 'om'
+                      ? 'Hanga Galmaa\'e'
+                      : currentLang === 'en'
+                      ? 'Recorded Percentage'
+                      : 'የተመዘገበ ምጣኔ'
                   ]}
                   contentStyle={{
                     backgroundColor: '#0f172a',
@@ -944,13 +1187,33 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   y={50}
                   stroke="#ef4444"
                   strokeDasharray="4 4"
-                  label={{ value: 'የማለፊያ መስመር (50%)', fill: '#ef4444', fontSize: 10, position: 'insideTopLeft' }}
+                  label={{
+                    value:
+                      currentLang === 'om'
+                        ? 'Daangaa Darbinaa (50%)'
+                        : currentLang === 'en'
+                        ? 'Pass Line (50%)'
+                        : 'የማለፊያ መስመር (50%)',
+                    fill: '#ef4444',
+                    fontSize: 10,
+                    position: 'insideTopLeft'
+                  }}
                 />
                 <ReferenceLine
                   y={85}
                   stroke="#10b981"
                   strokeDasharray="4 4"
-                  label={{ value: 'የላቀ ደረጃ (85%)', fill: '#059669', fontSize: 10, position: 'insideTopLeft' }}
+                  label={{
+                    value:
+                      currentLang === 'om'
+                        ? 'Sadarkaa Olaanaa (85%)'
+                        : currentLang === 'en'
+                        ? 'Distinction (85%)'
+                        : 'የላቀ ደረጃ (85%)',
+                    fill: '#059669',
+                    fontSize: 10,
+                    position: 'insideTopLeft'
+                  }}
                 />
                 <Bar dataKey="percentage" radius={[8, 8, 0, 0]}>
                   {timelineData.map((entry, index) => (
@@ -998,31 +1261,69 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   y={50}
                   stroke="#f43f5e"
                   strokeDasharray="4 4"
-                  label={{ value: 'ማለፊያ (50%)', fill: '#f43f5e', fontSize: 10, position: 'insideTopLeft' }}
+                  label={{
+                    value:
+                      currentLang === 'om'
+                        ? 'Darbina (50%)'
+                        : currentLang === 'en'
+                        ? 'Pass (50%)'
+                        : 'ማለፊያ (50%)',
+                    fill: '#f43f5e',
+                    fontSize: 10,
+                    position: 'insideTopLeft'
+                  }}
                 />
                 <ReferenceLine
                   y={85}
                   stroke="#059669"
                   strokeDasharray="4 4"
-                  label={{ value: 'የላቀ ውጤት (85%)', fill: '#059669', fontSize: 10, position: 'insideTopLeft' }}
+                  label={{
+                    value:
+                      currentLang === 'om'
+                        ? 'Qabxii Olaanaa (85%)'
+                        : currentLang === 'en'
+                        ? 'High Score (85%)'
+                        : 'የላቀ ውጤት (85%)',
+                    fill: '#059669',
+                    fontSize: 10,
+                    position: 'insideTopLeft'
+                  }}
                 />
                 <Bar
                   dataKey="quizzes"
-                  name="የክፍል ፈተናዎች (20%)"
+                  name={
+                    currentLang === 'om'
+                      ? 'Qormaata Kutaa (20%)'
+                      : currentLang === 'en'
+                      ? 'Class Quizzes (20%)'
+                      : 'የክፍል ፈተናዎች (20%)'
+                  }
                   stackId="a"
                   fill="#0284c7"
                   radius={[0, 0, 0, 0]}
                 />
                 <Bar
                   dataKey="midExam"
-                  name="የግማሽ ዓመት ፈተና (30%)"
+                  name={
+                    currentLang === 'om'
+                      ? 'Qormaata Walakkaa Waggaa (30%)'
+                      : currentLang === 'en'
+                      ? 'Mid-Term Exam (30%)'
+                      : 'የግማሽ ዓመት ፈተና (30%)'
+                  }
                   stackId="a"
                   fill="#f59e0b"
                   radius={[0, 0, 0, 0]}
                 />
                 <Bar
                   dataKey="finalExam"
-                  name="የማጠቃለያ ፈተና (50%)"
+                  name={
+                    currentLang === 'om'
+                      ? 'Qormaata Xumuraa (50%)'
+                      : currentLang === 'en'
+                      ? 'Final Exam (50%)'
+                      : 'የማጠቃለያ ፈተና (50%)'
+                  }
                   stackId="a"
                   fill="#10b981"
                   radius={[6, 6, 0, 0]}
@@ -1052,19 +1353,37 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px' }} />
                 <Bar
                   dataKey="quizzes"
-                  name="የክፍል ፈተናዎች (ከ 20)"
+                  name={
+                    currentLang === 'om'
+                      ? 'Qormaata Kutaa (20 keessaa)'
+                      : currentLang === 'en'
+                      ? 'Class Quizzes (/20)'
+                      : 'የክፍል ፈተናዎች (ከ 20)'
+                  }
                   fill="#0284c7"
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="midExam"
-                  name="የግማሽ ዓመት (ከ 30)"
+                  name={
+                    currentLang === 'om'
+                      ? 'Walakkaa Waggaa (30 keessaa)'
+                      : currentLang === 'en'
+                      ? 'Mid-Term (/30)'
+                      : 'የግማሽ ዓመት (ከ 30)'
+                  }
                   fill="#f59e0b"
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="finalExam"
-                  name="የማጠቃለያ ፈተና (ከ 50)"
+                  name={
+                    currentLang === 'om'
+                      ? 'Qormaata Xumuraa (50 keessaa)'
+                      : currentLang === 'en'
+                      ? 'Final Exam (/50)'
+                      : 'የማጠቃለያ ፈተና (ከ 50)'
+                  }
                   fill="#10b981"
                   radius={[4, 4, 0, 0]}
                 />
@@ -1097,7 +1416,17 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   strokeDasharray="4 4"
                   label={{ value: '85%+', fill: '#059669', fontSize: 10, position: 'insideTopLeft' }}
                 />
-                <Bar dataKey="total" name="አጠቃላይ ውጤት (100%)" radius={[6, 6, 0, 0]}>
+                <Bar
+                  dataKey="total"
+                  name={
+                    currentLang === 'om'
+                      ? 'Qabxii Waliigalaa (100%)'
+                      : currentLang === 'en'
+                      ? 'Total Score (100%)'
+                      : 'አጠቃላይ ውጤት (100%)'
+                  }
+                  radius={[6, 6, 0, 0]}
+                >
                   {subjectChartData.map((entry, index) => (
                     <Cell
                       key={`cell-total-${index}`}
@@ -1122,19 +1451,27 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 text-xs">
           <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl">
             <span className="text-[10px] text-emerald-800 font-bold block uppercase">
-              ከፍተኛ ውጤት የተመዘገበበት ትምህርት
+              {currentLang === 'om'
+                ? 'Gosa Barnootaa Qabxiin Olaanaan Galmaa\'e'
+                : currentLang === 'en'
+                ? 'Highest Scoring Subject'
+                : 'ከፍተኛ ውጤት የተመዘገበበት ትምህርት'}
             </span>
             <p className="font-extrabold text-emerald-950 text-sm mt-0.5">
               {topSubject?.subject}
             </p>
             <span className="text-[10px] text-emerald-700">
-              ውጤት: {topSubject?.total}% ({topSubject?.gradeLetter})
+              {currentLang === 'om' ? 'Qabxii:' : currentLang === 'en' ? 'Score:' : 'ውጤት:'} {topSubject?.total}% ({topSubject?.gradeLetter})
             </span>
           </div>
 
           <div className="p-3 bg-sky-50/70 border border-sky-100 rounded-xl">
             <span className="text-[10px] text-sky-800 font-bold block uppercase">
-              የማጠቃለያ ፈተና አማካይ (Final Exam)
+              {currentLang === 'om'
+                ? 'Giddugaleessa Qormaata Xumuraa (Final Exam)'
+                : currentLang === 'en'
+                ? 'Final Exam Average'
+                : 'የማጠቃለያ ፈተና አማካይ (Final Exam)'}
             </span>
             <p className="font-extrabold text-sky-950 text-sm mt-0.5">
               {(
@@ -1143,18 +1480,28 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               ).toFixed(1)}{' '}
               / 50
             </p>
-            <span className="text-[10px] text-sky-700">የ 50% ፈተናዎች አማካይ</span>
+            <span className="text-[10px] text-sky-700">
+              {currentLang === 'om'
+                ? 'Giddugaleessa qormaata 50%'
+                : currentLang === 'en'
+                ? 'Average of 50% final exams'
+                : 'የ 50% ፈተናዎች አማካይ'}
+            </span>
           </div>
 
           <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
             <span className="text-[10px] text-slate-500 font-bold block uppercase">
-              ተጨማሪ ትኩረት የሚሻ ትምህርት
+              {currentLang === 'om'
+                ? 'Gosa Barnootaa Xiyyeeffannoo Dabalataa Barbaadu'
+                : currentLang === 'en'
+                ? 'Subject Needing Extra Focus'
+                : 'ተጨማሪ ትኩረት የሚሻ ትምህርት'}
             </span>
             <p className="font-bold text-slate-800 text-sm mt-0.5">
               {lowestSubject?.subject}
             </p>
             <span className="text-[10px] text-slate-500">
-              ውጤት: {lowestSubject?.total}% ({lowestSubject?.gradeLetter})
+              {currentLang === 'om' ? 'Qabxii:' : currentLang === 'en' ? 'Score:' : 'ውጤት:'} {lowestSubject?.total}% ({lowestSubject?.gradeLetter})
             </span>
           </div>
         </div>
@@ -1165,8 +1512,20 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
       {/* ========================================================= */}
       <AudioTranscriber
         currentLang={currentLang}
-        title="የተማሪ/ወላጅ የድምጽ አስተያየት እና ግብረ-መልስ (Voice Note Transcription)"
-        placeholder="በማይክሮፎን የተናገሩት ድምጽ (በአማርኛ፣ በኦሮሚኛ ወይም በእንግሊዝኛ) በGemini 3.5 Transcribe ተተርጉሞ እዚህ ይቀመጣል..."
+        title={
+          currentLang === 'om'
+            ? 'Yaada Sagalee Barataa/Maatii fi Deebii (Voice Note Transcription)'
+            : currentLang === 'en'
+            ? 'Student/Parent Voice Note & Feedback Transcription'
+            : 'የተማሪ/ወላጅ የድምጽ አስተያየት እና ግብረ-መልስ (Voice Note Transcription)'
+        }
+        placeholder={
+          currentLang === 'om'
+            ? 'Sagaleen maaykiroofooniin dubbattan (Afaan Oromoo, Amaaraa ykn Ingiliffaan) gara barreeffamaatti jijjiiramee asitti taa\'a...'
+            : currentLang === 'en'
+            ? 'Your spoken voice note (Afaan Oromoo, Amharic, or English) will be transcribed and saved here...'
+            : 'በማይክሮፎን የተናገሩት ድምጽ (በአማርኛ፣ በኦሮሚኛ ወይም በእንግሊዝኛ) በGemini 3.5 Transcribe ተተርጉሞ እዚህ ይቀመጣል...'
+        }
       />
 
       {/* ========================================================= */}
@@ -1180,17 +1539,29 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             <div className="flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-emerald-800" />
               <h3 className="text-base font-bold text-slate-900">
-                የተማሪ የውጤት ካርድ እና ይፋዊ የውጤት ማረጋገጫ
+                {currentLang === 'om'
+                  ? 'Kaardii Qabxii Barataa fi Mirkaneessa Qabxii Ifaa'
+                  : currentLang === 'en'
+                  ? 'Student Report Card & Official Grade Verification'
+                  : 'የተማሪ የውጤት ካርድ እና ይፋዊ የውጤት ማረጋገጫ'}
               </h3>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              የሩብ ዓመት (Quarter)፣ የግማሽ ዓመት (Semester) እና የሙሉ ዓመት (Annual) ይፋዊ ውጤት
+              {currentLang === 'om'
+                ? 'Qabxii ifaa Kuwaartaraa (Quarter), Seemeestaraa (Semester) fi Waggaa Guutuu (Annual)'
+                : currentLang === 'en'
+                ? 'Official Quarter, Semester, and Annual Academic Results'
+                : 'የሩብ ዓመት (Quarter)፣ የግማሽ ዓመት (Semester) እና የሙሉ ዓመት (Annual) ይፋዊ ውጤት'}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200">
-              2016 ዓ.ም (2024/2025)
+              {currentLang === 'om'
+                ? 'Bara 2016 A.L.I (2024/2025)'
+                : currentLang === 'en'
+                ? '2024/2025 Academic Year'
+                : '2016 ዓ.ም (2024/2025)'}
             </span>
           </div>
         </div>
@@ -1199,23 +1570,87 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              የትምህርት ወቅት ይምረጡ (Select Academic Period):
+              {currentLang === 'om'
+                ? 'Yeroo Barnootaa Filadhu (Select Academic Period):'
+                : currentLang === 'en'
+                ? 'Select Academic Period:'
+                : 'የትምህርት ወቅት ይምረጡ (Select Academic Period):'}
             </label>
             <span className="text-[10px] text-slate-400">
-              ✓ = በዳይሬክተር የጸደቀ ይፋዊ ውጤት
+              {currentLang === 'om'
+                ? '✓ = Qabxii ifaa Daarektaraan mirkanaa\'e'
+                : currentLang === 'en'
+                ? '✓ = Official result approved by Director'
+                : '✓ = በዳይሬክተር የጸደቀ ይፋዊ ውጤት'}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 text-xs font-bold">
             {(
               [
-                { id: 'quarter_1', label: '1ኛ ሩብ (Q1)' },
-                { id: 'quarter_2', label: '2ኛ ሩብ (Q2)' },
-                { id: 'semester_1', label: '1ኛ ሴሚስተር (Sem 1)' },
-                { id: 'quarter_3', label: '3ኛ ሩብ (Q3)' },
-                { id: 'quarter_4', label: '4ኛ ሩብ (Q4)' },
-                { id: 'semester_2', label: '2ኛ ሴሚስተር (Sem 2)' },
-                { id: 'annual', label: 'የሙሉ ዓመት (Annual)' }
+                {
+                  id: 'quarter_1',
+                  label:
+                    currentLang === 'om'
+                      ? 'Kuwaartara 1ffaa (Q1)'
+                      : currentLang === 'en'
+                      ? '1st Quarter (Q1)'
+                      : '1ኛ ሩብ (Q1)'
+                },
+                {
+                  id: 'quarter_2',
+                  label:
+                    currentLang === 'om'
+                      ? 'Kuwaartara 2ffaa (Q2)'
+                      : currentLang === 'en'
+                      ? '2nd Quarter (Q2)'
+                      : '2ኛ ሩብ (Q2)'
+                },
+                {
+                  id: 'semester_1',
+                  label:
+                    currentLang === 'om'
+                      ? 'Seemeestara 1ffaa (Sem 1)'
+                      : currentLang === 'en'
+                      ? '1st Semester (Sem 1)'
+                      : '1ኛ ሴሚስተር (Sem 1)'
+                },
+                {
+                  id: 'quarter_3',
+                  label:
+                    currentLang === 'om'
+                      ? 'Kuwaartara 3ffaa (Q3)'
+                      : currentLang === 'en'
+                      ? '3rd Quarter (Q3)'
+                      : '3ኛ ሩብ (Q3)'
+                },
+                {
+                  id: 'quarter_4',
+                  label:
+                    currentLang === 'om'
+                      ? 'Kuwaartara 4ffaa (Q4)'
+                      : currentLang === 'en'
+                      ? '4th Quarter (Q4)'
+                      : '4ኛ ሩብ (Q4)'
+                },
+                {
+                  id: 'semester_2',
+                  label:
+                    currentLang === 'om'
+                      ? 'Seemeestara 2ffaa (Sem 2)'
+                      : currentLang === 'en'
+                      ? '2nd Semester (Sem 2)'
+                      : '2ኛ ሴሚስተር (Sem 2)'
+                },
+                {
+                  id: 'annual',
+                  label:
+                    currentLang === 'om'
+                      ? 'Waggaa Guutuu (Annual)'
+                      : currentLang === 'en'
+                      ? 'Annual Result'
+                      : 'የሙሉ ዓመት (Annual)'
+                }
               ] as { id: AcademicPeriodType; label: string }[]
             ).map((item) => {
               const isPeriodApproved = schoolGradeWorkflows.some(
@@ -1254,9 +1689,19 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                           ? 'bg-emerald-950 text-emerald-200 border border-emerald-500/50'
                           : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       }`}
-                      title="በዳይሬክተር የጸደቀ"
+                      title={
+                        currentLang === 'om'
+                          ? 'Daarektaraan mirkanaa\'e'
+                          : currentLang === 'en'
+                          ? 'Approved by Director'
+                          : 'በዳይሬክተር የጸደቀ'
+                      }
                     >
-                      ✓ ጸድቋል
+                      {currentLang === 'om'
+                        ? '✓ Mirkanaa\'e'
+                        : currentLang === 'en'
+                        ? '✓ Approved'
+                        : '✓ ጸድቋል'}
                     </span>
                   )}
                   {hasUnreadForPeriod && (
@@ -1270,9 +1715,6 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
 
         {/* =========================================================================
             3-TIER APPROVAL WORKFLOW STATUS BANNER
-            - Director Approved (Green & Gold Seal)
-            - Pending Workflow (Amber In-Progress Pipeline)
-            - Unscheduled (Slate Info)
            ========================================================================= */}
         {approvedBatch ? (
           <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg border-2 border-emerald-400/50 space-y-4">
@@ -1284,17 +1726,29 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/30 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
-                      በዳይሬክተር የጸደቀ እና ይፋ የተደረገ (Director Approved)
+                      {currentLang === 'om'
+                        ? 'Daarektaraan Mirkanaa\'ee Ifa Ta\'e (Director Approved)'
+                        : currentLang === 'en'
+                        ? 'Director Approved & Published'
+                        : 'በዳይሬክተር የጸደቀ እና ይፋ የተደረገ (Director Approved)'}
                     </span>
                     <span className="text-[10px] font-bold text-amber-300 font-mono">
                       {getPeriodLabel(selectedPeriod)}
                     </span>
                   </div>
                   <h4 className="text-sm sm:text-base font-black tracking-tight text-white mt-0.5">
-                    ይፋዊ የትምህርት ቤት ማህተም እና የዳይሬክተር ማረጋገጫ የተሰጠው ውጤት
+                    {currentLang === 'om'
+                      ? 'Qabxii Chaappaa Mana Barumsaa Ifaa fi Mirkaneessa Daarektaraa Qabu'
+                      : currentLang === 'en'
+                      ? 'Official School-Sealed & Director-Verified Result'
+                      : 'ይፋዊ የትምህርት ቤት ማህተም እና የዳይሬክተር ማረጋገጫ የተሰጠው ውጤት'}
                   </h4>
                   <p className="text-xs text-emerald-100/90 mt-0.5">
-                    በመምህራን ተመዝግቦ፣ በክፍል ተጠሪው መምህር ተጣርቶ፣ በትምህርት ቤቱ ዳይሬክተር ጸድቆ ለወላጅ/ተማሪ እና ለሻሸመኔ ትምህርት ቢሮ ደርሷል።
+                    {currentLang === 'om'
+                      ? 'Barsiisotaan galmaa\'ee, itti gaafatamaa kutaan qulqulleeffamee, daarektara mana barumsaan mirkanaa\'ee maatii/barataa fi Biiroo Barnootaa Shaashamannee qaqqabeera.'
+                      : currentLang === 'en'
+                      ? 'Recorded by subject teachers, verified by homeroom teacher, approved by school director, and delivered to parent/student and Shashemene Education Bureau.'
+                      : 'በመምህራን ተመዝግቦ፣ በክፍል ተጠሪው መምህር ተጣርቶ፣ በትምህርት ቤቱ ዳይሬክተር ጸድቆ ለወላጅ/ተማሪ እና ለሻሸመኔ ትምህርት ቢሮ ደርሷል።'}
                   </p>
                 </div>
               </div>
@@ -1302,13 +1756,22 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               {/* Digital Seal Code Badge */}
               <div className="bg-black/40 border border-amber-400/50 p-2.5 rounded-xl text-right sm:text-center shrink-0 w-full sm:w-auto">
                 <span className="text-[9px] text-amber-300 font-mono block uppercase">
-                  ይፋዊ የዲጂታል ማህተም ቁጥር
+                  {currentLang === 'om'
+                    ? 'Lakkoofsa Chaappaa Diijitaalaa Ifaa'
+                    : currentLang === 'en'
+                    ? 'Official Digital Seal Number'
+                    : 'ይፋዊ የዲጂታል ማህተም ቁጥር'}
                 </span>
                 <span className="text-xs font-mono font-black text-white">
                   {approvedBatch.directorApprovalSealNumber || 'SHAS-DIR-SEAL-VERIFIED'}
                 </span>
                 <span className="text-[9px] text-emerald-300 block mt-0.5">
-                  የጸደቀበት ቀን፡ {approvedBatch.directorApprovedAt ? approvedBatch.directorApprovedAt.split('T')[0] : '2024-02-04'}
+                  {currentLang === 'om'
+                    ? 'Guyyaa Mirkanaa\'e:'
+                    : currentLang === 'en'
+                    ? 'Approved Date:'
+                    : 'የጸደቀበት ቀን፡'}{' '}
+                  {approvedBatch.directorApprovedAt ? approvedBatch.directorApprovedAt.split('T')[0] : '2024-02-04'}
                 </span>
               </div>
             </div>
@@ -1318,32 +1781,80 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               <div className="p-2.5 rounded-xl bg-white/10 flex items-center gap-2 border border-white/10">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <div>
-                  <span className="text-[10px] text-emerald-200 block">1. መምህራን (Subject Teachers)</span>
-                  <strong className="text-white text-[11px]">ውጤት አስረክበዋል ✅</strong>
+                  <span className="text-[10px] text-emerald-200 block">
+                    {currentLang === 'om'
+                      ? '1. Barsiisota (Subject Teachers)'
+                      : currentLang === 'en'
+                      ? '1. Subject Teachers'
+                      : '1. መምህራን (Subject Teachers)'}
+                  </span>
+                  <strong className="text-white text-[11px]">
+                    {currentLang === 'om'
+                      ? 'Qabxii galchaniiru ✅'
+                      : currentLang === 'en'
+                      ? 'Scores Submitted ✅'
+                      : 'ውጤት አስረክበዋል ✅'}
+                  </strong>
                 </div>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/10 flex items-center gap-2 border border-white/10">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <div>
-                  <span className="text-[10px] text-emerald-200 block">2. የክፍል ተጠሪ (Homeroom)</span>
-                  <strong className="text-white text-[11px]">አጣርተው አስተላልፈዋል ✅</strong>
+                  <span className="text-[10px] text-emerald-200 block">
+                    {currentLang === 'om'
+                      ? '2. Itti Gaafatamaa Kutaa (Homeroom)'
+                      : currentLang === 'en'
+                      ? '2. Homeroom Teacher'
+                      : '2. የክፍል ተጠሪ (Homeroom)'}
+                  </span>
+                  <strong className="text-white text-[11px]">
+                    {currentLang === 'om'
+                      ? 'Qulqulleessanii dabarsaniiru ✅'
+                      : currentLang === 'en'
+                      ? 'Verified & Forwarded ✅'
+                      : 'አጣርተው አስተላልፈዋል ✅'}
+                  </strong>
                 </div>
               </div>
 
               <div className="p-2.5 rounded-xl bg-amber-400/20 flex items-center gap-2 border border-amber-400/40">
                 <ShieldCheck className="w-4 h-4 text-amber-300 shrink-0" />
                 <div>
-                  <span className="text-[10px] text-amber-200 block">3. ዳይሬክተር (School Director)</span>
-                  <strong className="text-amber-100 text-[11px]">በይፋ አፅድቀዋል 🏛️</strong>
+                  <span className="text-[10px] text-amber-200 block">
+                    {currentLang === 'om'
+                      ? '3. Daarektara (School Director)'
+                      : currentLang === 'en'
+                      ? '3. School Director'
+                      : '3. ዳይሬክተር (School Director)'}
+                  </span>
+                  <strong className="text-amber-100 text-[11px]">
+                    {currentLang === 'om'
+                      ? 'Ifatti mirkaneessaniiru 🏛️'
+                      : currentLang === 'en'
+                      ? 'Officially Approved 🏛️'
+                      : 'በይፋ አፅድቀዋል 🏛️'}
+                  </strong>
                 </div>
               </div>
 
               <div className="p-2.5 rounded-xl bg-teal-500/20 flex items-center gap-2 border border-teal-400/30">
                 <Send className="w-4 h-4 text-teal-300 shrink-0" />
                 <div>
-                  <span className="text-[10px] text-teal-200 block">4. ትምህርት ቢሮ (Bureau)</span>
-                  <strong className="text-teal-100 text-[11px]">በማዕከላዊ ደርሷል 🌐</strong>
+                  <span className="text-[10px] text-teal-200 block">
+                    {currentLang === 'om'
+                      ? '4. Biiroo Barnootaa (Bureau)'
+                      : currentLang === 'en'
+                      ? '4. Education Bureau'
+                      : '4. ትምህርት ቢሮ (Bureau)'}
+                  </span>
+                  <strong className="text-teal-100 text-[11px]">
+                    {currentLang === 'om'
+                      ? 'Giddugalatti qaqqabeera 🌐'
+                      : currentLang === 'en'
+                      ? 'Synced to Bureau 🌐'
+                      : 'በማዕከላዊ ደርሷል 🌐'}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -1351,7 +1862,21 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             {/* Director Notes */}
             {approvedBatch.directorFeedback && (
               <div className="bg-black/30 p-2.5 rounded-xl text-xs text-emerald-100 italic border border-white/10">
-                💬 <strong>የዳይሬክተር ማጠቃለያ አስተያየት፡</strong> "{approvedBatch.directorFeedback}" — {approvedBatch.directorName || 'ዋና ዳይሬክተር'}
+                💬{' '}
+                <strong>
+                  {currentLang === 'om'
+                    ? 'Yaada Xumuraa Daarektaraa:'
+                    : currentLang === 'en'
+                    ? 'Director Summary Remark:'
+                    : 'የዳይሬክተር ማጠቃለያ አስተያየት፡'}
+                </strong>{' '}
+                "{approvedBatch.directorFeedback}" —{' '}
+                {approvedBatch.directorName ||
+                  (currentLang === 'om'
+                    ? 'Daarektara Olaanaa'
+                    : currentLang === 'en'
+                    ? 'Principal'
+                    : 'ዋና ዳይሬክተር')}
               </div>
             )}
           </div>
@@ -1364,22 +1889,46 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
-                    በማፅደቅ ሂደት ላይ (Approval In Progress)
+                    {currentLang === 'om'
+                      ? 'Adeemsa Mirkaneessaa Irra Jira (In Progress)'
+                      : currentLang === 'en'
+                      ? 'Approval In Progress'
+                      : 'በማፅደቅ ሂደት ላይ (Approval In Progress)'}
                   </span>
                   <span className="text-xs font-bold text-amber-800">
                     {getPeriodLabel(selectedPeriod)}
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-amber-950 mt-1">
-                  ይህ ውጤት በዳይሬክተር ይፋዊ የማፅደቂያ ሰንሰለት ውስጥ ይገኛል
+                  {currentLang === 'om'
+                    ? 'Qabxiin kun funcaa mirkaneessa ifaa Daarektaraa keessa jira'
+                    : currentLang === 'en'
+                    ? 'This result is currently in the Director approval workflow'
+                    : 'ይህ ውጤት በዳይሬክተር ይፋዊ የማፅደቂያ ሰንሰለት ውስጥ ይገኛል'}
                 </h4>
                 <p className="text-xs text-amber-800 mt-0.5">
                   {pendingBatch.status === 'submitted_to_homeroom'
-                    ? 'መምህራን ውጤቱን ለክፍል ተጠሪው መምህር ልከዋል፤ በክፍል ተጠሪው ምርመራ እና ስነ-ምግባር ማጣሪያ ላይ ይገኛል።'
+                    ? currentLang === 'om'
+                      ? 'Barsiisonni qabxii gara itti gaafatamaa kutaatti ergamaniiru; sakatta\'iinsa itti gaafatamaa kutaa fi naamusaa irra jira.'
+                      : currentLang === 'en'
+                      ? 'Teachers submitted scores to the homeroom teacher; currently under homeroom review and conduct verification.'
+                      : 'መምህራን ውጤቱን ለክፍል ተጠሪው መምህር ልከዋል፤ በክፍል ተጠሪው ምርመራ እና ስነ-ምግባር ማጣሪያ ላይ ይገኛል።'
                     : pendingBatch.status === 'submitted_to_director'
-                    ? 'የክፍል ተጠሪው መምህር ውጤቱን ወደ ትምህርት ቤቱ ዋና ዳይሬክተር አስተላልፏል፤ በዳይሬክተር ይፋዊ ማፅደቂያ ላይ ይገኛል።'
+                    ? currentLang === 'om'
+                      ? 'Itti gaafatamaan kutaa qabxii gara Daarektara Olaanaa mana barumsaatti dabarseera; mirkaneessa ifaa eegaa jira.'
+                      : currentLang === 'en'
+                      ? 'Homeroom teacher forwarded the results to the school principal; awaiting final director approval.'
+                      : 'የክፍል ተጠሪው መምህር ውጤቱን ወደ ትምህርት ቤቱ ዋና ዳይሬክተር አስተላልፏል፤ በዳይሬክተር ይፋዊ ማፅደቂያ ላይ ይገኛል።'
                     : pendingBatch.status === 'revision_requested'
-                    ? 'በዳይሬክተር የማስተካከያ ጥያቄ የቀረበበት ሲሆን በመምህሩና በክፍል ተጠሪው እየተጣራ ነው።'
+                    ? currentLang === 'om'
+                      ? 'Gaaffiin sirreeffamaa Daarektaraan dhiyaateera; barsiisaa fi itti gaafatamaa kutaan qulqulleeffamaa jira.'
+                      : currentLang === 'en'
+                      ? 'Revision requested by the director; currently being corrected by teacher and homeroom.'
+                      : 'በዳይሬክተር የማስተካከያ ጥያቄ የቀረበበት ሲሆን በመምህሩና በክፍል ተጠሪው እየተጣራ ነው።'
+                    : currentLang === 'om'
+                    ? 'Qabxiin qophaa\'aa jira.'
+                    : currentLang === 'en'
+                    ? 'Result is being prepared.'
                     : 'ውጤቱ በመዘጋጀት ላይ ይገኛል።'}
                 </p>
               </div>
@@ -1395,7 +1944,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 }`}
               >
                 <Check className="w-4 h-4 text-emerald-700" />
-                <span>1. መምህራን አስረክበዋል</span>
+                <span>
+                  {currentLang === 'om'
+                    ? '1. Barsiisonni galchaniiru'
+                    : currentLang === 'en'
+                    ? '1. Teachers Submitted'
+                    : '1. መምህራን አስረክበዋል'}
+                </span>
               </div>
               <div
                 className={`p-2 rounded-xl flex items-center gap-2 border ${
@@ -1407,7 +1962,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 }`}
               >
                 <Clock className="w-4 h-4 text-amber-800" />
-                <span>2. ክፍል ተጠሪ (በሂደት)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? '2. Itti Gaafatamaa Kutaa (Adeemsa irra)'
+                    : currentLang === 'en'
+                    ? '2. Homeroom (In Progress)'
+                    : '2. ክፍል ተጠሪ (በሂደት)'}
+                </span>
               </div>
               <div
                 className={`p-2 rounded-xl flex items-center gap-2 border ${
@@ -1417,7 +1978,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 }`}
               >
                 <Clock className="w-4 h-4 text-amber-800" />
-                <span>3. ዋና ዳይሬክተር (በጥበቃ)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? '3. Daarektara Olaanaa (Eegaa jira)'
+                    : currentLang === 'en'
+                    ? '3. Principal (Pending)'
+                    : '3. ዋና ዳይሬክተር (በጥበቃ)'}
+                </span>
               </div>
             </div>
           </div>
@@ -1426,11 +1993,23 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             <div className="flex items-center gap-2.5">
               <FileText className="w-4 h-4 text-slate-400 shrink-0" />
               <span>
-                ለ <strong>{getPeriodLabel(selectedPeriod)}</strong> የትምህርት ቤት ውጤት ባች በይፋ እስኪከፈት ድረስ ከታች የ 1ኛ ሴሚስተር አጠቃላይ ውጤት ይታያል።
+                {currentLang === 'om' ? (
+                  <>
+                    Hanga baachiin qabxii mana barumsaa yeroo <strong>{getPeriodLabel(selectedPeriod)}</strong> ifatti banamutti qabxiin waliigalaa Seemeestara 1ffaa armaan gaditti mul&apos;ata.
+                  </>
+                ) : currentLang === 'en' ? (
+                  <>
+                    Until the official grade batch for <strong>{getPeriodLabel(selectedPeriod)}</strong> is opened, the 1st Semester summary is previewed below.
+                  </>
+                ) : (
+                  <>
+                    ለ <strong>{getPeriodLabel(selectedPeriod)}</strong> የትምህርት ቤት ውጤት ባች በይፋ እስኪከፈት ድረስ ከታች የ 1ኛ ሴሚስተር አጠቃላይ ውጤት ይታያል።
+                  </>
+                )}
               </span>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase shrink-0">
-              ቅድመ-ዕይታ
+              {currentLang === 'om' ? 'Dur-ilaalcha' : currentLang === 'en' ? 'Preview' : 'ቅድመ-ዕይታ'}
             </span>
           </div>
         )}
@@ -1441,13 +2020,21 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="px-4 py-3">{t.subject}</th>
-                <th className="px-4 py-3">ፈተና 1 (10%)</th>
-                <th className="px-4 py-3">ፈተና 2 (10%)</th>
+                <th className="px-4 py-3">
+                  {currentLang === 'om' ? 'Qormaata 1 (10%)' : currentLang === 'en' ? 'Quiz 1 (10%)' : 'ፈተና 1 (10%)'}
+                </th>
+                <th className="px-4 py-3">
+                  {currentLang === 'om' ? 'Qormaata 2 (10%)' : currentLang === 'en' ? 'Quiz 2 (10%)' : 'ፈተና 2 (10%)'}
+                </th>
                 <th className="px-4 py-3">{t.mid_score} (30%)</th>
                 <th className="px-4 py-3">{t.final_score} (50%)</th>
                 <th className="px-4 py-3">{t.total_score}</th>
-                <th className="px-4 py-3 text-center">የፊደል ደረጃ</th>
-                <th className="px-4 py-3 text-center">ሁኔታ</th>
+                <th className="px-4 py-3 text-center">
+                  {currentLang === 'om' ? 'Sadarkaa Qubee' : currentLang === 'en' ? 'Grade' : 'የፊደል ደረጃ'}
+                </th>
+                <th className="px-4 py-3 text-center">
+                  {currentLang === 'om' ? 'Haala' : currentLang === 'en' ? 'Status' : 'ሁኔታ'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -1467,11 +2054,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                   <td className="px-4 py-3 text-center">
                     {approvedBatch ? (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                        የጸደቀ ✅
+                        {currentLang === 'om' ? 'Mirkanaa\'e ✅' : currentLang === 'en' ? 'Approved ✅' : 'የጸደቀ ✅'}
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
-                        መደበኛ
+                        {currentLang === 'om' ? 'Idilee' : currentLang === 'en' ? 'Regular' : 'መደበኛ'}
                       </span>
                     )}
                   </td>
@@ -1485,13 +2072,25 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
         <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs bg-slate-50 p-4 rounded-xl">
           <div className="flex flex-wrap items-center gap-3">
             <div>
-              <span className="text-slate-500">የተማሪ መግቢያ ኮድ: </span>
+              <span className="text-slate-500">
+                {currentLang === 'om'
+                  ? 'Koodii Seensaa Barataa: '
+                  : currentLang === 'en'
+                  ? 'Student Access Code: '
+                  : 'የተማሪ መግቢያ ኮድ: '}
+              </span>
               <code className="font-mono font-bold text-emerald-900 bg-white px-2 py-0.5 rounded border border-slate-200">
                 {student.accessCode}
               </code>
             </div>
             <div>
-              <span className="text-slate-500">የወላጅ መግቢያ ኮድ: </span>
+              <span className="text-slate-500">
+                {currentLang === 'om'
+                  ? 'Koodii Seensaa Maatii: '
+                  : currentLang === 'en'
+                  ? 'Parent Access Code: '
+                  : 'የወላጅ መግቢያ ኮድ: '}
+              </span>
               <code className="font-mono font-bold text-emerald-900 bg-white px-2 py-0.5 rounded border border-slate-200">
                 {student.parentAccessCode}
               </code>
@@ -1505,7 +2104,13 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
               className="px-3.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>ይህንን ካርድ አትም (Print Card)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Kaardii Kana Maxxansi (Print Card)'
+                  : currentLang === 'en'
+                  ? 'Print This Card'
+                  : 'ይህንን ካርድ አትም (Print Card)'}
+              </span>
             </button>
           </div>
         </div>
@@ -1554,10 +2159,20 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    የስነ-ምግባር ችግር ጥቆማ ለትምህርት ቤት ዳይሬክተር
+                    {currentLang === 'om'
+                      ? 'Eeruu Rakkoo Naamusaa Daarektara Mana Barumsaaf'
+                      : currentLang === 'en'
+                      ? 'Student Misconduct Report to School Principal'
+                      : 'የስነ-ምግባር ችግር ጥቆማ ለትምህርት ቤት ዳይሬክተር'}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {student.fullName} · ክፍል {student.grade} ክፍልፋይ {student.section} · {resolvedSchool.name}
+                    {student.fullName} ·{' '}
+                    {currentLang === 'om'
+                      ? `Kutaa ${student.grade} Daree ${student.section}`
+                      : currentLang === 'en'
+                      ? `Grade ${student.grade} Section ${student.section}`
+                      : `ክፍል ${student.grade} ክፍልፋይ ${student.section}`}{' '}
+                    · {resolvedSchool.name}
                   </p>
                 </div>
               </div>

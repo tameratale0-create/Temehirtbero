@@ -76,25 +76,37 @@ import { SystemDeveloperProfileModal } from './components/SystemDeveloperProfile
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 export default function App() {
+  const getBureauAdminName = (lang: Language) =>
+    lang === 'om'
+      ? 'Bulchaa Biiroo Barnootaa Shaashamannee (Bureau Admin)'
+      : lang === 'en'
+      ? 'Shashemene Education Bureau Admin'
+      : 'የሻሸመኔ ትምህርት ቢሮ አስተዳዳሪ (Bureau Admin)';
+
   // Trilingual state: Default to Amharic (or check localStorage)
   const [currentLang, setCurrentLang] = useState<Language>(() => {
     return (localStorage.getItem('shash_edu_lang') as Language) || 'am';
   });
 
-  const handleLanguageChange = (lang: Language) => {
-    setCurrentLang(lang);
-    localStorage.setItem('shash_edu_lang', lang);
-  };
-
   const t = translations[currentLang];
 
   // Active User Session: Default to Bureau Admin (with master password 123456)
-  const [currentUser, setCurrentUser] = useState<AppUserSession | null>({
+  const [currentUser, setCurrentUser] = useState<AppUserSession | null>(() => ({
     role: 'bureau_admin',
-    name: 'የሻሸመኔ ትምህርት ቢሮ አስተዳዳሪ (Bureau Admin)',
+    name: getBureauAdminName(((localStorage.getItem('shash_edu_lang') as Language) || 'am')),
     identifier: 'admin',
     accessCode: '123456'
-  });
+  }));
+
+  const handleLanguageChange = (lang: Language) => {
+    setCurrentLang(lang);
+    localStorage.setItem('shash_edu_lang', lang);
+    setCurrentUser((prev) =>
+      prev && prev.role === 'bureau_admin' && prev.identifier === 'admin'
+        ? { ...prev, name: getBureauAdminName(lang) }
+        : prev
+    );
+  };
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -363,42 +375,98 @@ export default function App() {
 
   const getAllowedTabOptions = () => {
     if (currentUser?.role === 'student' || currentUser?.role === 'parent') {
-      return [{ id: 'student_portal', label: 'የተማሪ/ወላጅ ገጽ (Student Portal)' }];
+      return [
+        {
+          id: 'student_portal',
+          label:
+            currentLang === 'om'
+              ? 'Fuula Barataa/Maatii (Student Portal)'
+              : currentLang === 'en'
+              ? 'Student/Parent Portal'
+              : 'የተማሪ/ወላጅ ገጽ (Student Portal)'
+        }
+      ];
     }
     if (currentUser?.role === 'accountant') {
-      return [{ id: 'school_portal', label: 'የፋይናንስና ክፍያ ጽ/ቤት (Finance Desk)' }];
+      return [
+        {
+          id: 'school_portal',
+          label:
+            currentLang === 'om'
+              ? 'Waajjira Faayinaansii fi Kaffaltii (Finance Desk)'
+              : currentLang === 'en'
+              ? 'Finance Desk'
+              : 'የፋይናንስና ክፍያ ጽ/ቤት (Finance Desk)'
+        }
+      ];
     }
     if (currentUser?.role === 'registrar') {
-      return [{ id: 'school_portal', label: 'ሬጅስትራር (Registrar Desk)' }];
+      return [
+        {
+          id: 'school_portal',
+          label:
+            currentLang === 'om'
+              ? 'Reejistiraara (Registrar Desk)'
+              : currentLang === 'en'
+              ? 'Registrar Desk'
+              : 'ሬጅስትራር (Registrar Desk)'
+        }
+      ];
     }
     if (currentUser?.role === 'school_owner') {
-      return [{ id: 'school_portal', label: 'የቦርድ አመራር (Board Governance)' }];
+      return [
+        {
+          id: 'school_portal',
+          label:
+            currentLang === 'om'
+              ? 'Hoggansa Boordii (Board Governance)'
+              : currentLang === 'en'
+              ? 'Board Governance'
+              : 'የቦርድ አመራር (Board Governance)'
+        }
+      ];
     }
     if (currentUser?.role === 'teacher') {
       return [
-        { id: 'school_portal', label: 'የመምህር ገፅ (Teacher Desk)' },
-        { id: 'exams', label: 'የብቃት ፈተና (Exams)' },
-        { id: 'training', label: 'ስልጠና (Training)' }
+        {
+          id: 'school_portal',
+          label:
+            currentLang === 'om'
+              ? 'Fuula Barsiisaa (Teacher Desk)'
+              : currentLang === 'en'
+              ? 'Teacher Desk'
+              : 'የመምህር ገፅ (Teacher Desk)'
+        },
+        { id: 'exams', label: t.tab_exams },
+        { id: 'training', label: t.tab_training }
       ];
     }
     if (currentUser?.role === 'school_director') {
       return [
-        { id: 'school_portal', label: 'የት/ቤት አስተዳደር (School Portal)' },
-        { id: 'exams', label: 'የመምህራን ፈተና (Exams)' },
-        { id: 'training', label: 'ስልጠና (Training Hub)' }
+        {
+          id: 'school_portal',
+          label:
+            currentLang === 'om'
+              ? 'Bulchiinsa Mana Barumsaa (School Portal)'
+              : currentLang === 'en'
+              ? 'School Portal'
+              : 'የት/ቤት አስተዳደር (School Portal)'
+        },
+        { id: 'exams', label: t.tab_exams },
+        { id: 'training', label: t.tab_training }
       ];
     }
     return [
-      { id: 'dashboard', label: 'ዋናው ዳሽቦርድ (Dashboard)' },
-      { id: 'schools', label: 'ት/ቤቶች (Schools)' },
-      { id: 'staff', label: 'ሰራተኞች (Staff)' },
-      { id: 'reports', label: 'ሪፖርቶች (Reports)' },
-      { id: 'credentials', label: 'ማስረጃዎች (Credentials)' },
-      { id: 'exams', label: 'ፈተናዎች (Exams)' },
-      { id: 'training', label: 'ስልጠና (Training)' },
-      { id: 'standards', label: 'ስታንዳርድ (Standards)' },
-      { id: 'school_portal', label: 'የት/ቤት ፖርታል (School Portal)' },
-      { id: 'student_portal', label: 'የተማሪ ገጽ (Student Portal)' }
+      { id: 'dashboard', label: t.tab_dashboard },
+      { id: 'schools', label: t.tab_schools },
+      { id: 'staff', label: t.tab_staff },
+      { id: 'reports', label: t.tab_reports },
+      { id: 'credentials', label: t.tab_credentials },
+      { id: 'exams', label: t.tab_exams },
+      { id: 'training', label: t.tab_training },
+      { id: 'standards', label: t.tab_standards },
+      { id: 'school_portal', label: t.tab_school_portal },
+      { id: 'student_portal', label: t.tab_student_portal }
     ];
   };
 
@@ -455,7 +523,7 @@ export default function App() {
           onNavigateBureau={() => {
             handleLoginSuccess({
               role: 'bureau_admin',
-              name: 'የሻሸመኔ ትምህርት ቢሮ አስተዳዳሪ (Bureau Admin)',
+              name: getBureauAdminName(currentLang),
               identifier: 'admin',
               accessCode: '123456'
             });
@@ -712,7 +780,15 @@ export default function App() {
               <GraduationCap className="w-4 h-4 text-violet-300" />
               <span>
                 {currentUser?.role === 'student'
-                  ? 'የተማሪ የግል ገጽ (Student Portal)'
+                  ? currentLang === 'om'
+                    ? 'Fuula Dhuunfaa Barataa (Student Portal)'
+                    : currentLang === 'en'
+                    ? 'Student Portal'
+                    : 'የተማሪ የግል ገጽ (Student Portal)'
+                  : currentLang === 'om'
+                  ? 'Fuula Hordoffii Maatii (Parent Portal)'
+                  : currentLang === 'en'
+                  ? 'Parent Portal'
                   : 'የወላጅ መከታተያ ገጽ (Parent Portal)'}
               </span>
             </button>
@@ -725,7 +801,13 @@ export default function App() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors bg-emerald-800 text-white shadow-xs cursor-pointer`}
             >
               <DollarSign className="w-4 h-4 text-emerald-300" />
-              <span>የፋይናንስና ክፍያ ጽ/ቤት (Finance Desk)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Waajjira Faayinaansii fi Kaffaltii (Finance Desk)'
+                  : currentLang === 'en'
+                  ? 'Finance & Tuition Desk'
+                  : 'የፋይናንስና ክፍያ ጽ/ቤት (Finance Desk)'}
+              </span>
             </button>
           )}
 
@@ -736,7 +818,13 @@ export default function App() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors bg-blue-800 text-white shadow-xs cursor-pointer`}
             >
               <ClipboardList className="w-4 h-4 text-blue-300" />
-              <span>ሬጅስትራር እና የተማሪዎች ምዝገባ (Registrar Desk)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Reejistiraara fi Galmee Barattootaa (Registrar Desk)'
+                  : currentLang === 'en'
+                  ? 'Registrar & Admissions Desk'
+                  : 'ሬጅስትራር እና የተማሪዎች ምዝገባ (Registrar Desk)'}
+              </span>
             </button>
           )}
 
@@ -747,7 +835,13 @@ export default function App() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors bg-emerald-800 text-white shadow-xs cursor-pointer`}
             >
               <Crown className="w-4 h-4 text-amber-300" />
-              <span>የቦርድ አመራርና ቁጥጥር (Owner & Board Governance)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Hoggansa Boordii fi To\'annoo (Board Governance)'
+                  : currentLang === 'en'
+                  ? 'Owner & Board Governance'
+                  : 'የቦርድ አመራርና ቁጥጥር (Owner & Board Governance)'}
+              </span>
             </button>
           )}
 
@@ -763,7 +857,13 @@ export default function App() {
                 }`}
               >
                 <Award className="w-4 h-4 text-emerald-300" />
-                <span>የመምህር ገፅ (የቤት ስራና ውጤት)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Fuula Barsiisaa (Hojii Manaa & Qabxii)'
+                    : currentLang === 'en'
+                    ? 'Teacher Desk (Homework & Marks)'
+                    : 'የመምህር ገፅ (የቤት ስራና ውጤት)'}
+                </span>
               </button>
 
               <button
@@ -775,7 +875,13 @@ export default function App() {
                 }`}
               >
                 <BookOpen className="w-4 h-4 text-amber-700" />
-                <span>የትምህርት ቢሮ ስልጠናዎች (Subject Training)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Leenjiiwwan Biiroo Barnootaa (Subject Training)'
+                    : currentLang === 'en'
+                    ? 'Bureau Subject Training'
+                    : 'የትምህርት ቢሮ ስልጠናዎች (Subject Training)'}
+                </span>
               </button>
 
               <button
@@ -817,7 +923,13 @@ export default function App() {
                 }`}
               >
                 <SchoolIcon className="w-4 h-4" />
-                <span>የትምህርት ቤት አስተዳደር (Principal Portal)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Bulchiinsa Mana Barumsaa (Principal Portal)'
+                    : currentLang === 'en'
+                    ? 'Principal Portal'
+                    : 'የትምህርት ቤት አስተዳደር (Principal Portal)'}
+                </span>
               </button>
 
               <button
@@ -1015,14 +1127,22 @@ export default function App() {
             type="button"
             onClick={() => setIsFullscreenActivity(true)}
             className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-800 hover:bg-emerald-700 text-white shadow-xs shrink-0 cursor-pointer"
-            title="ይህንን አክቲቪቲ ሙሉ እስክሪን አድርግ (Fullscreen Activity Mode)"
+            title={
+              currentLang === 'om'
+                ? 'Hojii kana iskiriinii guutuu taasisi'
+                : currentLang === 'en'
+                ? 'Fullscreen Activity Mode'
+                : 'ይህንን አክቲቪቲ ሙሉ እስክሪን አድርግ (Fullscreen Activity Mode)'
+            }
           >
             <Maximize2 className="w-3.5 h-3.5 text-amber-300" />
-            <span className="hidden sm:inline">ሙሉ እስክሪን (Fullscreen)</span>
+            <span className="hidden sm:inline">
+              {currentLang === 'om' ? 'Iskiriinii Guutuu' : currentLang === 'en' ? 'Fullscreen' : 'ሙሉ እስክሪን (Fullscreen)'}
+            </span>
           </button>
         </div>
 
-        {/* On non-dashboard pages: Return to Dashboard Launcher Banner so buttons are never scattered */}
+        {/* On non-dashboard pages: Return to Dashboard Launcher Banner */}
         {activeTab !== 'dashboard' && (
           <div className="bg-white rounded-2xl border border-slate-200/90 px-3.5 sm:px-4 py-2.5 shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs animate-in fade-in">
             <div className="flex items-center gap-2">
@@ -1030,14 +1150,27 @@ export default function App() {
                 type="button"
                 onClick={() => navigateToActivity('dashboard')}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-bold transition-all shadow-xs cursor-pointer"
-                title="ወደ ዳሽቦርድ ማዕከላዊ በተኖች መቆጣጠሪያ ተመለስ"
+                title={
+                  currentLang === 'om'
+                    ? 'Gara To\'annoo Qabduuwwan Daashboordiitti Deebi\'i'
+                    : currentLang === 'en'
+                    ? 'Back to Dashboard Launcher'
+                    : 'ወደ ዳሽቦርድ ማዕከላዊ በተኖች መቆጣጠሪያ ተመለስ'
+                }
               >
                 <LayoutDashboard className="w-4 h-4 text-amber-300" />
-                <span>⌂ ወደ ዳሽቦርድ መቆጣጠሪያ (All Buttons Launcher)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? '⌂ Gara To\'annoo Daashboordii (All Buttons)'
+                    : currentLang === 'en'
+                    ? '⌂ Back to Dashboard Launcher'
+                    : '⌂ ወደ ዳሽቦርድ መቆጣጠሪያ (All Buttons Launcher)'}
+                </span>
               </button>
               <span className="text-slate-300 hidden sm:inline">|</span>
               <span className="text-slate-600 hidden sm:inline font-medium">
-                የአሁኑ ገጽ: <strong className="text-slate-900">{getActivityTitle(activeTab)}</strong>
+                {currentLang === 'om' ? 'Fuula Ammaa:' : currentLang === 'en' ? 'Current Page:' : 'የአሁኑ ገጽ:'}{' '}
+                <strong className="text-slate-900">{getActivityTitle(activeTab)}</strong>
               </span>
             </div>
 
@@ -1046,26 +1179,28 @@ export default function App() {
                 type="button"
                 onClick={() => navigateToActivity('school_portal')}
                 className="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 hover:bg-teal-100 font-semibold transition-colors cursor-pointer"
-                title="የት/ቤት ፖርታል"
+                title={t.tab_school_portal}
               >
-                🏫 ት/ቤት
+                🏫 {currentLang === 'om' ? 'M/Barumsaa' : currentLang === 'en' ? 'School' : 'ት/ቤት'}
               </button>
               <button
                 type="button"
                 onClick={() => navigateToActivity('student_portal')}
                 className="px-2.5 py-1 rounded-lg bg-violet-50 text-violet-800 hover:bg-violet-100 font-semibold transition-colors cursor-pointer"
-                title="የተማሪ እና ወላጅ ገጽ"
+                title={t.tab_student_portal}
               >
-                🎓 ተማሪ/ወላጅ
+                🎓 {currentLang === 'om' ? 'Barataa/Maatii' : currentLang === 'en' ? 'Student/Parent' : 'ተማሪ/ወላጅ'}
               </button>
               <button
                 type="button"
                 onClick={() => setIsFullscreenActivity(true)}
                 className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-semibold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                title="ሙሉ እስክሪን አድርግ"
+                title={currentLang === 'om' ? 'Iskiriinii Guutuu' : 'ሙሉ እስክሪን አድርግ'}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">ሙሉ ስክሪን</span>
+                <span className="hidden xs:inline">
+                  {currentLang === 'om' ? 'Iskiriinii Guutuu' : currentLang === 'en' ? 'Fullscreen' : 'ሙሉ ስክሪን'}
+                </span>
               </button>
             </div>
           </div>
@@ -1078,7 +1213,7 @@ export default function App() {
       </div>
 
       {/* =========================================================================
-          FULLSCREEN ACTIVITY OVERLAY: "አንድ በተን ሲነካ የተነካው በተን አክቲቪቲ ሙሉ እስክሪን የተነካው በተን ብቻ እንዲሆን አርገው"
+          FULLSCREEN ACTIVITY OVERLAY
          ========================================================================= */}
       {isFullscreenActivity && (
         <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col w-screen h-screen overflow-hidden">
@@ -1090,11 +1225,19 @@ export default function App() {
                 type="button"
                 onClick={() => setIsFullscreenActivity(false)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 hover:text-white text-xs font-bold transition-all border border-slate-700 shadow-xs cursor-pointer group shrink-0"
-                title="ከሙሉ እስክሪን ውጣ (ወደ ዋናው ገጽ ተመለስ - Esc)"
+                title={currentLang === 'om' ? 'Gara Mul\'ata Idileetti Deebi\'i (Esc)' : 'ከሙሉ እስክሪን ውጣ (Esc)'}
               >
                 <ArrowLeft className="w-4 h-4 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-                <span className="hidden sm:inline">ወደ መደበኛ እይታ ተመለስ</span>
-                <span className="sm:hidden">ተመለስ</span>
+                <span className="hidden sm:inline">
+                  {currentLang === 'om'
+                    ? 'Gara Mul\'ata Idileetti Deebi\'i'
+                    : currentLang === 'en'
+                    ? 'Back to Normal View'
+                    : 'ወደ መደበኛ እይታ ተመለስ'}
+                </span>
+                <span className="sm:hidden">
+                  {currentLang === 'om' ? 'Deebi\'i' : currentLang === 'en' ? 'Back' : 'ተመለስ'}
+                </span>
               </button>
 
               <div className="h-6 w-px bg-slate-800 hidden sm:block" />
@@ -1108,7 +1251,12 @@ export default function App() {
                     {getActivityTitle(activeTab)}
                   </h2>
                   <p className="text-[10px] text-emerald-400 font-medium truncate hidden sm:block">
-                    {activeTab === 'school_portal' ? activeSchool.name : t.bureau_full_name} · ሙሉ እስክሪን (የተመረጠ ስራ ብቻ)
+                    {activeTab === 'school_portal' ? localizedActiveSchool.name : t.bureau_full_name} ·{' '}
+                    {currentLang === 'om'
+                      ? 'Iskiriinii Guutuu (Hojii Filatame Qofa)'
+                      : currentLang === 'en'
+                      ? 'Fullscreen (Focused Activity Only)'
+                      : 'ሙሉ እስክሪን (የተመረጠ ስራ ብቻ)'}
                   </p>
                 </div>
               </div>
@@ -1117,7 +1265,13 @@ export default function App() {
             {/* Center: Fullscreen Indicator */}
             <div className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 text-xs font-semibold shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
-              <span>ሙሉ እስክሪን ሁነታ · የተነካው በተን አክቲቪቲ ብቻ</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Haala Iskiriinii Guutuu · Hojii Qabduu Tuqamee Qofa'
+                  : currentLang === 'en'
+                  ? 'Fullscreen Mode · Active Task Only'
+                  : 'ሙሉ እስክሪን ሁነታ · የተነካው በተን አክቲቪቲ ብቻ'}
+              </span>
             </div>
 
             {/* Right: Quick Switcher Dropdown + Minimize Button */}
@@ -1140,10 +1294,12 @@ export default function App() {
                 type="button"
                 onClick={() => setIsFullscreenActivity(false)}
                 className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 inline-flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
-                title="አሳንስ (መደበኛ እይታ)"
+                title={currentLang === 'om' ? 'Xiqqeessi' : 'አሳንስ (መደበኛ እይታ)'}
               >
                 <Minimize2 className="w-4 h-4" />
-                <span className="hidden md:inline">አሳንስ (መደበኛ)</span>
+                <span className="hidden md:inline">
+                  {currentLang === 'om' ? 'Xiqqeessi (Idilee)' : currentLang === 'en' ? 'Exit Fullscreen' : 'አሳንስ (መደበኛ)'}
+                </span>
               </button>
             </div>
           </header>
@@ -1165,25 +1321,39 @@ export default function App() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-[10px] font-black text-amber-300">
-                  ሲስተሙን ማን ገነባው? (SYSTEM BUILDER)
+                  {currentLang === 'om'
+                    ? 'SIRNICHA EENYUTU IJAARE? (SYSTEM BUILDER)'
+                    : currentLang === 'en'
+                    ? 'SYSTEM BUILDER'
+                    : 'ሲስተሙን ማን ገነባው? (SYSTEM BUILDER)'}
                 </span>
-                <span className="text-[11px] text-slate-400">· ሻሸመኔ፣ ኢትዮጵያ</span>
+                <span className="text-[11px] text-slate-400">
+                  · {currentLang === 'om' ? 'Shaashamannee, Itoophiyaa' : currentLang === 'en' ? 'Shashemene, Ethiopia' : 'ሻሸመኔ፣ ኢትዮጵያ'}
+                </span>
               </div>
               <h4 className="text-sm sm:text-base font-black text-white">
-                ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)
+                {currentLang === 'om' ? 'Taammee fi Siraawu I/G/Dh (Tame & Seraw PLC)' : 'ታሜና ሥራው ኃ/የተ/የግ/ማ (Tame & Seraw PLC)'}
               </h4>
               <p className="text-xs text-amber-200/90 font-medium">
-                እህት ድርጅት፡ <strong>ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)</strong>
+                {currentLang === 'om' ? 'Dhaabbata Obbolaa:' : currentLang === 'en' ? 'Sister Company:' : 'እህት ድርጅት፡'}{' '}
+                <strong>{currentLang === 'om' ? 'Wushiye Software Solution' : 'ውሽዬ ሶፍትዌር ሶሉሽን (Wushiye Software Solution)'}</strong>
               </p>
               <p className="text-[11px] text-slate-300 pt-0.5">
-                ዋና ቀዳሚ ፕሮግራመር፣ ባክኢንድ፣ ፍሮንትኢንድ እና ዲዛይነር፡ <strong className="text-white">ታምራት አሌ (Tamerat Ale)</strong>
+                {currentLang === 'om'
+                  ? 'Piroogiraamara Olaanaa, Backend, Frontend fi Dizaayinara:'
+                  : currentLang === 'en'
+                  ? 'Lead Programmer, Backend, Frontend & Designer:'
+                  : 'ዋና ቀዳሚ ፕሮግራመር፣ ባክኢንድ፣ ፍሮንትኢንድ እና ዲዛይነር፡'}{' '}
+                <strong className="text-white">{currentLang === 'om' ? 'Taamiraat Alii (Tamerat Ale)' : 'ታምራት አሌ (Tamerat Ale)'}</strong>
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
               <div className="text-left sm:text-right text-[11px] space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">ቀጥታ ስልኮች፡</span>
+                  <span className="text-slate-400">
+                    {currentLang === 'om' ? 'Bilbila Kallattii:' : currentLang === 'en' ? 'Direct Phones:' : 'ቀጥታ ስልኮች፡'}
+                  </span>
                   <a href="tel:+251911029070" className="font-mono font-bold text-emerald-400 hover:underline">
                     +251 91 102 9070
                   </a>
@@ -1216,7 +1386,7 @@ export default function App() {
                   className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shrink-0"
                 >
                   <Globe className="w-3.5 h-3.5 text-amber-400" />
-                  <span>ይፋዊ ዌብ ገፅ</span>
+                  <span>{currentLang === 'om' ? 'Fuula Weebii Seera-qabeessa' : currentLang === 'en' ? 'Official Website' : 'ይፋዊ ዌብ ገፅ'}</span>
                   <ExternalLink className="w-3 h-3 text-amber-400" />
                 </a>
 
@@ -1225,7 +1395,9 @@ export default function App() {
                   onClick={() => setShowDeveloperProfileModal(true)}
                   className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                 >
-                  <span>ሙሉ የአበልፃጊ መረጃ</span>
+                  <span>
+                    {currentLang === 'om' ? 'Odeeffannoo Misoosaa Guutuu' : currentLang === 'en' ? 'Full Developer Profile' : 'ሙሉ የአበልፃጊ መረጃ'}
+                  </span>
                   <span>→</span>
                 </button>
               </div>
@@ -1241,9 +1413,13 @@ export default function App() {
             </div>
             <div className="flex items-center gap-4 text-slate-400">
               <span className="text-emerald-400 font-semibold">
-                ኦንላይን እና ኦፍላይን ይፋዊ ስርዓት (Online & Offline Ready)
+                {currentLang === 'om'
+                  ? 'Sirna Seera-qabeessa Toora Irraa fi Toora Alaa (Online & Offline Ready)'
+                  : currentLang === 'en'
+                  ? 'Official Online & Offline Ready System'
+                  : 'ኦንላይን እና ኦፍላይን ይፋዊ ስርዓት (Online & Offline Ready)'}
               </span>
-              <span>© 2016-2017 ዓ.ም</span>
+              <span>© 2016-2017</span>
             </div>
           </div>
         </div>
@@ -1270,10 +1446,18 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900 leading-tight">
-                    የስራ ሚና እና የመግቢያ ኮድ ምረጥ (Role Isolation Tester)
+                    {currentLang === 'om'
+                      ? 'Gahee Hojii fi Koodii Seensaa Filadhaa (Role Isolation Tester)'
+                      : currentLang === 'en'
+                      ? 'Select Role & Access Code (Role Isolation Tester)'
+                      : 'የስራ ሚና እና የመግቢያ ኮድ ምረጥ (Role Isolation Tester)'}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    አንዱ የአንዱን ስራ ሳያይ እያንዳንዱ ሰራተኛ የተፈቀደለትን ብቻ እንዲሰራ በሲስተሙ የተወሰነ ነው
+                    {currentLang === 'om'
+                      ? 'Tokkoon tokkoon hojjetaa hojii isaaf heyyamame qofa akka hojjetu sirnichaan daangeffameera'
+                      : currentLang === 'en'
+                      ? 'Strict isolation: each user role only accesses authorized modules'
+                      : 'አንዱ የአንዱን ስራ ሳያይ እያንዳንዱ ሰራተኛ የተፈቀደለትን ብቻ እንዲሰራ በሲስተሙ የተወሰነ ነው'}
                   </p>
                 </div>
               </div>
@@ -1289,8 +1473,18 @@ export default function App() {
             <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
               <Lock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <span>
-                <strong>የስራ ወሰን ጥበቃ (Role Isolation Rules):</strong> ከስር ካሉት 9 የስራ ሚናዎች አንዱን ሲመርጡ
-                ወይም ኮዳቸውን ሲያስገቡ ሲስተሙ ለዚያ ሚና የተፈቀደውን ክፍል ብቻ ያሳያል፤ ሌሎች ሚስጥራዊ ወይም ያልተፈቀዱ ክፍሎች ሙሉ በሙሉ ይከለከላሉ።
+                <strong>
+                  {currentLang === 'om'
+                    ? 'Qajeelfama Eegumsa Daangaa Hojii (Role Isolation Rules):'
+                    : currentLang === 'en'
+                    ? 'Role Isolation Security Rules:'
+                    : 'የስራ ወሰን ጥበቃ (Role Isolation Rules):'}
+                </strong>{' '}
+                {currentLang === 'om'
+                  ? 'Gaheewwan hojii 9 armaan gadii keessaa tokko yoo filattan ykn koodii isaanii yoo galchitan sirnichi kutaa gahee sanaaf heyyamame qofa agarsiisa; kutaaleen biroo dhorkaa ta\'u.'
+                  : currentLang === 'en'
+                  ? 'Selecting any of the 9 roles below isolates the application interface to strictly permitted workflows for that actor.'
+                  : 'ከስር ካሉት 9 የስራ ሚናዎች አንዱን ሲመርጡ ወይም ኮዳቸውን ሲያስገቡ ሲስተሙ ለዚያ ሚና የተፈቀደውን ክፍል ብቻ ያሳያል፤ ሌሎች ሚስጥራዊ ወይም ያልተፈቀዱ ክፍሎች ሙሉ በሙሉ ይከለከላሉ።'}
               </span>
             </div>
 
@@ -1298,85 +1492,220 @@ export default function App() {
               {[
                 {
                   role: 'school_owner' as const,
-                  title: '1. ባለቤት / የቦርድ ሰብሳቢ',
-                  name: 'ዶ/ር ተስፋዬ በቀለ',
+                  title:
+                    currentLang === 'om'
+                      ? '1. Abbaa Qabeenyaa / Walitti-Qabaa Boordii'
+                      : currentLang === 'en'
+                      ? '1. Owner / Board Chair'
+                      : '1. ባለቤት / የቦርድ ሰብሳቢ',
+                  name:
+                    currentLang === 'om'
+                      ? 'Dr. Tasfaayee Baqqalaa'
+                      : currentLang === 'en'
+                      ? 'Dr. Tesfaye Bekele'
+                      : 'ዶ/ር ተስፋዬ በቀለ',
                   code: 'OWN-SHAS-01',
                   color: 'border-amber-300 bg-amber-50/50 hover:bg-amber-100/60',
                   icon: <Crown className="w-4 h-4 text-amber-600" />,
-                  desc: 'ዳይሬክተር መቅጠር፣ ኮድ መስጠት፣ የበላይ ቁጥጥር፣ የቦርድ ማስታወቂያ'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Daarektara qacaruu, koodii kennuu, to\'annoo olaanaa, beeksisa boordii'
+                      : currentLang === 'en'
+                      ? 'Appoint directors, manage codes, executive oversight & board notices'
+                      : 'ዳይሬክተር መቅጠር፣ ኮድ መስጠት፣ የበላይ ቁጥጥር፣ የቦርድ ማስታወቂያ'
                 },
                 {
                   role: 'school_director' as const,
-                  title: '2. ዋና ዳይሬክተር / ርዕሰ መምህር',
-                  name: 'አቶ ጉተማ ዋቆ',
+                  title:
+                    currentLang === 'om'
+                      ? '2. Daarektara Olaanaa / Hogganaa M/B'
+                      : currentLang === 'en'
+                      ? '2. Principal / School Director'
+                      : '2. ዋና ዳይሬክተር / ርዕሰ መምህር',
+                  name:
+                    currentLang === 'om'
+                      ? 'Obbo Gutamaa Waaqoo'
+                      : currentLang === 'en'
+                      ? 'Ato Gutema Wako'
+                      : 'አቶ ጉተማ ዋቆ',
                   code: 'DIR-SHAS-01',
                   color: 'border-teal-300 bg-teal-50/50 hover:bg-teal-100/60',
                   icon: <SchoolIcon className="w-4 h-4 text-teal-600" />,
-                  desc: 'ሰራተኞችንና ክፍሎችን መቆጣጠር፣ ሪፖርቶች መቀበል፣ ማስታወቂያ'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Hojjettootaa fi kutaalee to\'achuu, gabaasota fuudhuu, beeksisa'
+                      : currentLang === 'en'
+                      ? 'Supervise rosters, teachers, submit reports, post school alerts'
+                      : 'ሰራተኞችንና ክፍሎችን መቆጣጠር፣ ሪፖርቶች መቀበል፣ ማስታወቂያ'
                 },
                 {
                   role: 'teacher' as const,
-                  title: '3. መምህር',
-                  name: 'መ/ር በፈቃዱ ጥላሁን',
+                  title:
+                    currentLang === 'om'
+                      ? '3. Barsiisaa'
+                      : currentLang === 'en'
+                      ? '3. Teacher'
+                      : '3. መምህር',
+                  name:
+                    currentLang === 'om'
+                      ? 'B/saa Bafqaaduu Xilahun'
+                      : currentLang === 'en'
+                      ? 'Tr. Befekadu Tilahun'
+                      : 'መ/ር በፈቃዱ ጥላሁን',
                   code: 'TCH-BEFE-01',
                   color: 'border-emerald-300 bg-emerald-50/50 hover:bg-emerald-100/60',
                   icon: <Award className="w-4 h-4 text-emerald-600" />,
-                  desc: 'ተማሪ ማስተማር፣ የቤት ስራ መስጠትና ማረም፣ ውጤት መመዝገብ'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Barataa barsiisuu, hojii manaa kennuu fi sirreessuu, qabxii galmeessuu'
+                      : currentLang === 'en'
+                      ? 'Teach classes, create homework, grade submissions, record scores'
+                      : 'ተማሪ ማስተማር፣ የቤት ስራ መስጠትና ማረም፣ ውጤት መመዝገብ'
                 },
                 {
                   role: 'student' as const,
-                  title: '4. ተማሪ',
-                  name: 'ኪያር ከድር አሊ',
+                  title:
+                    currentLang === 'om'
+                      ? '4. Barataa'
+                      : currentLang === 'en'
+                      ? '4. Student'
+                      : '4. ተማሪ',
+                  name:
+                    currentLang === 'om'
+                      ? 'Kiyaar Kadir Alii'
+                      : currentLang === 'en'
+                      ? 'Kiyar Kedir Ali'
+                      : 'ኪያር ከድር አሊ',
                   code: 'STU-KIYAR-01',
                   color: 'border-violet-300 bg-violet-50/50 hover:bg-violet-100/60',
                   icon: <GraduationCap className="w-4 h-4 text-violet-600" />,
-                  desc: 'የራስን ውጤት ማየት፣ የቤት ስራ መስራት፣ ማስታወቂያ፣ መታወቂያ'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Kaardii qabxii ofii ilaaluu, hojii manaa hojjechuu, waraqaa eenyummaa'
+                      : currentLang === 'en'
+                      ? 'View own report card, submit homework, view digital student ID'
+                      : 'የራስን ውጤት ማየት፣ የቤት ስራ መስራት፣ ማስታወቂያ፣ መታወቂያ'
                 },
                 {
                   role: 'parent' as const,
-                  title: '5. ወላጅ / አሳዳጊ',
-                  name: 'አቶ ከድር አሊ',
+                  title:
+                    currentLang === 'om'
+                      ? '5. Maatii / Guddiftuu'
+                      : currentLang === 'en'
+                      ? '5. Parent / Guardian'
+                      : '5. ወላጅ / አሳዳጊ',
+                  name:
+                    currentLang === 'om'
+                      ? 'Obbo Kadir Alii'
+                      : currentLang === 'en'
+                      ? 'Ato Kedir Ali'
+                      : 'አቶ ከድር አሊ',
                   code: 'PAR-KIYAR-01',
                   color: 'border-rose-300 bg-rose-50/50 hover:bg-rose-100/60',
                   icon: <Users className="w-4 h-4 text-rose-600" />,
-                  desc: 'የልጅን ውጤትና ዕለታዊ መገኘት ማየት፣ የወር ክፍያ መክፈል'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Qabxii fi hirmaannaa guyyaa ijoollee ilaaluu, kaffaltii ji\'aa kaffaluu'
+                      : currentLang === 'en'
+                      ? 'Track child marks, daily presence, tuition fees & school notices'
+                      : 'የልጅን ውጤትና ዕለታዊ መገኘት ማየት፣ የወር ክፍያ መክፈል'
                 },
                 {
                   role: 'accountant' as const,
-                  title: '6. የሒሳብ ሰራተኛ (Finance)',
-                  name: 'ወ/ሮ ሰላማዊት አበራ',
+                  title:
+                    currentLang === 'om'
+                      ? '6. Ogeessa Faayinaansii (Finance)'
+                      : currentLang === 'en'
+                      ? '6. Accountant (Finance)'
+                      : '6. የሒሳብ ሰራተኛ (Finance)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Aaddee Salaamaawiit Abbarraa'
+                      : currentLang === 'en'
+                      ? 'W/ro Selamawit Abera'
+                      : 'ወ/ሮ ሰላማዊት አበራ',
                   code: 'ACC-SHAS-01',
                   color: 'border-green-300 bg-green-50/50 hover:bg-green-100/60',
                   icon: <DollarSign className="w-4 h-4 text-green-600" />,
-                  desc: 'የወር ክፍያ መሰብሰብ፣ ደረሰኝ፣ አስተዳደራዊ ወጪና ሚዛን'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Kaffaltii ji\'aa sassaabuu, nagahee, baasii bulchiinsaa fi madaallii'
+                      : currentLang === 'en'
+                      ? 'Tuition collection, electronic receipts, operating expenses & ledger'
+                      : 'የወር ክፍያ መሰብሰብ፣ ደረሰኝ፣ አስተዳደራዊ ወጪና ሚዛን'
                 },
                 {
                   role: 'registrar' as const,
-                  title: '7. ሬጅስትራር (ቅበላ & መዝገብ)',
-                  name: 'አቶ ዳንኤል ንጉሴ',
+                  title:
+                    currentLang === 'om'
+                      ? '7. Reejistiraara (Simannaa & Galmee)'
+                      : currentLang === 'en'
+                      ? '7. Registrar (Admissions)'
+                      : '7. ሬጅስትራር (ቅበላ & መዝገብ)',
+                  name:
+                    currentLang === 'om'
+                      ? 'Obbo Daan\'el Nigusee'
+                      : currentLang === 'en'
+                      ? 'Ato Daniel Nigussie'
+                      : 'አቶ ዳንኤል ንጉሴ',
                   code: 'REG-SHAS-01',
                   color: 'border-blue-300 bg-blue-50/50 hover:bg-blue-100/60',
                   icon: <ClipboardList className="w-4 h-4 text-blue-600" />,
-                  desc: 'አዳዲስ ተማሪዎችን መመዝገብ፣ ክፍል መመደብ፣ መታወቂያ ካርድ'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Barattoota haaraa galmeessuu, kutaa ramaduu, kaardii eenyummaa'
+                      : currentLang === 'en'
+                      ? 'Register new students, assign classroom sections & generate IDs'
+                      : 'አዳዲስ ተማሪዎችን መመዝገብ፣ ክፍል መመደብ፣ መታወቂያ ካርድ'
                 },
                 {
                   role: 'teacher' as const,
                   staffDepartment: 'library',
-                  title: '8. የቤተ-መጻሕፍት ኃላፊ',
-                  name: 'ወ/ሮ ሙሉእመቤት ደረሰ',
+                  title:
+                    currentLang === 'om'
+                      ? '8. Itti-Gaafatamaa Mana Kitaabaa'
+                      : currentLang === 'en'
+                      ? '8. Head Librarian'
+                      : '8. የቤተ-መጻሕፍት ኃላፊ',
+                  name:
+                    currentLang === 'om'
+                      ? 'Aaddee Mulukabarat Darassee'
+                      : currentLang === 'en'
+                      ? 'W/ro Muluemebet Derese'
+                      : 'ወ/ሮ ሙሉእመቤት ደረሰ',
                   code: 'LIB-MULU-02',
                   color: 'border-indigo-300 bg-indigo-50/50 hover:bg-indigo-100/60',
                   icon: <BookOpen className="w-4 h-4 text-indigo-600" />,
-                  desc: 'የመጻሕፍት ካታሎግ፣ የተማሪዎች ንባብ አገልግሎትና የተውሶ መዝገብ'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Kaataloogii kitaabaa, tajaajila dubbisa barattootaa fi galmee liqaa'
+                      : currentLang === 'en'
+                      ? 'Manage textbook catalog, student reading desk & lending registers'
+                      : 'የመጻሕፍት ካታሎግ፣ የተማሪዎች ንባብ አገልግሎትና የተውሶ መዝገብ'
                 },
                 {
                   role: 'bureau_admin' as const,
-                  title: '9. የከተማ ትምህርት ቢሮ አስተዳዳሪ',
-                  name: 'የሻሸመኔ ትምህርት ቢሮ',
+                  title:
+                    currentLang === 'om'
+                      ? '9. Bulchaa Biiroo Barnootaa Magaalaa'
+                      : currentLang === 'en'
+                      ? '9. City Education Bureau Admin'
+                      : '9. የከተማ ትምህርት ቢሮ አስተዳዳሪ',
+                  name:
+                    currentLang === 'om'
+                      ? 'Biiroo Barnootaa Shaashamannee'
+                      : currentLang === 'en'
+                      ? 'Shashemene Education Bureau'
+                      : 'የሻሸመኔ ትምህርት ቢሮ',
                   code: '123456',
                   color: 'border-slate-400 bg-slate-100 hover:bg-slate-200/80 sm:col-span-2',
                   icon: <ShieldCheck className="w-4 h-4 text-slate-800" />,
-                  desc: 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የበላይ ቁጥጥርና ኢንስፔክሽን'
+                  desc:
+                    currentLang === 'om'
+                      ? 'Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamannee: To\'annoo fi inispeekshinii olaanaa'
+                      : currentLang === 'en'
+                      ? 'Regional regulatory command center: institutional compliance & audit'
+                      : 'የሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የበላይ ቁጥጥርና ኢንስፔክሽን'
                 }
               ].map((item) => (
                 <button
@@ -1423,9 +1752,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowQuickRoleModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                ዝጋ (Close)
+                {currentLang === 'om' ? 'Cufi (Close)' : currentLang === 'en' ? 'Close' : 'ዝጋ (Close)'}
               </button>
             </div>
           </div>
@@ -1436,6 +1765,7 @@ export default function App() {
       <SecretDeveloperPortalModal
         isOpen={showDeveloperPortalModal}
         onClose={() => setShowDeveloperPortalModal(false)}
+        currentLang={currentLang}
         onSchoolStatusChanged={() => {
           const freshSchools = StorageService.getSchools();
           setSchools(freshSchools);
@@ -1447,6 +1777,7 @@ export default function App() {
         isOpen={showDeveloperProfileModal}
         onClose={() => setShowDeveloperProfileModal(false)}
         onOpenDeveloperPortal={() => setShowDeveloperPortalModal(true)}
+        currentLang={currentLang}
       />
 
       {/* Offline Connectivity Indicator */}

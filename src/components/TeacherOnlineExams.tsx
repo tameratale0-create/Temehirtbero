@@ -147,20 +147,49 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
   const [newDeliveryMode, setNewDeliveryMode] = useState<'one_by_one' | 'all_at_once'>('one_by_one');
   const [newPassingScore, setNewPassingScore] = useState(70);
   const [newInstructions, setNewInstructions] = useState(
-    'ይህ ፈተና በሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የተዘጋጀ ይፋዊ የመምህራን ብቃት መመዘኛ ነው።'
+    currentLang === 'om'
+      ? 'Qormaanni kun Biiroo Barnootaa Bulchiinsa Magaalaa Shaashamanneetiin kan qophaa’e madaallii gahumsa barsiisotaa idileeti.'
+      : currentLang === 'en'
+      ? 'This is an official teacher competency assessment prepared by the Shashemene City Education Bureau.'
+      : 'ይህ ፈተና በሻሸመኔ ከተማ አስተዳደር ትምህርት ቢሮ የተዘጋጀ ይፋዊ የመምህራን ብቃት መመዘኛ ነው።'
   );
   const [newQuestions, setNewQuestions] = useState<ExamQuestion[]>([
     {
       id: 'nq-1',
-      questionText: 'በተማሪ ተኮር የማስተማር ዘዴ ውስጥ የመምህሩ ቀዳሚ ተግባር ምንድነው?',
-      options: [
-        'ተማሪዎች እውቀትን እንዲያፈልቁ ማመቻቸትና ማገዝ (Facilitate)',
-        'ማስታወሻዎችን ያለማቋረጥ ማጻፍ ብቻ',
-        'የመማሪያ መጽሐፉን በሙሉ በቃል ማስሸምደድ',
-        'ፈተናዎችን ብቻ ማዘጋጀት'
-      ],
+      questionText:
+        currentLang === 'om'
+          ? 'Mala baruuf barsiisuu barataa giddugaleessa godhate keessatti gaheen barsiisaa inni jalqabaa maali?'
+          : currentLang === 'en'
+          ? 'In student-centered pedagogy, what is the primary role of the teacher?'
+          : 'በተማሪ ተኮር የማስተማር ዘዴ ውስጥ የመምህሩ ቀዳሚ ተግባር ምንድነው?',
+      options:
+        currentLang === 'om'
+          ? [
+              'Barattoonni beekumsa akka maddisiisan haala mijeessuu fi gargaaruu (Facilitate)',
+              'Yaadannoo walitti fufinsaan barreessisuu qofa',
+              'Kitaaba barataa guutummaatti qomaan qabachiisuu',
+              'Qormaata qofa qopheessuu'
+            ]
+          : currentLang === 'en'
+          ? [
+              'Facilitate and guide students to construct knowledge',
+              'Only dictate continuous notes',
+              'Make students memorize the entire textbook by heart',
+              'Only prepare examinations'
+            ]
+          : [
+              'ተማሪዎች እውቀትን እንዲያፈልቁ ማመቻቸትና ማገዝ (Facilitate)',
+              'ማስታወሻዎችን ያለማቋረጥ ማጻፍ ብቻ',
+              'የመማሪያ መጽሐፉን በሙሉ በቃል ማስሸምደድ',
+              'ፈተናዎችን ብቻ ማዘጋጀት'
+            ],
       correctIndex: 0,
-      explanation: 'መምህሩ የእውቀት አቅራቢ ብቻ ሳይሆን የመማር ሂደቱን አመቻች (Facilitator) ነው።'
+      explanation:
+        currentLang === 'om'
+          ? 'Barsiisaan dhiyeessaa beekumsaa qofa osoo hin taane haala mijeessaa (Facilitator) adeemsa barachuuti.'
+          : currentLang === 'en'
+          ? 'A teacher is not just a knowledge transmitter, but a facilitator of the learning process.'
+          : 'መምህሩ የእውቀት አቅራቢ ብቻ ሳይሆን የመማር ሂደቱን አመቻች (Facilitator) ነው።'
     }
   ]);
 
@@ -190,7 +219,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
       setQuestionTimeLeft((prev) => {
         if (prev <= 1) {
           // Question time expired! Auto-advance to next question or submit if last
-          setAutoAdvanceNotice(`የጥያቄ ${currentQuestionIndex + 1} የጊዜ ገደብ ስላለቀ በራስ-ሰር ወደ ቀጣዩ ጥያቄ ተሸጋግሯል!`);
+          setAutoAdvanceNotice(
+            currentLang === 'om'
+              ? `Yeroon gaaffii ${currentQuestionIndex + 1} waan dhumateef ofumaan gara gaaffii itti aanutti darbeera!`
+              : currentLang === 'en'
+              ? `Time for question ${currentQuestionIndex + 1} expired; auto-advancing!`
+              : `የጥያቄ ${currentQuestionIndex + 1} የጊዜ ገደብ ስላለቀ በራስ-ሰር ወደ ቀጣዩ ጥያቄ ተሸጋግሯል!`
+          );
           setTimeout(() => setAutoAdvanceNotice(null), 4000);
 
           if (currentQuestionIndex < activeExam.questions.length - 1) {
@@ -250,7 +285,14 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
         questionId: q.id,
         questionText: q.questionText,
         selectedOption: selected !== undefined ? selected : -1,
-        selectedOptionText: selected !== undefined && q.options[selected] ? q.options[selected] : 'ያልተመለሰ (Unanswered)',
+        selectedOptionText:
+          selected !== undefined && q.options[selected]
+            ? q.options[selected]
+            : currentLang === 'om'
+            ? 'Kan hin deebifamne (Unanswered)'
+            : currentLang === 'en'
+            ? 'Unanswered'
+            : 'ያልተመለሰ (Unanswered)',
         correctOption: q.correctIndex,
         correctOptionText: q.options[q.correctIndex],
         isCorrect,
@@ -264,7 +306,6 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
       ? `CERT-SHAS-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`
       : undefined;
 
-    // 3. የመምህራን የፈተና ጥያቄ መልስ ውጤት በትምህርት ቢሮ ጥያቄውና መልሱ ከታየ በኋላ ትምህርት ቢሮ ለመምህራን ይደርስ ሲል ይደርሳል
     const submission: ExamSubmission = {
       id: `sub-${Date.now()}`,
       examId: activeExam.id,
@@ -279,7 +320,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
       passed,
       submittedAt: new Date().toISOString(),
       certificateNumber: certNum,
-      reviewStatus: 'pending_bureau_review', // Pending bureau review!
+      reviewStatus: 'pending_bureau_review',
       answers: answerEntries
     };
 
@@ -291,41 +332,75 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
   // Bureau Officer: Release Result to Teacher
   const handleBureauReleaseResult = (submissionId: string, feedback?: string) => {
+    const reviewerLabel =
+      currentLang === 'om'
+        ? 'Daayirektoreetii Madaallii fi Gahumsaa Biiroo Barnootaa'
+        : currentLang === 'en'
+        ? 'Education Bureau Assessment & Competency Directorate'
+        : 'የትምህርት ቢሮ ምዘናና ብቃት ዳይሬክቶሬት';
     const updated = StorageService.updateSubmissionReview(
       submissionId,
       'released_to_teacher',
-      'የትምህርት ቢሮ ምዘናና ብቃት ዳይሬክቶሬት',
+      reviewerLabel,
       feedback
     );
     setSubmissions(updated);
     if (selectedSubmissionForReview?.id === submissionId) {
       setSelectedSubmissionForReview(updated.find((s) => s.id === submissionId) || null);
     }
-    showToast('✓ የፈተናው ጥያቄና መልስ ውጤት በተሳካ ሁኔታ ጸድቆ ወደ መምህሩ የግል አካውንት እንዲደርስ ተደርጓል!');
+    showToast(
+      currentLang === 'om'
+        ? '✓ Qabxiin qormaataa mirkanaa’ee gara akaawuntii dhuunfaa barsiisaatti milkaa’inaan ergameera!'
+        : currentLang === 'en'
+        ? '✓ Exam result approved and released to the teacher account!'
+        : '✓ የፈተናው ጥያቄና መልስ ውጤት በተሳካ ሁኔታ ጸድቆ ወደ መምህሩ የግል አካውንት እንዲደርስ ተደርጓል!'
+    );
   };
 
   // Bureau Officer: Batch release all pending submissions
   const handleBatchReleaseAll = () => {
     const pendingCount = submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length;
     if (pendingCount === 0) {
-      showToast('ግምገማ የሚጠብቅ ያልተለቀቀ የፈተና ውጤት የለም።');
+      showToast(
+        currentLang === 'om'
+          ? 'Qabxiin qormaataa gamaaggama eegu hin jiru.'
+          : currentLang === 'en'
+          ? 'No pending exam results to release.'
+          : 'ግምገማ የሚጠብቅ ያልተለቀቀ የፈተና ውጤት የለም።'
+      );
       return;
     }
-    const updated = StorageService.batchReleaseSubmissions('የትምህርት ቢሮ ምዘናና ብቃት ዳይሬክቶሬት');
+    const reviewerLabel =
+      currentLang === 'om'
+        ? 'Daayirektoreetii Madaallii fi Gahumsaa Biiroo Barnootaa'
+        : currentLang === 'en'
+        ? 'Education Bureau Assessment & Competency Directorate'
+        : 'የትምህርት ቢሮ ምዘናና ብቃት ዳይሬክቶሬት';
+    const updated = StorageService.batchReleaseSubmissions(reviewerLabel);
     setSubmissions(updated);
-    showToast(`✓ ${pendingCount} የፈተና ውጤቶች ለመምህራን በሙሉ በስኬት ተልከዋል!`);
+    showToast(
+      currentLang === 'om'
+        ? `✓ Qabxiileen qormaataa ${pendingCount} hundi barsiisotaaf milkaa’inaan ergamaniiru!`
+        : currentLang === 'en'
+        ? `✓ ${pendingCount} exam results released to teachers!`
+        : `✓ ${pendingCount} የፈተና ውጤቶች ለመምህራን በሙሉ በስኬት ተልከዋል!`
+    );
   };
 
   const handleAddQuestionToDraft = () => {
     const nextNum = newQuestions.length + 1;
+    const isOm = currentLang === 'om';
+    const isEn = currentLang === 'en';
+    const qPrefix = isOm ? 'Gaaffii' : isEn ? 'Question' : 'ጥያቄ';
+    const optPrefix = isOm ? 'Filannoo' : isEn ? 'Option' : 'ምርጫ';
     setNewQuestions([
       ...newQuestions,
       {
         id: `nq-${Date.now()}`,
-        questionText: `ጥያቄ ${nextNum}፡ `,
-        options: ['ምርጫ 1', 'ምርጫ 2', 'ምርጫ 3', 'ምርጫ 4'],
+        questionText: `${qPrefix} ${nextNum}: `,
+        options: [`${optPrefix} 1`, `${optPrefix} 2`, `${optPrefix} 3`, `${optPrefix} 4`],
         correctIndex: 0,
-        explanation: 'ትክክለኛ ማብራሪያ...'
+        explanation: isOm ? 'Ibsa sirrii...' : isEn ? 'Correct explanation...' : 'ትክክለኛ ማብራሪያ...'
       }
     ]);
   };
@@ -398,12 +473,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 {activeExam.title}
               </h2>
               <p className="text-xs text-slate-500">
-                ተፈታኝ፡ <strong className="text-slate-800">{currentTeacherName}</strong> ({currentSchoolName})
+                {currentLang === 'om' ? 'Qoramaataa:' : currentLang === 'en' ? 'Examinee:' : 'ተፈታኝ፡'}{' '}
+                <strong className="text-slate-800">{currentTeacherName}</strong> ({currentSchoolName})
               </p>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              {/* 1. አንድ ጥያቄ ስንት ደቂቃ ይቆይ - Active Question Timer */}
+              {/* Active Question Timer */}
               {activeExam.timePerQuestionMinutes ? (
                 <div
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-mono font-bold text-xs ${
@@ -411,10 +487,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
                       : 'bg-amber-50 text-amber-900 border-amber-300'
                   }`}
-                  title="የዚህ ነጠላ ጥያቄ የቀረው ሰዓት"
+                  title={currentLang === 'om' ? 'Sa’aatii gaaffii kanaa hafe' : currentLang === 'en' ? 'Remaining question time' : 'የዚህ ነጠላ ጥያቄ የቀረው ሰዓት'}
                 >
                   <Timer className="w-3.5 h-3.5 text-amber-700 animate-spin" />
-                  <span>የጥያቄው ሰዓት፡ {formatTime(questionTimeLeft)}</span>
+                  <span>
+                    {currentLang === 'om' ? 'Sa’aatii Gaaffii:' : currentLang === 'en' ? 'Question:' : 'የጥያቄው ሰዓት፡'}{' '}
+                    {formatTime(questionTimeLeft)}
+                  </span>
                 </div>
               ) : null}
 
@@ -425,17 +504,20 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
                     : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 }`}
-                title="ጠቅላላ የፈተናው የቀረው ሰዓት"
+                title={currentLang === 'om' ? 'Sa’aatii waliigalaa hafe' : currentLang === 'en' ? 'Total remaining exam time' : 'ጠቅላላ የፈተናው የቀረው ሰዓት'}
               >
                 <Clock className="w-4 h-4" />
-                <span>ጠቅላላ፡ {formatTime(timeLeft)}</span>
+                <span>
+                  {currentLang === 'om' ? 'Waliigala:' : currentLang === 'en' ? 'Total:' : 'ጠቅላላ፡'}{' '}
+                  {formatTime(timeLeft)}
+                </span>
               </div>
 
               <button
                 onClick={() => setActiveExam(null)}
                 className="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer"
               >
-                አቋርጥ
+                {currentLang === 'om' ? 'Addaan Kuti' : currentLang === 'en' ? 'Exit' : 'አቋርጥ'}
               </button>
             </div>
           </div>
@@ -446,14 +528,24 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-950 text-xs font-bold">
                 <Lock className="w-4 h-4 text-teal-700 shrink-0" />
                 <span>
-                  🔒 <strong>ጥብቅ ቅደም-ተከተል፡</strong> አንድ ጥያቄ ሰርተው 'ቀጣይ ጥያቄ' ሲሉ ብቻ የሚቀጥለው ይደርስዎታል። የቀደመ ጥያቄ ላይ መመለስ አይፈቀድም።
+                  {currentLang === 'om'
+                    ? "🔒 Tartiiba Cimaa: Gaaffii tokko hojjetanii 'Gaaffii Itti-Aanu' yoo tuqan qofa kan itti aanu dhufa. Gara gaaffii darbeetti deebi’uun hin eeyyamamu."
+                    : currentLang === 'en'
+                    ? "🔒 Strict Sequence: Click 'Next Question' after each item. Returning to previous questions is locked."
+                    : "🔒 ጥብቅ ቅደም-ተከተል፡ አንድ ጥያቄ ሰርተው 'ቀጣይ ጥያቄ' ሲሉ ብቻ የሚቀጥለው ይደርስዎታል። የቀደመ ጥያቄ ላይ መመለስ አይፈቀድም።"}
                 </span>
               </div>
             ) : (
               <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs font-bold">
                 <div className="flex items-center gap-2">
                   <Unlock className="w-4 h-4 text-indigo-700 shrink-0" />
-                  <span>🔓 <strong>ክፍት አቀራረብ፡</strong> ጥያቄዎችን እንደፈለጉ እየዘለሉ መስራትና መልስ መከለስ ይችላሉ።</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? '🔓 Dhiyeessa Banaa: Gaaffilee irra utaaluun hojjechuu fi deebii keessa deebi’uu dandeessu.'
+                      : currentLang === 'en'
+                      ? '🔓 Open Navigation: You can jump between questions and review your answers.'
+                      : '🔓 ክፍት አቀራረብ፡ ጥያቄዎችን እንደፈለጉ እየዘለሉ መስራትና መልስ መከለስ ይችላሉ።'}
+                  </span>
                 </div>
                 {/* Question jumping pills in all_at_once mode */}
                 <div className="flex items-center gap-1 overflow-x-auto">
@@ -493,10 +585,15 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
                   <span>
-                    ጥያቄ {currentQuestionIndex + 1} ከ {activeExam.questions.length}
+                    {currentLang === 'om'
+                      ? `Gaaffii ${currentQuestionIndex + 1} / ${activeExam.questions.length}`
+                      : currentLang === 'en'
+                      ? `Question ${currentQuestionIndex + 1} of ${activeExam.questions.length}`
+                      : `ጥያቄ ${currentQuestionIndex + 1} ከ ${activeExam.questions.length}`}
                   </span>
                   <span>
-                    የተመለሱ፡ {Object.keys(selectedAnswers).length} / {activeExam.questions.length}
+                    {currentLang === 'om' ? 'Kan Deebifame:' : currentLang === 'en' ? 'Answered:' : 'የተመለሱ፡'}{' '}
+                    {Object.keys(selectedAnswers).length} / {activeExam.questions.length}
                   </span>
                 </div>
 
@@ -570,12 +667,22 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
                     className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 rounded-xl transition-colors cursor-pointer"
                   >
-                    ← የቀደመ ጥያቄ
+                    {currentLang === 'om'
+                      ? '← Gaaffii Duraa'
+                      : currentLang === 'en'
+                      ? '← Previous Question'
+                      : '← የቀደመ ጥያቄ'}
                   </button>
                 ) : (
                   <div className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
                     <Lock className="w-3.5 h-3.5 text-slate-400" />
-                    <span>ወደ ኋላ መመለስ አይቻልም</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gara duubatti deebi\'uun hin danda\'amu'
+                        : currentLang === 'en'
+                        ? 'Cannot go back'
+                        : 'ወደ ኋላ መመለስ አይቻልም'}
+                    </span>
                   </div>
                 )}
 
@@ -585,7 +692,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
                     className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
-                    <span>የሚቀጥለው ጥያቄ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gaaffii Itti-Aanu'
+                        : currentLang === 'en'
+                        ? 'Next Question'
+                        : 'የሚቀጥለው ጥያቄ'}
+                    </span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 ) : (
@@ -594,7 +707,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     onClick={handleSubmitExam}
                     className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-md cursor-pointer flex items-center gap-1.5"
                   >
-                    <span>✓ ፈተናውን ጨርስና ለትምህርት ቢሮ አስረክብ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? '✓ Qormaata Xumuriitii Biiroof Ergi'
+                        : currentLang === 'en'
+                        ? '✓ Finish & Submit to Bureau'
+                        : '✓ ፈተናውን ጨርስና ለትምህርት ቢሮ አስረክብ'}
+                    </span>
                   </button>
                 )}
               </div>
@@ -611,13 +730,22 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
             <div>
               <span className="inline-block px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 mb-2">
-                🟡 የውጤት ሁኔታ፡ በትምህርት ቢሮ ግምገማ ላይ (Pending Review)
+                {currentLang === 'om'
+                  ? '🟡 Haala Qabxii: Gamaaggama Biiroo Barnootaa Irra Jira (Pending Review)'
+                  : currentLang === 'en'
+                  ? '🟡 Result Status: Pending Education Bureau Review'
+                  : '🟡 የውጤት ሁኔታ፡ በትምህርት ቢሮ ግምገማ ላይ (Pending Review)'}
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                ፈተናዎ በስኬት ተጠናቆ ለትምህርት ቢሮ ተልኳል!
+                {currentLang === 'om'
+                  ? 'Qormaanni Keessan Milkaa’inaan Xumuramee Biiroo Barnootaatiif Ergameera!'
+                  : currentLang === 'en'
+                  ? 'Exam Completed and Submitted to the Education Bureau!'
+                  : 'ፈተናዎ በስኬት ተጠናቆ ለትምህርት ቢሮ ተልኳል!'}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                ፈተና፡ <strong>{examResult.examTitle || activeExam.title}</strong>
+                {currentLang === 'om' ? 'Qormaata:' : currentLang === 'en' ? 'Exam:' : 'ፈተና፡'}{' '}
+                <strong>{examResult.examTitle || activeExam.title}</strong>
               </p>
             </div>
 
@@ -625,15 +753,40 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="flex items-start gap-2">
                 <FileSearch className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
-                  <strong>የትምህርት ቢሮ ይፋዊ የውጤት አሰራር፡</strong> የመምህራን የፈተና ጥያቄና መልስ ውጤት በትምህርት ቢሮ ጥያቄውና መልሱ ከታየ በኋላ ትምህርት ቢሮ <strong>"ውጤት ለመምህራን ይድረስ"</strong> ሲል በራስዎ አካውንት (<strong>"የእኔ ውጤቶች"</strong> ገፅ ላይ) ወዲያውኑ ይደርስዎታል።
+                  <strong>
+                    {currentLang === 'om'
+                      ? 'Hojmaata Idilee Qabxii Biiroo Barnootaa: '
+                      : currentLang === 'en'
+                      ? 'Official Bureau Grading Process: '
+                      : 'የትምህርት ቢሮ ይፋዊ የውጤት አሰራር፡ '}
+                  </strong>
+                  {currentLang === 'om'
+                    ? 'Gaaffii fi deebiin keessan Biiroo Barnootaatiin erga ilaalamee booda yeroo biiroon "Qabxiin Barsiisaa Haa Gahu" jedhu akaawuntii keessan ("Qabxiiwwan Koo") irratti battalumatti isin gaha.'
+                    : currentLang === 'en'
+                    ? 'Once the Education Bureau reviews your questions and answers and clicks "Release to Teacher", your score and certificate will appear immediately under "My Results".'
+                    : 'የመምህራን የፈተና ጥያቄና መልስ ውጤት በትምህርት ቢሮ ጥያቄውና መልሱ ከታየ በኋላ ትምህርት ቢሮ "ውጤት ለመምህራን ይድረስ" ሲል በራስዎ አካውንት ("የእኔ ውጤቶች" ገፅ ላይ) ወዲያውኑ ይደርስዎታል።'}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-amber-200 text-[11px]">
-                <div>ተፈታኝ መምህር፡ <strong>{examResult.teacherName}</strong></div>
-                <div>ትምህርት ቤት፡ <strong>{examResult.schoolName}</strong></div>
-                <div>የጥያቄዎች ብዛት፡ <strong>{examResult.totalMarks} ጥያቄዎች</strong></div>
-                <div>የተላከበት ቀንና ሰዓት፡ <strong>{new Date(examResult.submittedAt).toLocaleTimeString()}</strong></div>
+                <div>
+                  {currentLang === 'om' ? 'Barsiisaa Qoramaataa:' : currentLang === 'en' ? 'Examinee:' : 'ተፈታኝ መምህር፡'}{' '}
+                  <strong>{examResult.teacherName}</strong>
+                </div>
+                <div>
+                  {currentLang === 'om' ? 'Mana Barumsaa:' : currentLang === 'en' ? 'School:' : 'ትምህርት ቤት፡'}{' '}
+                  <strong>{examResult.schoolName}</strong>
+                </div>
+                <div>
+                  {currentLang === 'om' ? 'Baay’ina Gaaffii:' : currentLang === 'en' ? 'Questions:' : 'የጥያቄዎች ብዛት፡'}{' '}
+                  <strong>
+                    {examResult.totalMarks} {currentLang === 'om' ? 'Gaaffilee' : currentLang === 'en' ? 'Questions' : 'ጥያቄዎች'}
+                  </strong>
+                </div>
+                <div>
+                  {currentLang === 'om' ? 'Yeroo Ergame:' : currentLang === 'en' ? 'Submitted:' : 'የተላከበት ቀንና ሰዓት፡'}{' '}
+                  <strong>{new Date(examResult.submittedAt).toLocaleTimeString()}</strong>
+                </div>
               </div>
             </div>
 
@@ -647,14 +800,24 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
                 <Eye className="w-4 h-4" />
-                <span>የእኔ ውጤቶች ሁኔታን ተመልከት (My Results)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Haala Qabxiiwwan Koo Ilaali (My Results)'
+                    : currentLang === 'en'
+                    ? 'View My Results Status'
+                    : 'የእኔ ውጤቶች ሁኔታን ተመልከት (My Results)'}
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveExam(null)}
                 className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                ወደ ፈተናዎች ማውጫ ተመለስ
+                {currentLang === 'om'
+                  ? 'Gara Tarree Qormaataatti Deebi’i'
+                  : currentLang === 'en'
+                  ? 'Back to Exams Directory'
+                  : 'ወደ ፈተናዎች ማውጫ ተመለስ'}
               </button>
             </div>
           </div>
@@ -662,7 +825,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
       ) : (
         /* Exams Directory & Management Tabs */
         <div className="space-y-6">
-          {/* Main Module Tabs: 1. Available Exams | 2. Bureau Review & Release | 3. My Results */}
+          {/* Main Module Tabs */}
           <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 overflow-x-auto">
             <button
               type="button"
@@ -674,7 +837,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               }`}
             >
               <BookOpen className="w-4 h-4 text-emerald-700" />
-              <span>የፈተናዎች ማውጫ ({filteredExams.length})</span>
+              <span>
+                {currentLang === 'om'
+                  ? `Tarree Qormaataa (${filteredExams.length})`
+                  : currentLang === 'en'
+                  ? `Available Exams (${filteredExams.length})`
+                  : `የፈተናዎች ማውጫ (${filteredExams.length})`}
+              </span>
             </button>
 
             {isBureauOfficer && (
@@ -688,10 +857,17 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 }`}
               >
                 <ShieldCheck className="w-4 h-4 text-amber-700" />
-                <span>የትምህርት ቢሮ ግምገማ እና ውጤት መልቀቂያ</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Gamaaggama Biiroo & Gadhiisa Qabxii'
+                    : currentLang === 'en'
+                    ? 'Bureau Review & Result Release'
+                    : 'የትምህርት ቢሮ ግምገማ እና ውጤት መልቀቂያ'}
+                </span>
                 {submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length > 0 && (
                   <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">
-                    {submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length} ግምገማ የሚጠብቁ
+                    {submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length}{' '}
+                    {currentLang === 'om' ? 'Eegaa Jiru' : currentLang === 'en' ? 'Pending' : 'ግምገማ የሚጠብቁ'}
                   </span>
                 )}
               </button>
@@ -707,7 +883,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               }`}
             >
               <Award className="w-4 h-4 text-indigo-700" />
-              <span>የእኔ ውጤቶች (My Results)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Qabxiiwwan Koo (My Results)'
+                  : currentLang === 'en'
+                  ? 'My Results'
+                  : 'የእኔ ውጤቶች (My Results)'}
+              </span>
               {submissions.filter((s) => s.reviewStatus === 'released_to_teacher').length > 0 && (
                 <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
                   {submissions.filter((s) => s.reviewStatus === 'released_to_teacher').length}
@@ -728,10 +910,11 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
-                          {t.exam_title} (Teacher Competency Exams)
+                          {t.exam_title}
                         </h2>
                         <span className="text-xs text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300 font-bold">
-                          {filteredExams.length} / {exams.length} ፈተናዎች
+                          {filteredExams.length} / {exams.length}{' '}
+                          {currentLang === 'om' ? 'Qormaatawwan' : currentLang === 'en' ? 'Exams' : 'ፈተናዎች'}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">{t.exam_desc}</p>
@@ -750,7 +933,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-emerald-800 via-teal-800 to-indigo-950 hover:from-emerald-700 hover:to-indigo-900 text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer border border-emerald-400/40 hover:scale-102"
                         >
                           <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                          <span>✨ በ AI ከስልጠና ፅሁፍ ፈተና አውጣ (AI Exam Generator)</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? '✨ AI dhaan Barreeffama Leenjii Irraa Qormaata Baasi'
+                              : currentLang === 'en'
+                              ? '✨ AI Exam Generator from Training'
+                              : '✨ በ AI ከስልጠና ፅሁፍ ፈተና አውጣ (AI Exam Generator)'}
+                          </span>
                         </button>
 
                         <button
@@ -758,13 +947,25 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
                         >
                           <Plus className="w-4 h-4" />
-                          <span>በእጅ አዘጋጅ (Manual)</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? 'Harkaan Qopheessi (Manual)'
+                              : currentLang === 'en'
+                              ? 'Create Manual Exam'
+                              : 'በእጅ አዘጋጅ (Manual)'}
+                          </span>
                         </button>
                       </>
                     ) : (
                       <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs font-bold">
                         <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
-                        <span>ፈተና የማውጣት ህጋዊ ስልጣን የትምህርት ቢሮ ብቻ ነው።</span>
+                        <span>
+                          {currentLang === 'om'
+                            ? 'Aangoon seera qabeessi qormaata baasuu kan Biiroo Barnootaa qofa.'
+                            : currentLang === 'en'
+                            ? 'Exam creation authority belongs solely to the Education Bureau.'
+                            : 'ፈተና የማውጣት ህጋዊ ስልጣን የትምህርት ቢሮ ብቻ ነው።'}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -775,14 +976,32 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   <div className="space-y-1 max-w-2xl">
                     <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-[10px] font-bold text-amber-300">
                       <ShieldCheck className="w-3 h-3 text-amber-300" />
-                      <span>ይፋዊ የትምህርት ቢሮ የፈተናዎች ማዕከል · Bureau Exam Authority</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'Giddugala Qormaata Idilee Biiroo Barnootaa · Bureau Exam Authority'
+                          : currentLang === 'en'
+                          ? 'Official Education Bureau Exam Center'
+                          : 'ይፋዊ የትምህርት ቢሮ የፈተናዎች ማዕከል · Bureau Exam Authority'}
+                      </span>
                     </div>
                     <h3 className="text-xs sm:text-sm font-black tracking-tight text-white">
-                      የመምህራን ብቃት መመዘኛ ፈተናዎችን የማዘጋጀት እና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው
+                      {currentLang === 'om'
+                        ? 'Aangoon qormaata gahumsa barsiisotaa qopheessuu fi baasuu kan Biiroo Barnootaa qofa'
+                        : currentLang === 'en'
+                        ? 'Only the Education Bureau is authorized to prepare and publish teacher competency exams'
+                        : 'የመምህራን ብቃት መመዘኛ ፈተናዎችን የማዘጋጀት እና የማውጣት ስልጣን የትምህርት ቢሮ ብቻ ነው'}
                     </h3>
                     <p className="text-[11px] text-slate-300 leading-relaxed">
                       {isBureauOfficer
-                        ? 'የትምህርት ቢሮ ባለሙያዎች በቀጥታ ከስልጠና ማንዋሎች ላይ በ AI ቴክኖሎጂ ወይም በእጅ ጥያቄዎችን፣ የጥያቄ ሰዓት ገደብ እና የማለፊያ ነጥብ ወስነው ለመምህራን ይፋ ያደርጋሉ።'
+                        ? currentLang === 'om'
+                          ? 'Ogeeyyiin Biiroo Barnootaa kallattiidhaan mojuulota leenjii irraa teeknooloojii AI tiin ykn harkaan gaaffilee, daangaa sa’aatii fi qabxii darbinsaa murteessanii barsiisotaaf gadhiisu.'
+                          : currentLang === 'en'
+                          ? 'Bureau specialists generate or craft competency exams directly from training manuals with custom per-question timers and passing scores.'
+                          : 'የትምህርት ቢሮ ባለሙያዎች በቀጥታ ከስልጠና ማንዋሎች ላይ በ AI ቴክኖሎጂ ወይም በእጅ ጥያቄዎችን፣ የጥያቄ ሰዓት ገደብ እና የማለፊያ ነጥብ ወስነው ለመምህራን ይፋ ያደርጋሉ።'
+                        : currentLang === 'om'
+                        ? 'Qormaatawwan gahumsaa Biiroo Barnootaatiin qophaa’an tarree armaan gadii keessaa filachuun "Qormaata Fudhadhu" isa jedhu cuqaasaa. Qabxiin yeroo Biiroon mirkanaa’u akaawuntii keessanitti ni dhufa.'
+                        : currentLang === 'en'
+                        ? 'Select an official competency exam prepared by the Bureau below and click "Take Exam". Results will be delivered to your account after Bureau review.'
                         : 'የትምህርት ቢሮ ያዘጋጃቸውንና ያረጋገጣቸውን ይፋዊ የብቃት ፈተናዎች ከታች ካለው ዝርዝር በመምረጥ "ፈተናውን ውሰድ" የሚለውን ይጫኑ። የፈተናው ውጤት በትምህርት ቢሮ ተገምግሞ ሲለቀቅ በግል አካውንትዎ ይደርሰዎታል።'}
                     </p>
                   </div>
@@ -797,12 +1016,25 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer shrink-0 flex items-center justify-center gap-1.5"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>ፈተና በ AI አውጣ</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'AI dhaan Qormaata Baasi'
+                          : currentLang === 'en'
+                          ? 'Generate with AI'
+                          : 'ፈተና በ AI አውጣ'}
+                      </span>
                     </button>
                   ) : (
                     <div className="px-3.5 py-2 bg-white/10 backdrop-blur-xs rounded-xl border border-white/20 text-white text-xs font-bold shrink-0 flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-emerald-300" />
-                      <span>{filteredExams.length} ዝግጁ ይፋዊ ፈተናዎች</span>
+                      <span>
+                        {filteredExams.length}{' '}
+                        {currentLang === 'om'
+                          ? 'Qormaatawwan Qophaa’oo Idilee'
+                          : currentLang === 'en'
+                          ? 'Official Ready Exams'
+                          : 'ዝግጁ ይፋዊ ፈተናዎች'}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -815,7 +1047,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="የፈተናውን ርዕስ፣ የትምህርት አይነት ወይም መመሪያ ፈልግ..."
+                      placeholder={
+                        currentLang === 'om'
+                          ? 'Mata-duree qormaataa, gosa barnootaa ykn qajeelfama barbaadi...'
+                          : currentLang === 'en'
+                          ? 'Search exam title, subject or instructions...'
+                          : 'የፈተናውን ርዕስ፣ የትምህርት አይነት ወይም መመሪያ ፈልግ...'
+                      }
                       className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-600 focus:outline-hidden font-medium"
                     />
                     {searchTerm && (
@@ -832,12 +1070,12 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   {/* Subject Filter Pills */}
                   <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs">
                     {[
-                      { id: 'all', label: 'ሁሉም ፈተናዎች' },
-                      { id: 'Pedagogy', label: 'ስነ-ዘዴ (Pedagogy)' },
-                      { id: 'Mathematics', label: 'ሂሳብ' },
-                      { id: 'English', label: 'እንግሊዝኛ' },
-                      { id: 'Oromoo', label: 'አፋን ኦሮሞ' },
-                      { id: 'Science', label: 'ሳይንስ' }
+                      { id: 'all', label: currentLang === 'om' ? 'Qormaata Hunda' : currentLang === 'en' ? 'All Exams' : 'ሁሉም ፈተናዎች' },
+                      { id: 'Pedagogy', label: currentLang === 'om' ? 'Mala Barsiisuu (Pedagogy)' : currentLang === 'en' ? 'Pedagogy' : 'ስነ-ዘዴ (Pedagogy)' },
+                      { id: 'Mathematics', label: currentLang === 'om' ? 'Herrega' : currentLang === 'en' ? 'Mathematics' : 'ሂሳብ' },
+                      { id: 'English', label: currentLang === 'om' ? 'Ingiliffa' : currentLang === 'en' ? 'English' : 'እንግሊዝኛ' },
+                      { id: 'Oromoo', label: 'Afaan Oromoo' },
+                      { id: 'Science', label: currentLang === 'om' ? 'Saayinsii' : currentLang === 'en' ? 'Science' : 'ሳይንስ' }
                     ].map((sb) => (
                       <button
                         key={sb.id}
@@ -868,18 +1106,35 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-black text-emerald-950">
-                            የእርስዎ የተመደበበት የትምህርት መስክና የክፍል ደረጃ
+                            {currentLang === 'om'
+                              ? 'Dirree Barnootaa fi Sadarkaa Kutaa Isiniif Ramadame'
+                              : currentLang === 'en'
+                              ? 'Your Assigned Subject Field & Grade Level'
+                              : 'የእርስዎ የተመደበበት የትምህርት መስክና የክፍል ደረጃ'}
                           </span>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 border border-emerald-300">
-                            ይፋዊ የተጣራ ምደባ
+                            {currentLang === 'om'
+                              ? 'Ramaddii Idilee Gingilchaame'
+                              : currentLang === 'en'
+                              ? 'Official Filtered Assignment'
+                              : 'ይፋዊ የተጣራ ምደባ'}
                           </span>
                         </div>
                         <p className="text-xs text-slate-700 mt-0.5">
-                          የሚያስተምሩት የትምህርት ዓይነት፡{' '}
+                          {currentLang === 'om'
+                            ? 'Gosa barnootaa barsiistan: '
+                            : currentLang === 'en'
+                            ? 'Assigned Subject: '
+                            : 'የሚያስተምሩት የትምህርት ዓይነት፡ '}
                           <strong className="text-emerald-900 font-bold underline">
                             {teacherAssignment.primarySubjectLabel}
                           </strong>{' '}
-                          · የክፍል ደረጃ፡{' '}
+                          ·{' '}
+                          {currentLang === 'om'
+                            ? 'Sadarkaa Kutaa: '
+                            : currentLang === 'en'
+                            ? 'Grade Level: '
+                            : 'የክፍል ደረጃ፡ '}
                           <strong className="text-amber-900 font-bold underline">
                             {teacherAssignment.primaryGradeLabel}
                           </strong>
@@ -889,14 +1144,32 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
                     <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-900 text-xs font-bold shrink-0 shadow-2xs">
                       <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                      <span>{filteredExams.length} የተመደቡ ፈተናዎች ብቻ</span>
+                      <span>
+                        {filteredExams.length}{' '}
+                        {currentLang === 'om'
+                          ? 'Qormaatawwan Ramadaman Qofa'
+                          : currentLang === 'en'
+                          ? 'Assigned Exams Only'
+                          : 'የተመደቡ ፈተናዎች ብቻ'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="text-[11px] text-emerald-900/90 bg-white/70 p-2.5 rounded-xl border border-emerald-200 flex items-start gap-2">
                     <Info className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                     <span>
-                      <strong>የትምህርት ቢሮ ደንብ፡</strong> እርስዎ ለሚያስተምሩት የትምህርት ዓይነትና የክፍል ደረጃ የተዘጋጁ ፈተናዎች እና አጠቃላይ የክፍል ስነ-ዘዴ ምዘናዎች ብቻ ተጣርተው ደርሰውዎታል። የሌሎች የትምህርት ክፍሎች ፈተናዎች ተደብቀዋል።
+                      <strong>
+                        {currentLang === 'om'
+                          ? 'Qajeelfama Biiroo Barnootaa: '
+                          : currentLang === 'en'
+                          ? 'Education Bureau Policy: '
+                          : 'የትምህርት ቢሮ ደንብ፡ '}
+                      </strong>
+                      {currentLang === 'om'
+                        ? 'Qormaatawwan gosa barnootaa fi sadarkaa kutaa barsiistanitti qophaa’an qofatu gingilchaamee isin gahe.'
+                        : currentLang === 'en'
+                        ? 'Only competency exams tailored to your assigned subject and grade levels are filtered and shown here.'
+                        : 'እርስዎ ለሚያስተምሩት የትምህርት ዓይነትና የክፍል ደረጃ የተዘጋጁ ፈተናዎች እና አጠቃላይ የክፍል ስነ-ዘዴ ምዘናዎች ብቻ ተጣርተው ደርሰውዎታል። የሌሎች የትምህርት ክፍሎች ፈተናዎች ተደብቀዋል።'}
                     </span>
                   </div>
                 </div>
@@ -922,20 +1195,35 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           {exam.generatedByAI && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-900 border border-indigo-300">
                               <Sparkles className="w-3 h-3 text-indigo-600" />
-                              <span>✨ በ AI የተዘጋጀ</span>
+                              <span>
+                                {currentLang === 'om'
+                                  ? '✨ AI dhaan Qophaa’e'
+                                  : currentLang === 'en'
+                                  ? '✨ AI Generated'
+                                  : '✨ በ AI የተዘጋጀ'}
+                              </span>
                             </span>
                           )}
-                          {/* Delivery Mode Badge */}
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                             exam.deliveryMode === 'one_by_one'
                               ? 'bg-teal-50 text-teal-900 border-teal-200'
                               : 'bg-indigo-50 text-indigo-900 border-indigo-200'
                           }`}>
-                            {exam.deliveryMode === 'one_by_one' ? '🔒 ቅደም-ተከተል (Step)' : '🔓 ክፍት (All)'}
+                            {exam.deliveryMode === 'one_by_one'
+                              ? currentLang === 'om'
+                                ? '🔒 Tartiiba (Step)'
+                                : currentLang === 'en'
+                                ? '🔒 Step-by-Step'
+                                : '🔒 ቅደም-ተከተል (Step)'
+                              : currentLang === 'om'
+                              ? '🔓 Banaa (All)'
+                              : currentLang === 'en'
+                              ? '🔓 Open (All)'
+                              : '🔓 ክፍት (All)'}
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-400">
-                          እስከ {exam.deadline}
+                          {currentLang === 'om' ? 'Hanga' : currentLang === 'en' ? 'Until' : 'እስከ'} {exam.deadline}
                         </span>
                       </div>
 
@@ -946,7 +1234,14 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       {exam.sourceTrainingTitle && (
                         <div className="flex items-center gap-1.5 text-[11px] text-emerald-900 font-semibold mt-1 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200/80">
                           <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                          <span className="truncate">የስልጠና ፅሁፍ፡ {exam.sourceTrainingTitle}</span>
+                          <span className="truncate">
+                            {currentLang === 'om'
+                              ? 'Barreeffama Leenjii:'
+                              : currentLang === 'en'
+                              ? 'Training Source:'
+                              : 'የስልጠና ፅሁፍ፡'}{' '}
+                            {exam.sourceTrainingTitle}
+                          </span>
                         </div>
                       )}
 
@@ -956,21 +1251,41 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
                       <div className="mt-4 grid grid-cols-4 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                         <div>
-                          <span className="text-[10px] text-slate-400 block">ጠቅላላ ሰዓት</span>
-                          <strong className="text-slate-800">{exam.durationMinutes} ደቂቃ</strong>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 block">የጥያቄ ሰዓት</span>
-                          <strong className="text-amber-800">
-                            {exam.timePerQuestionMinutes ? `${exam.timePerQuestionMinutes} ደ/ጥ` : 'ያልተገደበ'}
+                          <span className="text-[10px] text-slate-400 block">
+                            {currentLang === 'om' ? 'Sa’aatii Waliigalaa' : currentLang === 'en' ? 'Total Time' : 'ጠቅላላ ሰዓት'}
+                          </span>
+                          <strong className="text-slate-800">
+                            {exam.durationMinutes}{' '}
+                            {currentLang === 'om' ? 'Daqiiqaa' : currentLang === 'en' ? 'Min' : 'ደቂቃ'}
                           </strong>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 block">የጥያቄ ብዛት</span>
-                          <strong className="text-slate-800">{exam.questions.length} ጥያቄ</strong>
+                          <span className="text-[10px] text-slate-400 block">
+                            {currentLang === 'om' ? 'Sa’aatii Gaaffii' : currentLang === 'en' ? 'Per Question' : 'የጥያቄ ሰዓት'}
+                          </span>
+                          <strong className="text-amber-800">
+                            {exam.timePerQuestionMinutes
+                              ? `${exam.timePerQuestionMinutes} ${currentLang === 'om' ? 'Daq/Gaaffii' : currentLang === 'en' ? 'min/Q' : 'ደ/ጥ'}`
+                              : currentLang === 'om'
+                              ? 'Daangaa Malee'
+                              : currentLang === 'en'
+                              ? 'Unlimited'
+                              : 'ያልተገደበ'}
+                          </strong>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 block">ማለፊያ</span>
+                          <span className="text-[10px] text-slate-400 block">
+                            {currentLang === 'om' ? 'Baay’ina Gaaffii' : currentLang === 'en' ? 'Questions' : 'የጥያቄ ብዛት'}
+                          </span>
+                          <strong className="text-slate-800">
+                            {exam.questions.length}{' '}
+                            {currentLang === 'om' ? 'Gaaffii' : currentLang === 'en' ? 'Q' : 'ጥያቄ'}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block">
+                            {currentLang === 'om' ? 'Qabxii Darbinsaa' : currentLang === 'en' ? 'Passing' : 'ማለፊያ'}
+                          </span>
                           <strong className="text-emerald-800">{exam.passingScore}%</strong>
                         </div>
                       </div>
@@ -978,7 +1293,10 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
                     <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-[11px] text-slate-400">
-                        ሁኔታ፡ <strong className="text-emerald-700">ዝግጁ</strong>
+                        {currentLang === 'om' ? 'Haala:' : currentLang === 'en' ? 'Status:' : 'ሁኔታ፡'}{' '}
+                        <strong className="text-emerald-700">
+                          {currentLang === 'om' ? 'Qophii' : currentLang === 'en' ? 'Ready' : 'ዝግጁ'}
+                        </strong>
                       </span>
                       <button
                         onClick={() => handleStartExam(exam)}
@@ -1003,13 +1321,27 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   <div className="space-y-1">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs font-bold">
                       <ShieldCheck className="w-4 h-4 text-amber-300" />
-                      <span>የትምህርት ቢሮ ይፋዊ የውጤት ኦዲት እና ማፅደቂያ ማዕከል</span>
+                      <span>
+                        {currentLang === 'om'
+                          ? 'Giddugala Odiitii Qabxii & Mirkaneessaa Biiroo Barnootaa'
+                          : currentLang === 'en'
+                          ? 'Official Bureau Score Audit & Approval Center'
+                          : 'የትምህርት ቢሮ ይፋዊ የውጤት ኦዲት እና ማፅደቂያ ማዕከል'}
+                      </span>
                     </div>
                     <h2 className="text-lg sm:text-xl font-black text-white">
-                      የመምህራን ፈተና ጥያቄና መልስ ግምገማ እና ይፋ ማድረጊያ
+                      {currentLang === 'om'
+                        ? 'Gamaaggama Gaaffii & Deebii Barsiisotaa fi Qabxii Ifa Gochuu'
+                        : currentLang === 'en'
+                        ? 'Teacher Exam Q&A Review & Result Publishing'
+                        : 'የመምህራን ፈተና ጥያቄና መልስ ግምገማ እና ይፋ ማድረጊያ'}
                     </h2>
                     <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                      መምህራን የሰሩትን የፈተና ጥያቄዎችና የመረጧቸውን መልሶች እዚህ ይገምግሙ። <strong>"ውጤቱ ለመምህሩ ይድረስ / አጽድቅ"</strong> ሲሉ መምህሩ በራሱ አካውንት ውጤቱን፣ ትክክለኛ ማብራሪያዎችን እና ይፋዊ ሰርተፊኬቱን ወዲያውኑ ይቀበላል።
+                      {currentLang === 'om'
+                        ? 'Gaaffii fi deebii barsiisonni hojjetan asitti gamaaggamaa. Yeroo "Qabxiin Barsiisaa Haa Gahu / Mirkaneessi" cuqaastan barsiisaan akaawuntii isaa irratti qabxii fi waraqaa ragaa battalumatti argata.'
+                        : currentLang === 'en'
+                        ? 'Review submitted teacher exam answers here. Clicking "Release to Teacher / Approve" immediately delivers the score, explanations, and certificate to the teacher.'
+                        : 'መምህራን የሰሩትን የፈተና ጥያቄዎችና የመረጧቸውን መልሶች እዚህ ይገምግሙ። "ውጤቱ ለመምህሩ ይድረስ / አጽድቅ" ሲሉ መምህሩ በራሱ አካውንት ውጤቱን፣ ትክክለኛ ማብራሪያዎችን እና ይፋዊ ሰርተፊኬቱን ወዲያውኑ ይቀበላል።'}
                     </p>
                   </div>
 
@@ -1019,29 +1351,53 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     className="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-transform hover:scale-102 cursor-pointer flex items-center justify-center gap-2 shrink-0"
                   >
                     <Send className="w-4 h-4 text-slate-950" />
-                    <span>🚀 ሁሉንም ለመምህራን በአንድ ጊዜ ላክ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? '🚀 Hunda Barsiisotaaf Yeroo Tokkotti Ergi'
+                        : currentLang === 'en'
+                        ? '🚀 Release All to Teachers'
+                        : '🚀 ሁሉንም ለመምህራን በአንድ ጊዜ ላክ'}
+                    </span>
                   </button>
                 </div>
 
                 {/* Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                   <div className="bg-white/10 backdrop-blur-xs p-3.5 rounded-2xl border border-white/15">
-                    <span className="text-[11px] text-slate-300 block">ጠቅላላ የተላኩ ፈተናዎች</span>
+                    <span className="text-[11px] text-slate-300 block">
+                      {currentLang === 'om'
+                        ? "Ida'ama Qormaatawwan Ergamanii"
+                        : currentLang === 'en'
+                        ? 'Total Submitted Exams'
+                        : 'ጠቅላላ የተላኩ ፈተናዎች'}
+                    </span>
                     <strong className="text-xl font-black font-mono text-white">
                       {submissions.length}
                     </strong>
                   </div>
                   <div className="bg-amber-500/20 backdrop-blur-xs p-3.5 rounded-2xl border border-amber-400/30">
-                    <span className="text-[11px] text-amber-200 block">ግምገማ የሚጠብቁ (Pending)</span>
+                    <span className="text-[11px] text-amber-200 block">
+                      {currentLang === 'om'
+                        ? 'Gamaaggama Kan Eegan (Pending)'
+                        : currentLang === 'en'
+                        ? 'Pending Review'
+                        : 'ግምገማ የሚጠብቁ (Pending)'}
+                    </span>
                     <strong className="text-xl font-black font-mono text-amber-300 flex items-center gap-2">
                       <span>{submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length}</span>
                       <span className="text-xs font-normal bg-amber-400/30 px-2 py-0.5 rounded-full text-amber-100">
-                        ግምገማ ይጠብቃሉ
+                        {currentLang === 'om' ? 'Eegaa Jiru' : currentLang === 'en' ? 'Waiting' : 'ግምገማ ይጠብቃሉ'}
                       </span>
                     </strong>
                   </div>
                   <div className="bg-emerald-500/20 backdrop-blur-xs p-3.5 rounded-2xl border border-emerald-400/30">
-                    <span className="text-[11px] text-emerald-200 block">ለመምህራን የተለቀቁ (Released)</span>
+                    <span className="text-[11px] text-emerald-200 block">
+                      {currentLang === 'om'
+                        ? 'Barsiisotaaf Kan Gadhiifaman (Released)'
+                        : currentLang === 'en'
+                        ? 'Released to Teachers'
+                        : 'ለመምህራን የተለቀቁ (Released)'}
+                    </span>
                     <strong className="text-xl font-black font-mono text-emerald-300">
                       {submissions.filter((s) => s.reviewStatus === 'released_to_teacher').length}
                     </strong>
@@ -1057,16 +1413,31 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     type="text"
                     value={submissionSearch}
                     onChange={(e) => setSubmissionSearch(e.target.value)}
-                    placeholder="መምህር፣ ትምህርት ቤት ወይም የፈተና ርዕስ ፈልግ..."
+                    placeholder={
+                      currentLang === 'om'
+                        ? 'Barsiisaa, mana barumsaa ykn mata-duree qormaataa barbaadi...'
+                        : currentLang === 'en'
+                        ? 'Search teacher, school or exam title...'
+                        : 'መምህር፣ ትምህርት ቤት ወይም የፈተና ርዕስ ፈልግ...'
+                    }
                     className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl bg-slate-50 focus:bg-white font-medium"
                   />
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs">
                   {[
-                    { id: 'all', label: 'ሁሉም (' + submissions.length + ')' },
-                    { id: 'pending', label: 'ግምገማ የሚጠብቁ (' + submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length + ')' },
-                    { id: 'released', label: 'የተለቀቁ (' + submissions.filter((s) => s.reviewStatus === 'released_to_teacher').length + ')' }
+                    {
+                      id: 'all',
+                      label: `${currentLang === 'om' ? 'Hunda' : currentLang === 'en' ? 'All' : 'ሁሉም'} (${submissions.length})`
+                    },
+                    {
+                      id: 'pending',
+                      label: `${currentLang === 'om' ? 'Kan Eegan' : currentLang === 'en' ? 'Pending' : 'ግምገማ የሚጠብቁ'} (${submissions.filter((s) => s.reviewStatus === 'pending_bureau_review').length})`
+                    },
+                    {
+                      id: 'released',
+                      label: `${currentLang === 'om' ? 'Gadhiifaman' : currentLang === 'en' ? 'Released' : 'የተለቀቁ'} (${submissions.filter((s) => s.reviewStatus === 'released_to_teacher').length})`
+                    }
                   ].map((flt) => (
                     <button
                       key={flt.id}
@@ -1117,7 +1488,15 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                             }`}
                           >
                             {sub.reviewStatus === 'pending_bureau_review'
-                              ? '🟡 በትምህርት ቢሮ ግምገማ ላይ'
+                              ? currentLang === 'om'
+                                ? '🟡 Gamaaggama Biiroo Irra Jira'
+                                : currentLang === 'en'
+                                ? '🟡 Pending Bureau Review'
+                                : '🟡 በትምህርት ቢሮ ግምገማ ላይ'
+                              : currentLang === 'om'
+                              ? '🟢 Barsiisaaf Gadhiifameera'
+                              : currentLang === 'en'
+                              ? '🟢 Released to Teacher'
                               : '🟢 ለመምህሩ ተለቋል'}
                           </span>
                           <span className="text-[11px] font-bold text-slate-500">
@@ -1129,15 +1508,26 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                         </div>
 
                         <h3 className="text-sm font-black text-slate-900">
-                          {sub.examTitle || 'የመምህራን ብቃት ምዘና'}
+                          {sub.examTitle || (currentLang === 'om' ? 'Madaallii Gahumsa Barsiisotaa' : currentLang === 'en' ? 'Teacher Competency Assessment' : 'የመምህራን ብቃት ምዘና')}
                         </h3>
 
                         <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
-                          <span>ተፈታኝ፡ <strong className="text-slate-900">{sub.teacherName}</strong></span>
+                          <span>
+                            {currentLang === 'om' ? 'Qoramaataa:' : currentLang === 'en' ? 'Examinee:' : 'ተፈታኝ፡'}{' '}
+                            <strong className="text-slate-900">{sub.teacherName}</strong>
+                          </span>
                           <span>•</span>
-                          <span>ትምህርት ቤት፡ <strong className="text-slate-800">{sub.schoolName}</strong></span>
+                          <span>
+                            {currentLang === 'om' ? 'Mana Barumsaa:' : currentLang === 'en' ? 'School:' : 'ትምህርት ቤት፡'}{' '}
+                            <strong className="text-slate-800">{sub.schoolName}</strong>
+                          </span>
                           <span>•</span>
-                          <span>ውጤት፡ <strong className={sub.passed ? 'text-emerald-700' : 'text-rose-700'}>{sub.percentage}% ({sub.score}/{sub.totalMarks})</strong></span>
+                          <span>
+                            {currentLang === 'om' ? 'Qabxii:' : currentLang === 'en' ? 'Score:' : 'ውጤት፡'}{' '}
+                            <strong className={sub.passed ? 'text-emerald-700' : 'text-rose-700'}>
+                              {sub.percentage}% ({sub.score}/{sub.totalMarks})
+                            </strong>
+                          </span>
                         </div>
                       </div>
 
@@ -1151,7 +1541,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
                         >
                           <Eye className="w-3.5 h-3.5 text-slate-700" />
-                          <span>ጥያቄና መልስ ገምግም</span>
+                          <span>
+                            {currentLang === 'om'
+                              ? 'Gaaffii & Deebii Gamaaggami'
+                              : currentLang === 'en'
+                              ? 'Inspect Q&A'
+                              : 'ጥያቄና መልስ ገምግም'}
+                          </span>
                         </button>
 
                         {sub.reviewStatus === 'pending_bureau_review' ? (
@@ -1161,12 +1557,20 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                             className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                           >
                             <Send className="w-3.5 h-3.5" />
-                            <span>ውጤት ለመምህሩ ላክ</span>
+                            <span>
+                              {currentLang === 'om'
+                                ? 'Qabxii Barsiisaaf Ergi'
+                                : currentLang === 'en'
+                                ? 'Release to Teacher'
+                                : 'ውጤት ለመምህሩ ላክ'}
+                            </span>
                           </button>
                         ) : (
                           <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1">
                             <CheckCheck className="w-3.5 h-3.5 text-emerald-700" />
-                            <span>ተልኳል</span>
+                            <span>
+                              {currentLang === 'om' ? 'Ergameera' : currentLang === 'en' ? 'Sent' : 'ተልኳል'}
+                            </span>
                           </span>
                         )}
                       </div>
@@ -1186,10 +1590,18 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   </div>
                   <div>
                     <h2 className="text-base sm:text-lg font-black text-slate-900">
-                      የእኔ የፈተና ውጤቶች እና ሰርተፊኬቶች (My Results)
+                      {currentLang === 'om'
+                        ? 'Qabxiiwwan Qormaataa fi Waraqaawwan Ragaa Koo (My Results)'
+                        : currentLang === 'en'
+                        ? 'My Exam Results & Certificates'
+                        : 'የእኔ የፈተና ውጤቶች እና ሰርተፊኬቶች (My Results)'}
                     </h2>
                     <p className="text-xs text-slate-500">
-                      የወሰዷቸው የብቃት ፈተናዎች ዝርዝር። የትምህርት ቢሮ ጥያቄውንና መልሱን ከገመገመ በኋላ ይፋ ያደረጋቸውን ውጤቶች እዚህ ይመልከቱ።
+                      {currentLang === 'om'
+                        ? 'Tarree qormaata gahumsaa fudhattanii. Qabxiiwwan Biiroon Barnootaa gamaaggamee gadhiise asitti ilaalaa.'
+                        : currentLang === 'en'
+                        ? 'List of competency exams you have taken. View scores and certificates released after Bureau review.'
+                        : 'የወሰዷቸው የብቃት ፈተናዎች ዝርዝር። የትምህርት ቢሮ ጥያቄውንና መልሱን ከገመገመ በኋላ ይፋ ያደረጋቸውን ውጤቶች እዚህ ይመልከቱ።'}
                     </p>
                   </div>
                 </div>
@@ -1199,13 +1611,23 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 {submissions.length === 0 ? (
                   <div className="p-12 text-center bg-white rounded-3xl border border-slate-200">
                     <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-xs font-bold text-slate-500">እስካሁን የወሰዱት ፈተና የለም።</p>
+                    <p className="text-xs font-bold text-slate-500">
+                      {currentLang === 'om'
+                        ? 'Hanga ammaatti qormaanni fudhattan hin jiru.'
+                        : currentLang === 'en'
+                        ? 'You have not taken any exams yet.'
+                        : 'እስካሁን የወሰዱት ፈተና የለም።'}
+                    </p>
                     <button
                       type="button"
                       onClick={() => setActiveExamTab('exams')}
                       className="mt-3 px-4 py-2 bg-emerald-800 text-white text-xs font-bold rounded-xl cursor-pointer"
                     >
-                      ፈተናዎችን ይመልከቱ
+                      {currentLang === 'om'
+                        ? 'Qormaatawwan Ilaali'
+                        : currentLang === 'en'
+                        ? 'Browse Exams'
+                        : 'ፈተናዎችን ይመልከቱ'}
                     </button>
                   </div>
                 ) : (
@@ -1220,7 +1642,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                             {sub.subject}
                           </span>
                           <h3 className="text-sm font-black text-slate-900 mt-1">
-                            {sub.examTitle || 'የመምህራን ብቃት ምዘና'}
+                            {sub.examTitle || (currentLang === 'om' ? 'Madaallii Gahumsa Barsiisotaa' : currentLang === 'en' ? 'Teacher Competency Exam' : 'የመምህራን ብቃት ምዘና')}
                           </h3>
                         </div>
 
@@ -1228,12 +1650,24 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           {sub.reviewStatus === 'pending_bureau_review' ? (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300">
                               <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
-                              <span>🟡 በትምህርት ቢሮ ግምገማ ላይ ነው</span>
+                              <span>
+                                {currentLang === 'om'
+                                  ? '🟡 Gamaaggama Biiroo Irra Jira'
+                                  : currentLang === 'en'
+                                  ? '🟡 Under Bureau Review'
+                                  : '🟡 በትምህርት ቢሮ ግምገማ ላይ ነው'}
+                              </span>
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-300">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                              <span>🟢 ውጤቱ በትምህርት ቢሮ ተለቋል</span>
+                              <span>
+                                {currentLang === 'om'
+                                  ? '🟢 Qabxiin Biiroon Gadhiifameera'
+                                  : currentLang === 'en'
+                                  ? '🟢 Result Released by Bureau'
+                                  : '🟢 ውጤቱ በትምህርት ቢሮ ተለቋል'}
+                              </span>
                             </span>
                           )}
                         </div>
@@ -1245,10 +1679,18 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           <Info className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                           <div className="space-y-1">
                             <p className="font-bold">
-                              ፈተናዎ በትምህርት ቢሮ ግምገማ ላይ ይገኛል!
+                              {currentLang === 'om'
+                                ? 'Qormaanni keessan gamaaggama Biiroo Barnootaa irra jira!'
+                                : currentLang === 'en'
+                                ? 'Your exam is currently under Education Bureau review!'
+                                : 'ፈተናዎ በትምህርት ቢሮ ግምገማ ላይ ይገኛል!'}
                             </p>
                             <p className="text-slate-600 leading-relaxed text-[11px]">
-                              የትምህርት ቢሮ ባለሙያዎች የፈተና ጥያቄዎችንና የመለሷቸውን መልሶች ካረጋገጡ በኋላ <strong>"ውጤት ለመምህሩ ይድረስ"</strong> ሲሉ ውጤትዎ፣ ትክክለኛ ማብራሪያዎች እና ይፋዊ ሰርተፊኬት እዚህ ገፅ ላይ ወዲያውኑ ይለቀቃል።
+                              {currentLang === 'om'
+                                ? 'Ogeeyyiin Biiroo Barnootaa gaaffii fi deebii erga mirkaneessanii booda yeroo "Qabxiin Barsiisaa Haa Gahu" jedhan qabxiin keessan fi waraqaan ragaa asitti gadhiifama.'
+                                : currentLang === 'en'
+                                ? 'Once Bureau specialists verify your answers and release the score, your detailed breakdown and official certificate will appear here.'
+                                : 'የትምህርት ቢሮ ባለሙያዎች የፈተና ጥያቄዎችንና የመለሷቸውን መልሶች ካረጋገጡ በኋላ "ውጤት ለመምህሩ ይድረስ" ሲሉ ውጤትዎ፣ ትክክለኛ ማብራሪያዎች እና ይፋዊ ሰርተፊኬት እዚህ ገፅ ላይ ወዲያውኑ ይለቀቃል።'}
                             </p>
                           </div>
                         </div>
@@ -1257,17 +1699,31 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                             <div className="flex items-center gap-4">
                               <div>
-                                <span className="text-[10px] text-slate-400 block">ውጤት (Score)</span>
+                                <span className="text-[10px] text-slate-400 block">
+                                  {currentLang === 'om' ? 'Qabxii (Score)' : currentLang === 'en' ? 'Score' : 'ውጤት (Score)'}
+                                </span>
                                 <strong className={`text-2xl font-black font-mono ${sub.passed ? 'text-emerald-700' : 'text-rose-700'}`}>
                                   {sub.percentage}%
                                 </strong>
                               </div>
                               <div className="border-l border-slate-200 pl-4">
-                                <span className="text-[10px] text-slate-400 block">ሁኔታ</span>
+                                <span className="text-[10px] text-slate-400 block">
+                                  {currentLang === 'om' ? 'Haala' : currentLang === 'en' ? 'Status' : 'ሁኔታ'}
+                                </span>
                                 <span className={`text-xs font-black px-2 py-0.5 rounded-md ${
                                   sub.passed ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'
                                 }`}>
-                                  {sub.passed ? '✓ አልፈዋል (Passed)' : '✕ አላለፉም (Failed)'}
+                                  {sub.passed
+                                    ? currentLang === 'om'
+                                      ? '✓ Darbaniiru (Passed)'
+                                      : currentLang === 'en'
+                                      ? '✓ Passed'
+                                      : '✓ አልፈዋል (Passed)'
+                                    : currentLang === 'om'
+                                    ? '✕ Hin Darbine (Failed)'
+                                    : currentLang === 'en'
+                                    ? '✕ Failed'
+                                    : '✕ አላለፉም (Failed)'}
                                 </span>
                               </div>
                             </div>
@@ -1279,7 +1735,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                                 className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                <span>የጥያቄና መልስ ዝርዝር</span>
+                                <span>
+                                  {currentLang === 'om'
+                                    ? 'Bal’ina Gaaffii & Deebii'
+                                    : currentLang === 'en'
+                                    ? 'Q&A Breakdown'
+                                    : 'የጥያቄና መልስ ዝርዝር'}
+                                </span>
                               </button>
 
                               {sub.passed && (
@@ -1289,7 +1751,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                                   className="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
                                 >
                                   <Award className="w-3.5 h-3.5" />
-                                  <span>ሰርተፊኬት አሳይ</span>
+                                  <span>
+                                    {currentLang === 'om'
+                                      ? 'Waraqaa Ragaa Agarsiisi'
+                                      : currentLang === 'en'
+                                      ? 'Show Certificate'
+                                      : 'ሰርተፊኬት አሳይ'}
+                                  </span>
                                 </button>
                               )}
                             </div>
@@ -1297,7 +1765,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
                           {sub.bureauNotes && (
                             <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl text-xs text-emerald-950">
-                              <span className="font-bold block mb-0.5">የትምህርት ቢሮ ይፋዊ አስተያየት፡</span>
+                              <span className="font-bold block mb-0.5">
+                                {currentLang === 'om'
+                                  ? 'Yaada Idilee Biiroo Barnootaa:'
+                                  : currentLang === 'en'
+                                  ? 'Official Bureau Feedback:'
+                                  : 'የትምህርት ቢሮ ይፋዊ አስተያየት፡'}
+                              </span>
                               <p className="text-[11px] leading-relaxed">{sub.bureauNotes}</p>
                             </div>
                           )}
@@ -1318,7 +1792,11 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
           <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900">
-                አዲስ የመምህራን ኦንላይን ፈተና አዘጋጅ
+                {currentLang === 'om'
+                  ? 'Qormaata To’annoo Barsiisotaa Haaraa Qopheessi'
+                  : currentLang === 'en'
+                  ? 'Create New Teacher Online Exam'
+                  : 'አዲስ የመምህራን ኦንላይን ፈተና አዘጋጅ'}
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -1331,14 +1809,20 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
             <form onSubmit={handleSaveNewExam} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  የፈተናው ርዕስ *
+                  {currentLang === 'om' ? 'Mata-duree Qormaataa *' : currentLang === 'en' ? 'Exam Title *' : 'የፈተናው ርዕስ *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="ምሳሌ፡ የሂሳብ መምህራን የስነ-ዘዴ እና የይዘት ብቃት ፈተና"
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fkn: Qormaata Gahumsa Mala Barsiisuu fi Qabiyyee Herregaa'
+                      : currentLang === 'en'
+                      ? 'e.g., Mathematics Pedagogy & Content Competency Exam'
+                      : 'ምሳሌ፡ የሂሳብ መምህራን የስነ-ዘዴ እና የይዘት ብቃት ፈተና'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
                 />
               </div>
@@ -1346,7 +1830,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የትምህርት አይነት
+                    {currentLang === 'om' ? 'Gosa Barnootaa' : currentLang === 'en' ? 'Subject' : 'የትምህርት አይነት'}
                   </label>
                   <input
                     type="text"
@@ -1358,7 +1842,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ጊዜ (ደቂቃ)
+                    {currentLang === 'om' ? 'Yeroo (Daqiiqaa)' : currentLang === 'en' ? 'Duration (Mins)' : 'ጊዜ (ደቂቃ)'}
                   </label>
                   <input
                     type="number"
@@ -1370,7 +1854,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    የማለፊያ ነጥብ (%)
+                    {currentLang === 'om' ? 'Qabxii Darbinsaa (%)' : currentLang === 'en' ? 'Passing Score (%)' : 'የማለፊያ ነጥብ (%)'}
                   </label>
                   <input
                     type="number"
@@ -1387,13 +1871,23 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
                   <Timer className="w-4 h-4 text-emerald-800" />
-                  <span>1. አንድ ጥያቄ ስንት ደቂቃ ይቆይ? (የጥያቄ ሰዓት ገደብ)</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? '1. Gaaffiin tokko daqiiqaa meeqa tura? (Daangaa Yeroo Gaaffii)'
+                      : currentLang === 'en'
+                      ? '1. Time Limit Per Question'
+                      : '1. አንድ ጥያቄ ስንት ደቂቃ ይቆይ? (የጥያቄ ሰዓት ገደብ)'}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      ለአንድ ጥያቄ የተመደበ ደቂቃ
+                      {currentLang === 'om'
+                        ? 'Daqiiqaa gaaffii tokkoof ramadame'
+                        : currentLang === 'en'
+                        ? 'Minutes allocated per question'
+                        : 'ለአንድ ጥያቄ የተመደበ ደቂቃ'}
                     </label>
                     <div className="flex items-center gap-2">
                       <input
@@ -1405,12 +1899,16 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                         onChange={(e) => setNewTimePerQuestion(Number(e.target.value))}
                         className="w-24 px-3 py-1.5 text-xs font-bold text-emerald-900 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-600"
                       />
-                      <span className="text-xs text-slate-600 font-medium">ደቂቃ / ጥያቄ</span>
+                      <span className="text-xs text-slate-600 font-medium">
+                        {currentLang === 'om' ? 'Daqiiqaa / Gaaffii' : currentLang === 'en' ? 'Min / Question' : 'ደቂቃ / ጥያቄ'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] text-slate-500 w-full">ፈጣን ምርጫዎች፡</span>
+                    <span className="text-[10px] text-slate-500 w-full">
+                      {currentLang === 'om' ? 'Filannoo Ariifataa:' : currentLang === 'en' ? 'Quick Presets:' : 'ፈጣን ምርጫዎች፡'}
+                    </span>
                     {[1, 2, 3, 5].map((mins) => (
                       <button
                         key={mins}
@@ -1422,7 +1920,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                             : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                         }`}
                       >
-                        {mins} ደቂቃ
+                        {mins} {currentLang === 'om' ? 'Daq' : currentLang === 'en' ? 'Min' : 'ደቂቃ'}
                       </button>
                     ))}
                   </div>
@@ -1430,7 +1928,11 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
                 <div className="border-t border-slate-200/80 pt-3 space-y-2">
                   <label className="block text-xs font-bold text-slate-800">
-                    2. የፈተናው አቀራረብ ዘዴ (የጥያቄዎች አሰጣጥ)
+                    {currentLang === 'om'
+                      ? '2. Haala Dhiyeessa Qormaataa (Dhiyeessa Gaaffiiwwanii)'
+                      : currentLang === 'en'
+                      ? '2. Exam Delivery Mode'
+                      : '2. የፈተናው አቀራረብ ዘዴ (የጥያቄዎች አሰጣጥ)'}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
@@ -1445,10 +1947,18 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       <Lock className={`w-4 h-4 shrink-0 mt-0.5 ${newDeliveryMode === 'one_by_one' ? 'text-emerald-800' : 'text-slate-400'}`} />
                       <div>
                         <span className="text-xs font-bold text-slate-900 block">
-                          አንድን ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ ይድረሰው
+                          {currentLang === 'om'
+                            ? 'Gaaffii tokko yoo xumuru kan itti aanu haa gahu'
+                            : currentLang === 'en'
+                            ? 'One Question at a Time (Sequential)'
+                            : 'አንድን ጥያቄ ሰርቶ ሲጨርስ ቀጣይ ጥያቄ ይድረሰው'}
                         </span>
                         <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                          መምህሩ አንድን ጥያቄ መልሶ ሲጨርስ ወይም ሰዓቱ ሲያልቅ ብቻ ቀጣዩ ጥያቄ ይከፈታል። ወደ ኋላ መመለስ አይፈቀድም።
+                          {currentLang === 'om'
+                            ? 'Barsiisaan gaaffii tokko erga deebisee ykn yeroon erga dhumee qofa gaaffiin itti aanu banama. Duubatti deebi’uun hin eeyyamamu.'
+                            : currentLang === 'en'
+                            ? 'Next question unlocks only after answering or timer expiry. No going back.'
+                            : 'መምህሩ አንድን ጥያቄ መልሶ ሲጨርስ ወይም ሰዓቱ ሲያልቅ ብቻ ቀጣዩ ጥያቄ ይከፈታል። ወደ ኋላ መመለስ አይፈቀድም።'}
                         </span>
                       </div>
                     </button>
@@ -1465,10 +1975,18 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                       <Unlock className={`w-4 h-4 shrink-0 mt-0.5 ${newDeliveryMode === 'all_at_once' ? 'text-indigo-800' : 'text-slate-400'}`} />
                       <div>
                         <span className="text-xs font-bold text-slate-900 block">
-                          የፈተናው ሙሉ ጥያቄዎች በአንድ ጊዜ ይድረሱት
+                          {currentLang === 'om'
+                            ? 'Gaaffiiwwan guutuun yeroo tokkotti haa gahan'
+                            : currentLang === 'en'
+                            ? 'All Questions at Once (Free Navigation)'
+                            : 'የፈተናው ሙሉ ጥያቄዎች በአንድ ጊዜ ይድረሱት'}
                         </span>
                         <span className="text-[10px] text-slate-500 leading-tight block mt-0.5">
-                          ሁሉንም ጥያቄዎች ማየትና በነፃነት ወደ ፊትና ወደ ኋላ እየተዘዋወሩ መመለስ ይቻላል።
+                          {currentLang === 'om'
+                            ? 'Gaaffiiwwan hunda arguu fi bilisaan fuulduraa fi duubatti naanna’anii deebisuun ni danda’ama.'
+                            : currentLang === 'en'
+                            ? 'View all questions and freely navigate back and forth.'
+                            : 'ሁሉንም ጥያቄዎች ማየትና በነፃነት ወደ ፊትና ወደ ኋላ እየተዘዋወሩ መመለስ ይቻላል።'}
                         </span>
                       </div>
                     </button>
@@ -1478,7 +1996,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  መመሪያ (Instructions)
+                  {currentLang === 'om' ? 'Qajeelfama (Instructions)' : currentLang === 'en' ? 'Instructions' : 'መመሪያ (Instructions)'}
                 </label>
                 <textarea
                   rows={2}
@@ -1492,14 +2010,18 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="border-t border-slate-100 pt-3">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-bold text-slate-800">
-                    የፈተና ጥያቄዎች ({newQuestions.length})
+                    {currentLang === 'om'
+                      ? `Gaaffiiwwan Qormaataa (${newQuestions.length})`
+                      : currentLang === 'en'
+                      ? `Exam Questions (${newQuestions.length})`
+                      : `የፈተና ጥያቄዎች (${newQuestions.length})`}
                   </h4>
                   <button
                     type="button"
                     onClick={handleAddQuestionToDraft}
                     className="text-xs font-semibold text-emerald-800 hover:underline"
                   >
-                    + ጥያቄ ጨምር
+                    {currentLang === 'om' ? '+ Gaaffii Dabali' : currentLang === 'en' ? '+ Add Question' : '+ ጥያቄ ጨምር'}
                   </button>
                 </div>
 
@@ -1508,7 +2030,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     <div key={q.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
                       <div>
                         <span className="font-bold text-slate-700 block mb-1">
-                          ጥያቄ {qIdx + 1}፡
+                          {currentLang === 'om' ? `Gaaffii ${qIdx + 1}:` : currentLang === 'en' ? `Question ${qIdx + 1}:` : `ጥያቄ ${qIdx + 1}፡`}
                         </span>
                         <input
                           type="text"
@@ -1541,7 +2063,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                                 );
                               }}
                               className="text-emerald-700"
-                              title="ትክክለኛውን መልስ ይምረጡ"
+                              title={currentLang === 'om' ? 'Deebii sirrii filadhu' : currentLang === 'en' ? 'Select correct answer' : 'ትክክለኛውን መልስ ይምረጡ'}
                             />
                             <input
                               type="text"
@@ -1577,13 +2099,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-bold text-white bg-emerald-800 hover:bg-emerald-900 rounded-xl transition-colors shadow-xs"
                 >
-                  ፈተናውን አጽድቅና ልቀቅ
+                  {currentLang === 'om' ? 'Qormaata Mirkaneessi & Gadhiisi' : currentLang === 'en' ? 'Approve & Publish Exam' : 'ፈተናውን አጽድቅና ልቀቅ'}
                 </button>
               </div>
             </form>
@@ -1618,10 +2140,18 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   </span>
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-900">
-                      የትምህርት ቢሮ ይፋዊ የውጤት ኦዲት
+                      {currentLang === 'om'
+                        ? 'Odiitii Qabxii Idilee Biiroo Barnootaa'
+                        : currentLang === 'en'
+                        ? 'Official Education Bureau Score Audit'
+                        : 'የትምህርት ቢሮ ይፋዊ የውጤት ኦዲት'}
                     </span>
                     <h3 className="text-base sm:text-lg font-black text-slate-900">
-                      የመምህሩ የፈተና ጥያቄና መልስ ግምገማ
+                      {currentLang === 'om'
+                        ? 'Gamaaggama Gaaffii fi Deebii Qormaata Barsiisaa'
+                        : currentLang === 'en'
+                        ? 'Teacher Exam Q&A Review'
+                        : 'የመምህሩ የፈተና ጥያቄና መልስ ግምገማ'}
                     </h3>
                   </div>
                 </div>
@@ -1639,7 +2169,9 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
             {/* Submitter & Performance Banner */}
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 block font-semibold">ተፈታኝ መምህር</span>
+                <span className="text-[10px] text-slate-400 block font-semibold">
+                  {currentLang === 'om' ? 'Barsiisaa Qorame' : currentLang === 'en' ? 'Examinee Teacher' : 'ተፈታኝ መምህር'}
+                </span>
                 <strong className="text-slate-900 text-sm block truncate">
                   {selectedSubmissionForReview.teacherName}
                 </strong>
@@ -1649,7 +2181,9 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               </div>
 
               <div>
-                <span className="text-[10px] text-slate-400 block font-semibold">የፈተና ርዕስ</span>
+                <span className="text-[10px] text-slate-400 block font-semibold">
+                  {currentLang === 'om' ? 'Mata-duree Qormaataa' : currentLang === 'en' ? 'Exam Title' : 'የፈተና ርዕስ'}
+                </span>
                 <strong className="text-slate-900 block truncate">
                   {selectedSubmissionForReview.examTitle || selectedSubmissionForReview.subject}
                 </strong>
@@ -1659,17 +2193,23 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               </div>
 
               <div>
-                <span className="text-[10px] text-slate-400 block font-semibold">የፈተና ውጤት</span>
+                <span className="text-[10px] text-slate-400 block font-semibold">
+                  {currentLang === 'om' ? 'Qabxii Qormaataa' : currentLang === 'en' ? 'Exam Score' : 'የፈተና ውጤት'}
+                </span>
                 <strong className={`text-base font-black font-mono ${selectedSubmissionForReview.passed ? 'text-emerald-700' : 'text-rose-700'}`}>
                   {selectedSubmissionForReview.percentage}% ({selectedSubmissionForReview.score}/{selectedSubmissionForReview.totalMarks})
                 </strong>
                 <span className="text-[10px] font-bold text-slate-600 block">
-                  {selectedSubmissionForReview.passed ? '✓ አልፈዋል' : '✕ አላለፉም'}
+                  {selectedSubmissionForReview.passed
+                    ? currentLang === 'om' ? '✓ Darbaniiru' : currentLang === 'en' ? '✓ Passed' : '✓ አልፈዋል'
+                    : currentLang === 'om' ? '✕ Hin Darbine' : currentLang === 'en' ? '✕ Failed' : '✕ አላለፉም'}
                 </span>
               </div>
 
               <div>
-                <span className="text-[10px] text-slate-400 block font-semibold">የውጤት ሁኔታ</span>
+                <span className="text-[10px] text-slate-400 block font-semibold">
+                  {currentLang === 'om' ? 'Haala Qabxii' : currentLang === 'en' ? 'Result Status' : 'የውጤት ሁኔታ'}
+                </span>
                 <span
                   className={`inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-lg border mt-1 ${
                     selectedSubmissionForReview.reviewStatus === 'pending_bureau_review'
@@ -1678,8 +2218,8 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                   }`}
                 >
                   {selectedSubmissionForReview.reviewStatus === 'pending_bureau_review'
-                    ? '🟡 ግምገማ ይጠብቃል'
-                    : '🟢 ለመምህሩ ተለቋል'}
+                    ? currentLang === 'om' ? '🟡 Gamaaggama Eeggata' : currentLang === 'en' ? '🟡 Pending Review' : '🟡 ግምገማ ይጠብቃል'
+                    : currentLang === 'om' ? '🟢 Barsiisaaf Gadhiifameera' : currentLang === 'en' ? '🟢 Released to Teacher' : '🟢 ለመምህሩ ተለቋል'}
                 </span>
               </div>
             </div>
@@ -1689,10 +2229,19 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                   <FileSearch className="w-4 h-4 text-emerald-800" />
-                  <span>ጥያቄዎች እና የመምህሩ ምርጫዎች ({selectedSubmissionForReview.answers?.length || 0})</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? `Gaaffiiwwan fi Filannoo Barsiisaa (${selectedSubmissionForReview.answers?.length || 0})`
+                      : currentLang === 'en'
+                      ? `Questions & Teacher Selections (${selectedSubmissionForReview.answers?.length || 0})`
+                      : `ጥያቄዎች እና የመምህሩ ምርጫዎች (${selectedSubmissionForReview.answers?.length || 0})`}
+                  </span>
                 </h4>
                 <span className="text-[11px] text-slate-500">
-                  ትክክል፡ <strong className="text-emerald-700">{selectedSubmissionForReview.score}</strong> | የተሳሳተ፡ <strong className="text-rose-700">{selectedSubmissionForReview.totalMarks - selectedSubmissionForReview.score}</strong>
+                  {currentLang === 'om' ? 'Sirrii:' : currentLang === 'en' ? 'Correct:' : 'ትክክል፡'}{' '}
+                  <strong className="text-emerald-700">{selectedSubmissionForReview.score}</strong> |{' '}
+                  {currentLang === 'om' ? 'Dogoggora:' : currentLang === 'en' ? 'Incorrect:' : 'የተሳሳተ፡'}{' '}
+                  <strong className="text-rose-700">{selectedSubmissionForReview.totalMarks - selectedSubmissionForReview.score}</strong>
                 </span>
               </div>
 
@@ -1709,7 +2258,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1">
                         <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-800">
-                          ጥያቄ {idx + 1}
+                          {currentLang === 'om' ? `Gaaffii ${idx + 1}` : currentLang === 'en' ? `Question ${idx + 1}` : `ጥያቄ ${idx + 1}`}
                         </span>
                         <p className="font-bold text-slate-900 text-xs sm:text-sm mt-1">
                           {ans.questionText}
@@ -1726,12 +2275,12 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                         {ans.isCorrect ? (
                           <>
                             <Check className="w-3 h-3 text-emerald-700" />
-                            <span>ትክክል</span>
+                            <span>{currentLang === 'om' ? 'Sirrii' : currentLang === 'en' ? 'Correct' : 'ትክክል'}</span>
                           </>
                         ) : (
                           <>
                             <X className="w-3 h-3 text-rose-700" />
-                            <span>ስህተት</span>
+                            <span>{currentLang === 'om' ? 'Dogoggora' : currentLang === 'en' ? 'Wrong' : 'ስህተት'}</span>
                           </>
                         )}
                       </span>
@@ -1744,19 +2293,25 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                           ? 'bg-emerald-100/60 border-emerald-300 text-emerald-950 font-semibold'
                           : 'bg-rose-100/60 border-rose-300 text-rose-950 font-semibold'
                       }`}>
-                        <span className="text-[10px] text-slate-500 block">የመምህሩ ምርጫ (Selected Answer)፡</span>
+                        <span className="text-[10px] text-slate-500 block">
+                          {currentLang === 'om' ? 'Filannoo Barsiisaa:' : currentLang === 'en' ? 'Selected Answer:' : 'የመምህሩ ምርጫ (Selected Answer)፡'}
+                        </span>
                         <span>{ans.selectedOptionText}</span>
                       </div>
 
                       <div className="p-2.5 rounded-xl border bg-emerald-100/80 border-emerald-300 text-emerald-950 font-semibold">
-                        <span className="text-[10px] text-emerald-800 block">ትክክለኛው መልስ (Correct Answer)፡</span>
+                        <span className="text-[10px] text-emerald-800 block">
+                          {currentLang === 'om' ? 'Deebii Sirrii:' : currentLang === 'en' ? 'Correct Answer:' : 'ትክክለኛው መልስ (Correct Answer)፡'}
+                        </span>
                         <span>{ans.correctOptionText}</span>
                       </div>
                     </div>
 
                     {ans.explanation && (
                       <div className="p-2.5 bg-white/80 rounded-xl border border-slate-200 text-[11px] text-slate-600">
-                        <span className="font-bold text-slate-800 block mb-0.5">ማብራሪያ (Pedagogical Explanation)፡</span>
+                        <span className="font-bold text-slate-800 block mb-0.5">
+                          {currentLang === 'om' ? 'Ibsa Ogummaa (Explanation):' : currentLang === 'en' ? 'Pedagogical Explanation:' : 'ማብራሪያ (Pedagogical Explanation)፡'}
+                        </span>
                         <p>{ans.explanation}</p>
                       </div>
                     )}
@@ -1764,24 +2319,42 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 ))
               ) : (
                 <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">
-                  ዝርዝር የጥያቄና መልስ መረጃ አልተገኘም።
+                  {currentLang === 'om'
+                    ? 'Odeeffannoon bal’aan gaaffii fi deebii hin argamne.'
+                    : currentLang === 'en'
+                    ? 'Detailed Q&A data not found.'
+                    : 'ዝርዝር የጥያቄና መልስ መረጃ አልተገኘም።'}
                 </div>
               )}
 
               {/* Bureau Notes field */}
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                 <label className="block text-xs font-bold text-slate-800">
-                  የትምህርት ቢሮ ይፋዊ አስተያየት እና ግብረ-መልስ (Bureau Notes / Feedback)
+                  {currentLang === 'om'
+                    ? 'Yaada fi Duub-deebii Idilee Biiroo Barnootaa'
+                    : currentLang === 'en'
+                    ? 'Official Bureau Notes / Feedback'
+                    : 'የትምህርት ቢሮ ይፋዊ አስተያየት እና ግብረ-መልስ (Bureau Notes / Feedback)'}
                 </label>
                 <textarea
                   rows={2}
                   value={bureauOfficerFeedback}
                   onChange={(e) => setBureauOfficerFeedback(e.target.value)}
-                  placeholder="ለምሳሌ፡ ጥያቄዎችን በብቃት መልሰዋል፤ በትምህርት ስነ-ዘዴ ዘርፍ ያሳዩት ብቃት አበረታች ነው።"
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fkn: Gaaffiiwwan gahumsaan deebisaniiru; dandeettiin mala barsiisuu agarsiisan jajjabeessaadha.'
+                      : currentLang === 'en'
+                      ? 'e.g., Answered questions competently; demonstrated encouraging pedagogical skills.'
+                      : 'ለምሳሌ፡ ጥያቄዎችን በብቃት መልሰዋል፤ በትምህርት ስነ-ዘዴ ዘርፍ ያሳዩት ብቃት አበረታች ነው።'
+                  }
                   className="w-full p-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                 />
                 <span className="text-[10px] text-slate-400 block">
-                  ይህ አስተያየት ውጤቱ ሲለቀቅ ለመምህሩ በግል አካውንታቸው አብሮ ይታያል።
+                  {currentLang === 'om'
+                    ? 'Yaadni kun yeroo qabxiin gadhiifamu akkuma walitti aanuun akaawuntii barsiisichaarratti mul’ata.'
+                    : currentLang === 'en'
+                    ? 'This feedback will be visible on the teacher’s portal once the result is released.'
+                    : 'ይህ አስተያየት ውጤቱ ሲለቀቅ ለመምህሩ በግል አካውንታቸው አብሮ ይታያል።'}
                 </span>
               </div>
             </div>
@@ -1793,7 +2366,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 onClick={() => setSelectedSubmissionForReview(null)}
                 className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
-                ዝጋ
+                {currentLang === 'om' ? 'Cufi' : currentLang === 'en' ? 'Close' : 'ዝጋ'}
               </button>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1804,7 +2377,13 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     className="w-full sm:w-auto px-5 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
-                    <span>✓ ውጤቱ ለመምህሩ ይድረስ / አጽድቅ (Release to Teacher)</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? '✓ Qabxiin Barsiisaa Haa Gahu / Mirkaneessi'
+                        : currentLang === 'en'
+                        ? '✓ Approve & Release to Teacher'
+                        : '✓ ውጤቱ ለመምህሩ ይድረስ / አጽድቅ (Release to Teacher)'}
+                    </span>
                   </button>
                 ) : (
                   <button
@@ -1813,7 +2392,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <CheckCheck className="w-4 h-4 text-emerald-400" />
-                    <span>አስተያየቱን አድስ</span>
+                    <span>{currentLang === 'om' ? 'Yaada Haaromsi' : currentLang === 'en' ? 'Update Feedback' : 'አስተያየቱን አድስ'}</span>
                   </button>
                 )}
               </div>
@@ -1833,10 +2412,10 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 </span>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
-                    ይፋዊ የፈተና ውጤት
+                    {currentLang === 'om' ? 'Qabxii Qormaataa Idilee' : currentLang === 'en' ? 'Official Exam Result' : 'ይፋዊ የፈተና ውጤት'}
                   </span>
                   <h3 className="text-base font-black text-slate-900">
-                    {inspectResultDetails.examTitle || 'የመምህራን ብቃት ምዘና'}
+                    {inspectResultDetails.examTitle || (currentLang === 'om' ? 'Madaallii Gahumsa Barsiisotaa' : currentLang === 'en' ? 'Teacher Competency Exam' : 'የመምህራን ብቃት ምዘና')}
                   </h3>
                 </div>
               </div>
@@ -1854,17 +2433,21 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               {/* Score card */}
               <div className="bg-gradient-to-br from-emerald-800 to-teal-900 p-5 rounded-2xl text-white space-y-2 text-center">
                 <span className="text-xs font-semibold text-emerald-200 uppercase tracking-widest block">
-                  የፈተና ውጤትዎ
+                  {currentLang === 'om' ? 'Qabxii Qormaata Keessanii' : currentLang === 'en' ? 'Your Exam Score' : 'የፈተና ውጤትዎ'}
                 </span>
                 <div className="text-4xl font-black font-mono">
                   {inspectResultDetails.percentage}%
                 </div>
                 <p className="text-xs text-emerald-100">
-                  ተፈታኝ፡ <strong>{inspectResultDetails.teacherName}</strong> | ትምህርት ቤት፡ {inspectResultDetails.schoolName}
+                  {currentLang === 'om' ? 'Qoramaa:' : currentLang === 'en' ? 'Examinee:' : 'ተፈታኝ፡'}{' '}
+                  <strong>{inspectResultDetails.teacherName}</strong> |{' '}
+                  {currentLang === 'om' ? 'Mana Barumsaa:' : currentLang === 'en' ? 'School:' : 'ትምህርት ቤት፡'}{' '}
+                  {inspectResultDetails.schoolName}
                 </p>
                 {inspectResultDetails.certificateNumber && (
                   <div className="inline-block mt-2 px-3 py-1 bg-white/20 rounded-full text-[11px] font-mono text-emerald-100">
-                    ይፋዊ የምስክር ወረቀት ቁጥር፡ {inspectResultDetails.certificateNumber}
+                    {currentLang === 'om' ? 'Lakk. Waraqaa Ragaa Idilee:' : currentLang === 'en' ? 'Official Certificate No.:' : 'ይፋዊ የምስክር ወረቀት ቁጥር፡'}{' '}
+                    {inspectResultDetails.certificateNumber}
                   </div>
                 )}
               </div>
@@ -1874,7 +2457,9 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-950 space-y-1">
                   <span className="font-bold flex items-center gap-1.5 text-emerald-900">
                     <ShieldCheck className="w-4 h-4 text-emerald-800" />
-                    <span>የትምህርት ቢሮ ይፋዊ አስተያየት፡</span>
+                    <span>
+                      {currentLang === 'om' ? 'Yaada Idilee Biiroo Barnootaa:' : currentLang === 'en' ? 'Official Bureau Feedback:' : 'የትምህርት ቢሮ ይፋዊ አስተያየት፡'}
+                    </span>
                   </span>
                   <p className="text-[11px] leading-relaxed text-slate-700">
                     {inspectResultDetails.bureauNotes}
@@ -1885,7 +2470,11 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
               {/* Answers breakdown */}
               <div className="space-y-3 pt-2">
                 <h4 className="text-xs font-bold text-slate-800">
-                  የጥያቄዎችና መልሶች ዝርዝር ትንተና
+                  {currentLang === 'om'
+                    ? 'Xiinxala Bal’aa Gaaffii fi Deebii'
+                    : currentLang === 'en'
+                    ? 'Detailed Q&A Analysis'
+                    : 'የጥያቄዎችና መልሶች ዝርዝር ትንተና'}
                 </h4>
 
                 {inspectResultDetails.answers && inspectResultDetails.answers.length > 0 ? (
@@ -1898,26 +2487,33 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-bold text-slate-900">
-                          ጥያቄ {idx + 1}፡ {ans.questionText}
+                          {currentLang === 'om' ? `Gaaffii ${idx + 1}:` : currentLang === 'en' ? `Q${idx + 1}:` : `ጥያቄ ${idx + 1}፡`}{' '}
+                          {ans.questionText}
                         </span>
                         <span
                           className={`text-[10px] font-black px-2 py-0.5 rounded ${
                             ans.isCorrect ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'
                           }`}
                         >
-                          {ans.isCorrect ? '✓ ትክክል' : '✕ ስህተት'}
+                          {ans.isCorrect
+                            ? currentLang === 'om' ? '✓ Sirrii' : currentLang === 'en' ? '✓ Correct' : '✓ ትክክል'
+                            : currentLang === 'om' ? '✕ Dogoggora' : currentLang === 'en' ? '✕ Wrong' : '✕ ስህተት'}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-slate-400 block text-[10px]">እርስዎ የመረጡት፡</span>
+                          <span className="text-slate-400 block text-[10px]">
+                            {currentLang === 'om' ? 'Kan isin filattan:' : currentLang === 'en' ? 'Your Choice:' : 'እርስዎ የመረጡት፡'}
+                          </span>
                           <span className={ans.isCorrect ? 'text-emerald-900 font-semibold' : 'text-rose-900 font-semibold'}>
                             {ans.selectedOptionText}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[10px]">ትክክለኛው መልስ፡</span>
+                          <span className="text-slate-400 block text-[10px]">
+                            {currentLang === 'om' ? 'Deebii Sirrii:' : currentLang === 'en' ? 'Correct Answer:' : 'ትክክለኛው መልስ፡'}
+                          </span>
                           <span className="text-emerald-900 font-semibold">
                             {ans.correctOptionText}
                           </span>
@@ -1926,13 +2522,16 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
 
                       {ans.explanation && (
                         <div className="p-2 bg-white/80 rounded-lg text-[10px] text-slate-600 border border-slate-200">
-                          <strong>ማብራሪያ፡</strong> {ans.explanation}
+                          <strong>{currentLang === 'om' ? 'Ibsa:' : currentLang === 'en' ? 'Explanation:' : 'ማብራሪያ፡'}</strong>{' '}
+                          {ans.explanation}
                         </div>
                       )}
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-500">ዝርዝር መረጃ አልተገኘም።</p>
+                  <p className="text-xs text-slate-500">
+                    {currentLang === 'om' ? 'Odeeffannoon bal’aan hin argamne.' : currentLang === 'en' ? 'Detailed information not found.' : 'ዝርዝር መረጃ አልተገኘም።'}
+                  </p>
                 )}
               </div>
             </div>
@@ -1943,7 +2542,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 onClick={() => setInspectResultDetails(null)}
                 className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
-                ዝጋ
+                {currentLang === 'om' ? 'Cufi' : currentLang === 'en' ? 'Close' : 'ዝጋ'}
               </button>
 
               <button
@@ -1952,7 +2551,7 @@ export const TeacherOnlineExams: React.FC<TeacherOnlineExamsProps> = ({
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>ውጤት አትም (Print)</span>
+                <span>{currentLang === 'om' ? 'Qabxii Maxxansi (Print)' : currentLang === 'en' ? 'Print Result' : 'ውጤት አትም (Print)'}</span>
               </button>
             </div>
           </div>

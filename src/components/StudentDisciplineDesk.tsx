@@ -97,13 +97,21 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
     StorageService.getDisciplineReports(school.id)
   );
 
-  // Success toast
+  // Success toast & validation error
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [tipOffError, setTipOffError] = useState<string | null>(null);
+  const [confirmDeleteReportId, setConfirmDeleteReportId] = useState<string | null>(null);
 
   // Active report for Director Action / Details Modal
   const [selectedReport, setSelectedReport] = useState<StudentDisciplineReport | null>(null);
   const [directorRemarksInput, setDirectorRemarksInput] = useState<string>('');
-  const [actionTakenInput, setActionTakenInput] = useState<string>('የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል');
+  const [actionTakenInput, setActionTakenInput] = useState<string>(
+    currentLang === 'om'
+      ? 'Akeekkachiisa afaanii fi gorsa naamusaa kennameera'
+      : currentLang === 'en'
+      ? 'Verbal warning and behavioral counseling given'
+      : 'የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል'
+  );
   const [newStatusInput, setNewStatusInput] = useState<DisciplineReportStatus>('under_investigation');
 
   // =========================================================================
@@ -162,8 +170,12 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
   const [customCategoryTitle, setCustomCategoryTitle] = useState<string>('');
   const [severity, setSeverity] = useState<DisciplineReportSeverity>('medium');
   const [incidentDate, setIncidentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
-  const [incidentTime, setIncidentTime] = useState<string>('4:00 ከሰዓት');
-  const [incidentLocation, setIncidentLocation] = useState<string>('በክፍል ውስጥ');
+  const [incidentTime, setIncidentTime] = useState<string>(
+    currentLang === 'om' ? 'Sa\'aatii 10:00 WB' : currentLang === 'en' ? '4:00 PM' : '4:00 ከሰዓት'
+  );
+  const [incidentLocation, setIncidentLocation] = useState<string>(
+    currentLang === 'om' ? 'Daree keessatti' : currentLang === 'en' ? 'Inside Classroom' : 'በክፍል ውስጥ'
+  );
   const [description, setDescription] = useState<string>('');
   const [witnesses, setWitnesses] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -217,71 +229,111 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
   const misconductCategories: {
     key: MisconductCategory;
     titleAm: string;
+    titleOm: string;
+    titleEn: string;
     icon: string;
     description: string;
+    descriptionOm: string;
+    descriptionEn: string;
     defaultSeverity: DisciplineReportSeverity;
   }[] = [
     {
       key: 'classroom_disruption',
       titleAm: 'የክፍል ረብሻ እና መምህራንን አለማክበር',
+      titleOm: 'Jeequmsa Daree fi Barsiisaa Kabajuu Dhabuu',
+      titleEn: 'Classroom Disruption & Disrespect',
       icon: '🚫',
       description: 'መምህሩ ሲያስተምሩ መረበሽ፣ ያልተገባ ጩኸት፣ የትምህርት ክፍለ-ጊዜን ማስተጓጎል',
+      descriptionOm: 'Yeroo barsiisaan barsiisu jeequu, iyya hin malle, wayitii barnootaa addaan kutuu',
+      descriptionEn: 'Disrupting instruction, shouting, or interrupting classroom teaching',
       defaultSeverity: 'medium'
     },
     {
       key: 'fighting_violence',
       titleAm: 'ፀብ፣ አካላዊ ጥቃት እና ማስፈራራት (Bullying)',
+      titleOm: 'Wal-loluu, Miidhaa Qaamaa fi Doorsisa (Bullying)',
+      titleEn: 'Fighting, Physical Assault & Bullying',
       icon: '🥊',
       description: 'ከተማሪዎች ጋር መጣላት፣ መደባደብ፣ በቡድን ማስፈራራት፣ አካላዊ ጉዳት ማድረስ',
+      descriptionOm: 'Barattoota waliin wal-loluu, wal-rukutuu, gareedhaan doorsisuu, miidhaa qaamaa geessisuu',
+      descriptionEn: 'Fighting classmates, physical aggression, gang intimidation, or injury',
       defaultSeverity: 'high'
     },
     {
       key: 'verbal_abuse_harassment',
       titleAm: 'ስድብ፣ ዛቻ እና የሞራል ማሸማቀቅ',
+      titleOm: 'Arrabsoo, Doorsisa fi Hamilee Buusuu',
+      titleEn: 'Verbal Abuse & Harassment',
       icon: '🗣️',
       description: 'አጸያፊ ቃላት መሳደብ፣ ተማሪዎችን ማሸማቀቅ፣ ስም ማጥፋት፣ ማስፈራራት',
+      descriptionOm: 'Jechoota fokkisaa dubbachuu, barattoota qaanessuu, maqaa balleessuu, doorsisuu',
+      descriptionEn: 'Foul language, intimidating or humiliating fellow students',
       defaultSeverity: 'medium'
     },
     {
       key: 'substance_smoking_khat',
       titleAm: 'አደንዛዥ እፅ፣ ጫት ወይም ሲጋራ መቃም/ማጨስ',
+      titleOm: 'Baala Sammuu Namaa Hadoochan, Jimaa ykn Tamboo',
+      titleEn: 'Substances, Khat or Smoking',
       icon: '🚬',
       description: 'በትምህርት ቤት ሰዓት ወይም ዩኒፎርም ለብሶ ጫት መቃም፣ ሲጋራ ማጨስ፣ አደንዛዥ እፅ መጠቀም',
+      descriptionOm: 'Sa\'aatii barnootaa ykn yeroo yunifoormii uffatan jimaa qaamuu, tamboo xuuxuu, qoricha sammuu hadoochu fayyadamuu',
+      descriptionEn: 'Chewing khat, smoking cigarettes, or using banned substances on campus/in uniform',
       defaultSeverity: 'critical'
     },
     {
       key: 'property_damage_vandalism',
       titleAm: 'የትምህርት ቤት ንብረት ማውደም (Vandalism)',
+      titleOm: 'Qabeenya Mana Barumsaa Balleessuu (Vandalism)',
+      titleEn: 'School Property Damage / Vandalism',
       icon: '🔨',
       description: 'ዴስክ፣ በር፣ መስታወት፣ መጽሐፍት ወይም የትምህርት መሳሪያዎችን ሆን ብሎ መስበርና ማበላሸት',
+      descriptionOm: 'Teessoo, balbala, daawitii, kitaabota ykn meeshaalee barnootaa itti yaadanii cabsuu fi balleessuu',
+      descriptionEn: 'Deliberately breaking desks, doors, glass, books, or lab equipment',
       defaultSeverity: 'high'
     },
     {
       key: 'truancy_skipping_class',
       titleAm: 'ከትምህርት ቤት ማምለጥ እና አለመገኘት',
+      titleOm: 'Mana Barumsaatii Baduu fi Daree Hafuu',
+      titleEn: 'Truancy & Skipping Class',
       icon: '🏃‍♂️',
       description: 'ወላጅ ሳያውቅ ከአጥር ዘሎ መውጣት፣ የተወሰኑ ክፍለ-ጊዜዎችን ቆርጦ መቅረት',
+      descriptionOm: 'Maatiin osoo hin beekin dallaarraa utaaluu, wayitii barnootaa murtaa\'e kutanii hafuu',
+      descriptionEn: 'Leaving school grounds without permission or skipping scheduled classes',
       defaultSeverity: 'medium'
     },
     {
       key: 'exam_cheating',
       titleAm: 'ፈተና ማጭበርበር እና ስርቆት',
+      titleOm: 'Qormaata Hatuu fi Hattoota Qabeenyaa',
+      titleEn: 'Exam Cheating & Theft',
       icon: '📝',
       description: 'በፈተና ወቅት ኩረጃ መኮረጅ፣ ኮፒ ማስገባት፣ የተማሪዎችን ንብረት ወይም ፈተና መስረቅ',
+      descriptionOm: 'Yeroo qormaataa walirraa garagalchuu, waraqaa dhoksaan galchuu, qabeenya barattootaa hatuu',
+      descriptionEn: 'Copying during exams, sneaking notes, or stealing school/student belongings',
       defaultSeverity: 'high'
     },
     {
       key: 'digital_mobile_misuse',
       titleAm: 'የሞባይል ስልክ ተገቢ ያልሆነ አጠቃቀም',
+      titleOm: 'Itti Fayyadama Bilbila Mobaayilaa Hin Malle',
+      titleEn: 'Improper Mobile Phone Use',
       icon: '📱',
       description: 'በክፍል ውስጥ ስልክ መደወል/ጌም መጫወት፣ ያለፍቃድ ቪዲዮ/ፎቶ መቅረጽ እና ማሰራጨት',
+      descriptionOm: 'Daree keessatti bilbiluu/geemii taphachuu, hayyama malee suuraa fi viidiyoo waraabuu',
+      descriptionEn: 'Using phones/games in class or recording photos/videos without consent',
       defaultSeverity: 'low'
     },
     {
       key: 'other_misconduct',
       titleAm: 'ሌላ የስነ-ምግባር ጉድለት (Other)',
+      titleOm: 'Hanqina Naamusaa Biraa (Other)',
+      titleEn: 'Other Behavioral Misconduct',
       icon: '⚠️',
       description: 'የትምህርት ቤቱን ውስጣዊ ደንብ የሚጥስ ሌላ ማንኛውም የስነ-ምግባር ግድፈት',
+      descriptionOm: 'Hanqina naamusaa seera keessoo mana barumsaa cabsu kamiyyuu',
+      descriptionEn: 'Any other conduct violation breaching school rules and regulations',
       defaultSeverity: 'medium'
     }
   ];
@@ -289,20 +341,42 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
   // Submit Tip-off handler
   const handleSubmitTipOff = (e: React.FormEvent) => {
     e.preventDefault();
+    setTipOffError(null);
 
     const targetName = selectedTargetStudent ? selectedTargetStudent.fullName : targetStudentNameManual.trim();
 
     if (!targetName) {
-      alert('እባክዎ የስነ-ምግባር ችግር ያለበትን ተማሪ ከስም ዝርዝሩ ይምረጡ ወይም ስሙን ያስገቡ!');
+      setTipOffError(
+        currentLang === 'om'
+          ? 'Maaloo barataa rakkoon naamusaa qabu tarree keessaa filadhaa ykn maqaa galchaa!'
+          : currentLang === 'en'
+          ? 'Please select a student from the roster or enter the student name!'
+          : 'እባክዎ የስነ-ምግባር ችግር ያለበትን ተማሪ ከስም ዝርዝሩ ይምረጡ ወይም ስሙን ያስገቡ!'
+      );
       return;
     }
 
     if (!description.trim()) {
-      alert('እባክዎ የተከሰተውን የስነ-ምግባር ችግር ሁኔታ በዝርዝር ይግለጹ!');
+      setTipOffError(
+        currentLang === 'om'
+          ? 'Maaloo haala rakkina naamusaa mudate bal\'inaan ibsaa!'
+          : currentLang === 'en'
+          ? 'Please describe the behavioral incident in detail!'
+          : 'እባክዎ የተከሰተውን የስነ-ምግባር ችግር ሁኔታ በዝርዝር ይግለጹ!'
+      );
       return;
     }
 
     setIsSubmitting(true);
+
+    const confidentialLabel =
+      currentLang === 'om'
+        ? 'Eeruu Iccitii (Anonymous)'
+        : currentLang === 'en'
+        ? 'Confidential Report'
+        : 'ሚስጥራዊ ጥቆማ';
+    const unspecifiedLabel =
+      currentLang === 'om' ? 'Hin ibsamne' : currentLang === 'en' ? 'Not specified' : 'ያልተገለጸ';
 
     const newReport: StudentDisciplineReport = {
       id: `disc-${Date.now()}`,
@@ -314,7 +388,10 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
       grade: Number(formGrade),
       section: formSection,
       reporterType,
-      reporterName: isConfidential && reporterType === 'anonymous' ? 'ሚስጥራዊ ጥቆማ' : reporterNameInput || 'ያልተገለጸ',
+      reporterName:
+        isConfidential && reporterType === 'anonymous'
+          ? confidentialLabel
+          : reporterNameInput || unspecifiedLabel,
       reporterPhone: reporterPhoneInput,
       reporterCode: studentSelf?.accessCode,
       isConfidential,
@@ -343,12 +420,23 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
       {
         authorName: newReport.reporterName,
         schoolName: school.name,
-        description: `የስነ-ምግባር ጥቆማ፡ ${newReport.targetStudentName} (${newReport.grade}${newReport.section})`
+        description:
+          currentLang === 'om'
+            ? `Gabaasa naamusaa: ${newReport.targetStudentName} (${newReport.grade}${newReport.section})`
+            : currentLang === 'en'
+            ? `Conduct report: ${newReport.targetStudentName} (${newReport.grade}${newReport.section})`
+            : `የስነ-ምግባር ጥቆማ፡ ${newReport.targetStudentName} (${newReport.grade}${newReport.section})`
       }
     );
 
     setIsSubmitting(false);
-    setSuccessToast(`የስነ-ምግባር ጥቆማው ለትምህርት ቤቱ ዳይሬክተር በስኬት ተልኳል! የምስጢር መለያ ቁጥር፡ ${newReport.id}`);
+    setSuccessToast(
+      currentLang === 'om'
+        ? `Himannaan naamusaa gara Daarektara Mana Barnootaatti milkaa'inaan ergameera! Koodii: ${newReport.id}`
+        : currentLang === 'en'
+        ? `Behavioral report submitted to School Principal successfully! Ref ID: ${newReport.id}`
+        : `የስነ-ምግባር ጥቆማው ለትምህርት ቤቱ ዳይሬክተር በስኬት ተልኳል! የምስጢር መለያ ቁጥር፡ ${newReport.id}`
+    );
 
     // Reset Form
     setSelectedTargetStudent(null);
@@ -368,7 +456,14 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
   const handleOpenActionModal = (report: StudentDisciplineReport) => {
     setSelectedReport(report);
     setDirectorRemarksInput(report.directorRemarks || '');
-    setActionTakenInput(report.actionTaken || 'የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል');
+    setActionTakenInput(
+      report.actionTaken ||
+        (currentLang === 'om'
+          ? 'Akeekkachiisa afaanii fi gorsa naamusaa kennameera'
+          : currentLang === 'en'
+          ? 'Verbal warning and behavioral counseling given'
+          : 'የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል')
+    );
     setNewStatusInput(report.status);
   };
 
@@ -382,9 +477,22 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
       directorRemarks: directorRemarksInput.trim(),
       actionTaken: actionTakenInput.trim(),
       actionDate: new Date().toISOString().split('T')[0],
-      reviewedByDirectorName: currentUser?.name || 'ርዕሰ መምህር (School Director)',
+      reviewedByDirectorName:
+        currentUser?.name ||
+        (currentLang === 'om'
+          ? 'Daarektara Mana Barnootaa'
+          : currentLang === 'en'
+          ? 'School Director'
+          : 'ርዕሰ መምህር (School Director)'),
       isAcknowledged: true,
-      acknowledgedByDirectorName: selectedReport.acknowledgedByDirectorName || currentUser?.name || 'ርዕሰ መምህር (School Director)',
+      acknowledgedByDirectorName:
+        selectedReport.acknowledgedByDirectorName ||
+        currentUser?.name ||
+        (currentLang === 'om'
+          ? 'Daarektara Mana Barnootaa'
+          : currentLang === 'en'
+          ? 'School Director'
+          : 'ርዕሰ መምህር (School Director)'),
       directorAcknowledgedAt: selectedReport.directorAcknowledgedAt || nowIso,
       updatedAt: nowIso
     };
@@ -402,19 +510,36 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
       {
         authorName: updatedReport.reviewedByDirectorName,
         schoolName: school.name,
-        description: `የዳይሬክተር እርምጃ ውሳኔ፡ ${updatedReport.targetStudentName} - ሁኔታ፡ ${updatedReport.status}`
+        description:
+          currentLang === 'om'
+            ? `Murtee Daarektaraa: ${updatedReport.targetStudentName} - Haala: ${updatedReport.status}`
+            : currentLang === 'en'
+            ? `Director action: ${updatedReport.targetStudentName} - Status: ${updatedReport.status}`
+            : `የዳይሬክተር እርምጃ ውሳኔ፡ ${updatedReport.targetStudentName} - ሁኔታ፡ ${updatedReport.status}`
       }
     );
 
     setSelectedReport(null);
-    setSuccessToast(`የዳይሬክተር ውሳኔና ይፋዊ ማረጋገጫ (Acknowledgment) በተሳካ ሁኔታ ተመዝግቧል!`);
+    setSuccessToast(
+      currentLang === 'om'
+        ? 'Murteen Daarektaraa fi mirkaneessi seera-qabeessa milkaa\'inaan galmaa\'eera!'
+        : currentLang === 'en'
+        ? 'Director decision & official acknowledgment saved successfully!'
+        : 'የዳይሬክተር ውሳኔና ይፋዊ ማረጋገጫ (Acknowledgment) በተሳካ ሁኔታ ተመዝግቧል!'
+    );
     setTimeout(() => setSuccessToast(null), 4000);
   };
 
   // Quick Direct Acknowledgment with Timestamp
   const handleConfirmQuickAcknowledge = () => {
     if (!acknowledgingReport) return;
-    const directorName = currentUser?.name || 'ርዕሰ መምህር (School Director)';
+    const directorName =
+      currentUser?.name ||
+      (currentLang === 'om'
+        ? 'Daarektara Mana Barnootaa'
+        : currentLang === 'en'
+        ? 'School Director'
+        : 'ርዕሰ መምህር (School Director)');
     const updated = StorageService.acknowledgeDisciplineReport(
       acknowledgingReport.id,
       directorName,
@@ -433,7 +558,12 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
         {
           authorName: directorName,
           schoolName: school.name,
-          description: `የዳይሬክተር ዕውቅና መስጫ (Acknowledged): ${acknowledgedItem.targetStudentName} (${acknowledgedItem.grade}${acknowledgedItem.section})`
+          description:
+            currentLang === 'om'
+              ? `Mirkaneessa Daarektaraa (Acknowledged): ${acknowledgedItem.targetStudentName} (${acknowledgedItem.grade}${acknowledgedItem.section})`
+              : currentLang === 'en'
+              ? `Director acknowledgment: ${acknowledgedItem.targetStudentName} (${acknowledgedItem.grade}${acknowledgedItem.section})`
+              : `የዳይሬክተር ዕውቅና መስጫ (Acknowledged): ${acknowledgedItem.targetStudentName} (${acknowledgedItem.grade}${acknowledgedItem.section})`
         }
       );
     }
@@ -441,16 +571,20 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
     setAcknowledgingReport(null);
     setQuickAcknowledgeRemarks('');
     setSuccessToast(
-      `የስነ-ምግባር መዝገቡ በዳይሬክተር ${directorName} ታይቶ ይፋዊ ማረጋገጫና ሰዓት (Timestamp) ተሰጥቶታል!`
+      currentLang === 'om'
+        ? `Galmeen naamusaa Daarektara ${directorName} tiin ilaalamee mirkaneessii fi sa'aatiin (Timestamp) galmaa'eera!`
+        : currentLang === 'en'
+        ? `Conduct record reviewed and acknowledged with timestamp by Director ${directorName}!`
+        : `የስነ-ምግባር መዝገቡ በዳይሬክተር ${directorName} ታይቶ ይፋዊ ማረጋገጫና ሰዓት (Timestamp) ተሰጥቶታል!`
     );
     setTimeout(() => setSuccessToast(null), 4500);
   };
 
   const handleDeleteReport = (id: string) => {
-    if (!confirm('ይህን የስነ-ምግባር መዝገብ መሰረዝ ይፈልጋሉ?')) return;
     const updated = StorageService.deleteDisciplineReport(id);
     setReports(updated);
     onReportsUpdated?.(updated);
+    setConfirmDeleteReportId(null);
   };
 
   // Director Board Filters
@@ -508,12 +642,37 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
     const doc = iframe.contentWindow?.document;
     if (!doc) return;
 
+    const printTitle =
+      currentLang === 'om'
+        ? 'Sanada Naamusaa fi Murtee Daarektaraa'
+        : currentLang === 'en'
+        ? 'Student Conduct Finding & Director Decision Record'
+        : 'የተማሪ ስነ-ምግባር ግኝትና የዳይሬክተር ውሳኔ ሰነድ';
+    const subOffice =
+      currentLang === 'om'
+        ? 'Waajjira Koree Naamusaa fi Gorsa Barattootaa'
+        : currentLang === 'en'
+        ? 'Office of Student Conduct, Discipline & Counseling Committee'
+        : 'የተማሪዎች ስነ-ምግባር፣ ስነ-ስርዓትና የምክር አገልግሎት ኮሚቴ ጽ/ቤት';
+    const cityLabel =
+      currentLang === 'om'
+        ? 'Bulchiinsa Magaalaa Shaashamannee · Naannoo Oromiyaa'
+        : currentLang === 'en'
+        ? 'Shashemene City Administration · Oromia Region'
+        : 'ሻሸመኔ ከተማ አስተዳደር · የኦሮሚያ ክልል';
+    const docHeading =
+      currentLang === 'om'
+        ? 'Galmee Qorannoo Naamusaa fi Murtee Seera-Qabeessa Daarektaraa'
+        : currentLang === 'en'
+        ? 'Official Student Conduct Finding & Principal Decision Record'
+        : 'የተማሪ ስነ-ምግባር ግኝት እና የዳይሬክተር ይፋዊ የውሳኔ መዝገብ';
+
     doc.open();
     doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>የተማሪ ስነ-ምግባር ግኝትና የዳይሬክተር ውሳኔ ሰነድ</title>
+          <title>${printTitle}</title>
           <style>
             body { font-family: sans-serif; padding: 30px; line-height: 1.6; color: #0f172a; }
             .header { text-align: center; border-bottom: 3px double #047857; padding-bottom: 15px; margin-bottom: 20px; }
@@ -531,47 +690,47 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
         <body>
           <div class="header">
             <div class="school-name">${school.name}</div>
-            <div class="sub-title">የተማሪዎች ስነ-ምግባር፣ ስነ-ስርዓትና የምክር አገልግሎት ኮሚቴ ጽ/ቤት</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 3px;">ሻሸመኔ ከተማ አስተዳደር · የኦሮሚያ ክልል</div>
+            <div class="sub-title">${subOffice}</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 3px;">${cityLabel}</div>
           </div>
 
-          <div class="title">የተማሪ ስነ-ምግባር ግኝት እና የዳይሬክተር ይፋዊ የውሳኔ መዝገብ</div>
+          <div class="title">${docHeading}</div>
 
           <div class="grid">
             <div class="box">
-              <strong>የተማሪው ስም፡</strong> ${rep.targetStudentName}<br/>
-              <strong>የክፍል ደረጃና ሴክሽን፡</strong> ክፍል ${rep.grade} - ${rep.section}<br/>
-              <strong>የተማሪ መለያ ቁጥር፡</strong> ${rep.targetStudentCode || 'የክፍል ተማሪ'}
+              <strong>${currentLang === 'om' ? 'Maqaa Barataa:' : currentLang === 'en' ? 'Student Name:' : 'የተማሪው ስም፡'}</strong> ${rep.targetStudentName}<br/>
+              <strong>${currentLang === 'om' ? 'Kutaa fi Daree:' : currentLang === 'en' ? 'Grade & Section:' : 'የክፍል ደረጃና ሴክሽን፡'}</strong> ${currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} ${rep.grade} - ${rep.section}<br/>
+              <strong>${currentLang === 'om' ? 'Lakkoofsa Addaa Barataa:' : currentLang === 'en' ? 'Student ID:' : 'የተማሪ መለያ ቁጥር፡'}</strong> ${rep.targetStudentCode || (currentLang === 'om' ? 'Barataa Daree' : currentLang === 'en' ? 'Class Student' : 'የክፍል ተማሪ')}
             </div>
             <div class="box">
-              <strong>የጥቆማ መለያ ቁጥር፡</strong> ${rep.id}<br/>
-              <strong>የተከሰተበት ቀን፡</strong> ${rep.incidentDate} (${rep.incidentTime || 'ሰዓት አልተጠቀሰም'})<br/>
-              <strong>የተከሰተበት ቦታ፡</strong> ${rep.incidentLocation || 'በትምህርት ቤት ግቢ'}
+              <strong>${currentLang === 'om' ? 'Lakkoofsa Eeruu:' : currentLang === 'en' ? 'Report ID:' : 'የጥቆማ መለያ ቁጥር፡'}</strong> ${rep.id}<br/>
+              <strong>${currentLang === 'om' ? 'Guyyaa Taatee:' : currentLang === 'en' ? 'Incident Date:' : 'የተከሰተበት ቀን፡'}</strong> ${rep.incidentDate} (${rep.incidentTime || (currentLang === 'om' ? 'Sa\'aatiin hin ibsamne' : currentLang === 'en' ? 'Time not specified' : 'ሰዓት አልተጠቀሰም')})<br/>
+              <strong>${currentLang === 'om' ? 'Bakka Taatee:' : currentLang === 'en' ? 'Location:' : 'የተከሰተበት ቦታ፡'}</strong> ${rep.incidentLocation || (currentLang === 'om' ? 'Mooraa Mana Barnootaa' : currentLang === 'en' ? 'School Campus' : 'በትምህርት ቤት ግቢ')}
             </div>
           </div>
 
           <div class="full-box">
-            <strong>የስነ-ምግባር ጥሰት አይነት፡</strong> ${rep.category}<br/>
-            <strong>የስነ-ምግባር ችግሩ ዝርዝር ሁኔታ፡</strong><br/>
+            <strong>${currentLang === 'om' ? 'Gosa Badii Naamusaa:' : currentLang === 'en' ? 'Misconduct Category:' : 'የስነ-ምግባር ጥሰት አይነት፡'}</strong> ${rep.category}<br/>
+            <strong>${currentLang === 'om' ? 'Ibsa Bal\'aa Taatee Naamusaa:' : currentLang === 'en' ? 'Incident Details:' : 'የስነ-ምግባር ችግሩ ዝርዝር ሁኔታ፡'}</strong><br/>
             ${rep.description}
           </div>
 
           <div class="decision-box">
-            <strong>የዳይሬክተር ግምገማና ውሳኔ፡</strong><br/>
-            ${rep.directorRemarks || 'ውሳኔ በመሰጠት ላይ'}<br/><br/>
-            <strong>የተወሰደ አስተዳደራዊ እርምጃ፡</strong> ${rep.actionTaken || 'ምክርና ማስጠንቀቂያ'}<br/>
-            <strong>የወቅቱ ሁኔታ፡</strong> ${rep.status}
+            <strong>${currentLang === 'om' ? 'Gamaaggamaa fi Murtee Daarektaraa:' : currentLang === 'en' ? 'Director Review & Decision:' : 'የዳይሬክተር ግምገማና ውሳኔ፡'}</strong><br/>
+            ${rep.directorRemarks || (currentLang === 'om' ? 'Murteen kennamaa jira' : currentLang === 'en' ? 'Decision in progress' : 'ውሳኔ በመሰጠት ላይ')}<br/><br/>
+            <strong>${currentLang === 'om' ? 'Tarkaanfii Bulchiinsaa Fudhatame:' : currentLang === 'en' ? 'Administrative Action Taken:' : 'የተወሰደ አስተዳደራዊ እርምጃ፡'}</strong> ${rep.actionTaken || (currentLang === 'om' ? 'Gorsaa fi Akeekkachiisa' : currentLang === 'en' ? 'Counseling & Warning' : 'ምክርና ማስጠንቀቂያ')}<br/>
+            <strong>${currentLang === 'om' ? 'Haala Ammaa:' : currentLang === 'en' ? 'Current Status:' : 'የወቅቱ ሁኔታ፡'}</strong> ${rep.status}
           </div>
 
           <div class="footer">
             <div>
-              <div class="sign">የክፍል ተጠሪ መምህር ፊርማ</div>
+              <div class="sign">${currentLang === 'om' ? 'Mallattoo Barsiisaa Itti-Gaafatamaa Daree' : currentLang === 'en' ? 'Homeroom Teacher Signature' : 'የክፍል ተጠሪ መምህር ፊርማ'}</div>
             </div>
             <div>
-              <div class="sign">የተማሪው ወላጅ/አሳዳጊ ፊርማ</div>
+              <div class="sign">${currentLang === 'om' ? 'Mallattoo Maatii / Guddistuu' : currentLang === 'en' ? 'Parent / Guardian Signature' : 'የተማሪው ወላጅ/አሳዳጊ ፊርማ'}</div>
             </div>
             <div>
-              <div class="sign">የርዕሰ መምህር / ዳይሬክተር ፊርማ እና ማህተም</div>
+              <div class="sign">${currentLang === 'om' ? 'Mallattoo fi Chaappaa Daarektaraa' : currentLang === 'en' ? 'Principal Signature & Stamp' : 'የርዕሰ መምህር / ዳይሬክተር ፊርማ እና ማህተም'}</div>
             </div>
           </div>
         </body>
@@ -596,32 +755,61 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-xs font-bold text-amber-300">
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span>የተማሪዎች ስነ-ምግባር መዝገብና ክትትል (Student Conduct & Behavioral Log)</span>
+              <span>
+                {currentLang === 'om'
+                  ? 'Galmee Naamusaa fi Hordoffii Barattootaa'
+                  : currentLang === 'en'
+                  ? 'Student Conduct & Behavioral Log'
+                  : 'የተማሪዎች ስነ-ምግባር መዝገብና ክትትል (Student Conduct & Behavioral Log)'}
+              </span>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              የተማሪዎች ስነ-ምግባር ምዝገባና ክትትል (Student Conduct & Behavioral Log)
+              {currentLang === 'om'
+                ? 'Galmee Naamusaa fi Hordoffii Barattootaa'
+                : currentLang === 'en'
+                ? 'Student Conduct & Behavioral Log'
+                : 'የተማሪዎች ስነ-ምግባር ምዝገባና ክትትል (Student Conduct & Behavioral Log)'}
             </h2>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              መምህራን በክፍልና በትምህርት ቤት ግቢ ውስጥ የተከሰቱ የተማሪዎች የስነ-ምግባር ክስተቶችን (Behavioral Incidents) ይመዘግባሉ፤ የትምህርት ቤት ዳይሬክተሮች ደግሞ ጉዳዮቹን ገምግመው ይፋዊ ዕውቅና (Acknowledge) እና ሰዓት (Timestamp) ይሰጣሉ። እንዲሁም ተማሪዎችና ወላጆች ሚስጥራዊ ጥቆማዎችን ለዳይሬክተሩ ማድረስ ይችላሉ።
+              {currentLang === 'om'
+                ? 'Barsiisonni gochaalee naamusaa daree fi mooraa mana barumsaa keessatti mudatan ni galmeessu; Daarektaroonni dhimma sana gamaaggamanii mirkaneessa seera-qabeessa (Acknowledge) fi sa\'aatii (Timestamp) kennu. Barattoonni fi maatiin himannaa iccitii kallattiin gara Daarektaraatti erguu danda\'u.'
+                : currentLang === 'en'
+                ? 'Teachers log student behavioral incidents occurring in class or on campus; School Principals review cases and record official acknowledgments with timestamps. Students and parents can also send confidential tips directly to the Principal.'
+                : 'መምህራን በክፍልና በትምህርት ቤት ግቢ ውስጥ የተከሰቱ የተማሪዎች የስነ-ምግባር ክስተቶችን (Behavioral Incidents) ይመዘግባሉ፤ የትምህርት ቤት ዳይሬክተሮች ደግሞ ጉዳዮቹን ገምግመው ይፋዊ ዕውቅና (Acknowledge) እና ሰዓት (Timestamp) ይሰጣሉ። እንዲሁም ተማሪዎችና ወላጆች ሚስጥራዊ ጥቆማዎችን ለዳይሬክተሩ ማድረስ ይችላሉ።'}
             </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
               <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 flex items-center gap-1.5 font-medium">
                 <Building2 className="w-3.5 h-3.5 text-amber-400" />
-                <span>ት/ቤት፡ <strong>{school.name}</strong></span>
+                <span>
+                  {currentLang === 'om' ? 'M/Barumsaa:' : currentLang === 'en' ? 'School:' : 'ት/ቤት፡'}{' '}
+                  <strong>{school.name}</strong>
+                </span>
               </span>
 
               <span className="px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-500/40 text-emerald-200 flex items-center gap-1.5 font-bold">
                 <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>100% ሚስጥራዊነት የተጠበቀ (Confidential & Direct)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? '100% Iccitiin Eegamaa (Confidential & Direct)'
+                    : currentLang === 'en'
+                    ? '100% Confidential & Direct'
+                    : '100% ሚስጥራዊነት የተጠበቀ (Confidential & Direct)'}
+                </span>
               </span>
 
               <span className="px-2.5 py-1 rounded-lg bg-amber-950/70 border border-amber-500/40 text-amber-200 flex items-center gap-1.5 font-bold">
                 <Users className="w-3.5 h-3.5 text-amber-400" />
-                <span>ጠቅላላ የተመዘገቡ ተማሪዎች፡ {students.length}</span>
+                <span>
+                  {currentLang === 'om'
+                    ? `Barattoota Galmaa'an: ${students.length}`
+                    : currentLang === 'en'
+                    ? `Total Registered Students: ${students.length}`
+                    : `ጠቅላላ የተመዘገቡ ተማሪዎች፡ ${students.length}`}
+                </span>
               </span>
             </div>
           </div>
@@ -638,7 +826,19 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               }`}
             >
               <Send className="w-4 h-4" />
-              <span>{isTeacher ? '📝 የስነ-ምግባር ክስተት መዝግብ (Log Incident)' : '✍️ ስነ-ምግባር ጥቆማ አስገባ'}</span>
+              <span>
+                {isTeacher
+                  ? currentLang === 'om'
+                    ? '📝 Gocha Naamusaa Galmeessi (Log Incident)'
+                    : currentLang === 'en'
+                    ? '📝 Log Behavioral Incident'
+                    : '📝 የስነ-ምግባር ክስተት መዝግብ (Log Incident)'
+                  : currentLang === 'om'
+                  ? '✍️ Himannaa Naamusaa Galchi'
+                  : currentLang === 'en'
+                  ? '✍️ Submit Misconduct Tip'
+                  : '✍️ ስነ-ምግባር ጥቆማ አስገባ'}
+              </span>
             </button>
 
             <button
@@ -651,7 +851,15 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               }`}
             >
               <Users className="w-4 h-4 text-amber-300" />
-              <span>👥 አብረው የሚማሩ የክፍል ተማሪዎች ({classmates.length})</span>
+              <span>
+                👥{' '}
+                {currentLang === 'om'
+                  ? 'Barattoota Waliin Baratan'
+                  : currentLang === 'en'
+                  ? 'Classmates Roster'
+                  : 'አብረው የሚማሩ የክፍል ተማሪዎች'}{' '}
+                ({classmates.length})
+              </span>
             </button>
 
             {isDirectorOrAdmin && (
@@ -665,7 +873,15 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 }`}
               >
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>🏛️ የዳይሬክተር መዝገብ ሰሌዳ ({reports.length})</span>
+                <span>
+                  🏛️{' '}
+                  {currentLang === 'om'
+                    ? 'Gabatee Galmee Daarektaraa'
+                    : currentLang === 'en'
+                    ? 'Director Log Board'
+                    : 'የዳይሬክተር መዝገብ ሰሌዳ'}{' '}
+                  ({reports.length})
+                </span>
                 {stats.pending > 0 && (
                   <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold animate-pulse">
                     {stats.pending}
@@ -689,7 +905,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
             onClick={() => setSuccessToast(null)}
             className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-1 rounded-lg cursor-pointer"
           >
-            እሺ
+            {currentLang === 'om' ? 'Tole' : currentLang === 'en' ? 'OK' : 'እሺ'}
           </button>
         </div>
       )}
@@ -705,14 +921,24 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               <div>
                 <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                   <Users className="w-4 h-4 text-amber-600" />
-                  <span>አብረው የሚማሩ የክፍል ተማሪዎች ዝርዝር</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Tarree Barattoota Daree Waliin Baratanii'
+                      : currentLang === 'en'
+                      ? 'Classmates Roster List'
+                      : 'አብረው የሚማሩ የክፍል ተማሪዎች ዝርዝር'}
+                  </span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  የክፍሉን ተማሪዎች ይመልከቱ፤ ጥቆማ የሚሰጡበትን ተማሪ ጠቅ በማድረግ በቀላሉ ይምረጡ።
+                  {currentLang === 'om'
+                    ? 'Barattoota daree ilaalaa; barataa himannaa irratti kennitan cuqaasuun salphaatti filadhaa.'
+                    : currentLang === 'en'
+                    ? 'Browse classmates and click any student to select them for the report.'
+                    : 'የክፍሉን ተማሪዎች ይመልከቱ፤ ጥቆማ የሚሰጡበትን ተማሪ ጠቅ በማድረግ በቀላሉ ይምረጡ።'}
                 </p>
               </div>
               <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-black">
-                ክፍል {formGrade} - {formSection}
+                {currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} {formGrade} - {formSection}
               </span>
             </div>
 
@@ -720,7 +946,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
             <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
               <div>
                 <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                  የክፍል ደረጃ (Grade)
+                  {currentLang === 'om' ? 'Sadarkaa Kutaa (Grade)' : currentLang === 'en' ? 'Grade Level' : 'የክፍል ደረጃ (Grade)'}
                 </label>
                 <select
                   value={formGrade}
@@ -733,7 +959,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 >
                   {availableGrades.map((g) => (
                     <option key={g} value={g}>
-                      ክፍል {g} (Grade {g})
+                      {currentLang === 'om' ? `Kutaa ${g}` : currentLang === 'en' ? `Grade ${g}` : `ክፍል ${g} (Grade ${g})`}
                     </option>
                   ))}
                 </select>
@@ -741,7 +967,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                  ሴክሽን (Section)
+                  {currentLang === 'om' ? 'Daree (Section)' : currentLang === 'en' ? 'Section' : 'ሴክሽን (Section)'}
                 </label>
                 <select
                   value={formSection}
@@ -753,7 +979,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 >
                   {availableSections.map((sec) => (
                     <option key={sec} value={sec}>
-                      ሴክሽን {sec}
+                      {currentLang === 'om' ? `Daree ${sec}` : currentLang === 'en' ? `Section ${sec}` : `ሴክሽን ${sec}`}
                     </option>
                   ))}
                 </select>
@@ -767,7 +993,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 type="text"
                 value={classmatesSearch}
                 onChange={(e) => setClassmatesSearch(e.target.value)}
-                placeholder="የክፍል ተማሪ በስም ወይም መታወቂያ ፈልግ..."
+                placeholder={
+                  currentLang === 'om'
+                    ? 'Maqaa ykn ID barataatiin barbaadi...'
+                    : currentLang === 'en'
+                    ? 'Search classmate by name or ID...'
+                    : 'የክፍል ተማሪ በስም ወይም መታወቂያ ፈልግ...'
+                }
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden bg-slate-50/50"
               />
             </div>
@@ -780,12 +1012,18 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                     {selectedTargetStudent.fullName.charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] text-amber-950 font-bold block">የተመረጠ ተማሪ (Target Student)፡</span>
+                    <span className="text-[10px] text-amber-950 font-bold block">
+                      {currentLang === 'om'
+                        ? 'Barataa Filatame (Target Student):'
+                        : currentLang === 'en'
+                        ? 'Selected Target Student:'
+                        : 'የተመረጠ ተማሪ (Target Student)፡'}
+                    </span>
                     <strong className="text-xs text-amber-950 truncate block">
                       {selectedTargetStudent.fullName}
                     </strong>
                     <span className="text-[10px] text-amber-800">
-                      ክፍል {selectedTargetStudent.grade}-{selectedTargetStudent.section} · ID: {selectedTargetStudent.studentIdNumber || selectedTargetStudent.accessCode}
+                      {currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} {selectedTargetStudent.grade}-{selectedTargetStudent.section} · ID: {selectedTargetStudent.studentIdNumber || selectedTargetStudent.accessCode}
                     </span>
                   </div>
                 </div>
@@ -797,7 +1035,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                     setTargetStudentNameManual('');
                   }}
                   className="p-1 rounded-full bg-amber-200 text-amber-900 hover:bg-amber-300 transition-colors text-xs cursor-pointer shrink-0"
-                  title="ምርጫ ሰርዝ"
+                  title={currentLang === 'om' ? 'Filannoo haqi' : currentLang === 'en' ? 'Clear selection' : 'ምርጫ ሰርዝ'}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -810,10 +1048,18 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 <div className="text-center p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-2">
                   <Users className="w-8 h-8 text-slate-300 mx-auto" />
                   <p className="text-xs text-slate-500 font-medium">
-                    በዚህ ክፍልና ሴክሽን (ክፍል {formGrade}-{formSection}) የተገኘ ተማሪ የለም።
+                    {currentLang === 'om'
+                      ? `Kutaa fi daree kana keessatti (Kutaa ${formGrade}-${formSection}) barataan hin argamne.`
+                      : currentLang === 'en'
+                      ? `No students found in Grade ${formGrade}-${formSection}.`
+                      : `በዚህ ክፍልና ሴክሽን (ክፍል ${formGrade}-${formSection}) የተገኘ ተማሪ የለም።`}
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    ከላይ ሌላ ክፍል ወይም ሴክሽን በመምረጥ የሌሎች ክፍሎችን ተማሪዎች መመልከት ይችላሉ።
+                    {currentLang === 'om'
+                      ? 'Gubbaadhaa kutaa ykn daree biraa filachuun barattoota biroo ilaaluu dandeessu.'
+                      : currentLang === 'en'
+                      ? 'Select another grade or section above to view students in other classes.'
+                      : 'ከላይ ሌላ ክፍል ወይም ሴክሽን በመምረጥ የሌሎች ክፍሎችን ተማሪዎች መመልከት ይችላሉ።'}
                   </p>
                 </div>
               ) : (
@@ -847,9 +1093,24 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                           <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
                             <span>ID: {student.studentIdNumber || student.accessCode}</span>
                             <span>·</span>
-                            <span>ጾታ፡ {student.gender === 'F' ? 'ሴት' : 'ወንድ'}</span>
+                            <span>
+                              {currentLang === 'om' ? 'Saala:' : currentLang === 'en' ? 'Gender:' : 'ጾታ፡'}{' '}
+                              {student.gender === 'F'
+                                ? currentLang === 'om'
+                                  ? 'Dubartii'
+                                  : currentLang === 'en'
+                                  ? 'Female'
+                                  : 'ሴት'
+                                : currentLang === 'om'
+                                ? 'Dhiira'
+                                : currentLang === 'en'
+                                ? 'Male'
+                                : 'ወንድ'}
+                            </span>
                             <span>·</span>
-                            <span className="font-semibold text-emerald-700">ስነ-ምግባር፡ {student.conduct}</span>
+                            <span className="font-semibold text-emerald-700">
+                              {currentLang === 'om' ? 'Naamusa:' : currentLang === 'en' ? 'Conduct:' : 'ስነ-ምግባር፡'} {student.conduct}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -866,7 +1127,17 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                             : 'bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-900'
                         }`}
                       >
-                        {isSelected ? '✓ ተመርጧል' : '+ ጥቆማ ስጥ'}
+                        {isSelected
+                          ? currentLang === 'om'
+                            ? '✓ Filatameera'
+                            : currentLang === 'en'
+                            ? '✓ Selected'
+                            : '✓ ተመርጧል'
+                          : currentLang === 'om'
+                          ? '+ Himadhu'
+                          : currentLang === 'en'
+                          ? '+ Report'
+                          : '+ ጥቆማ ስጥ'}
                       </button>
                     </div>
                   );
@@ -877,7 +1148,14 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-[11px] text-slate-600 flex items-start gap-2">
               <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <span>
-                <strong>ጠቃሚ ማሳሰቢያ፡</strong> ተማሪውን ከዝርዝሩ ከመረጡ በኋላ በቀኝ በኩል ያለውን የስነ-ምግባር ችግር አይነት፣ የተከሰተበትን ሰዓት እና ዝርዝር ሁኔታ በመሙላት ለዳይሬክተር ይላኩ።
+                <strong>
+                  {currentLang === 'om' ? 'Yaadachiisa Barbaachisaa:' : currentLang === 'en' ? 'Important Note:' : 'ጠቃሚ ማሳሰቢያ፡'}
+                </strong>{' '}
+                {currentLang === 'om'
+                  ? 'Erga barataa tarree keessaa filattanii booda gama mirgaatiin gosa rakkina naamusaa, sa\'aatii fi ibsa bal\'aa guutuun gara Daarektaraatti ergaa.'
+                  : currentLang === 'en'
+                  ? 'After picking a student from the list, fill out the incident type, time, and detailed description on the right and submit to the Director.'
+                  : 'ተማሪውን ከዝርዝሩ ከመረጡ በኋላ በቀኝ በኩል ያለውን የስነ-ምግባር ችግር አይነት፣ የተከሰተበትን ሰዓት እና ዝርዝር ሁኔታ በመሙላት ለዳይሬክተር ይላኩ።'}
               </span>
             </div>
           </div>
@@ -890,19 +1168,45 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   <ShieldAlert className="w-5 h-5 text-red-600" />
                   <span>
                     {isTeacher
-                      ? 'የተማሪ የስነ-ምግባር ክስተት መመዝገቢያ (Record Behavioral Incident)'
+                      ? currentLang === 'om'
+                        ? 'Galmee Gocha Naamusaa Barataa (Record Behavioral Incident)'
+                        : currentLang === 'en'
+                        ? 'Record Student Behavioral Incident'
+                        : 'የተማሪ የስነ-ምግባር ክስተት መመዝገቢያ (Record Behavioral Incident)'
+                      : currentLang === 'om'
+                      ? 'Unka Himannaa Naamusaa Barataa'
+                      : currentLang === 'en'
+                      ? 'Student Conduct & Incident Form'
                       : 'የስነ-ምግባር ችግር ጥቆማ መሙያ ቅጽ (Student Conduct & Incident Form)'}
                   </span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {isTeacher
-                    ? 'መምህራን የተማሪዎችን የስነ-ምግባር ክስተቶች እዚህ ይመዘግባሉ፤ ለትምህርት ቤት ዳይሬክተር ደርሶ ይፋዊ ዕውቅና (Acknowledgment) ይሰጠዋል።'
+                    ? currentLang === 'om'
+                      ? 'Barsiisonni gochaalee naamusaa barattootaa asitti galmeessu; Daarektarri ilaalee mirkaneessa seera-qabeessa (Acknowledgment) kenna.'
+                      : currentLang === 'en'
+                      ? 'Teachers log behavioral incidents here; the School Principal reviews and gives official acknowledgment.'
+                      : 'መምህራን የተማሪዎችን የስነ-ምግባር ክስተቶች እዚህ ይመዘግባሉ፤ ለትምህርት ቤት ዳይሬክተር ደርሶ ይፋዊ ዕውቅና (Acknowledgment) ይሰጠዋል።'
+                    : currentLang === 'om'
+                    ? 'Himannaan kun kallattiin gara deeskii Daarektara Mana Barumsaa qofaatti ergama.'
+                    : currentLang === 'en'
+                    ? 'This report goes directly and exclusively to the School Principal desk.'
                     : 'ይህ ጥቆማ በቀጥታ ለትምህርት ቤቱ ዳይሬክተር ዴስክ ብቻ ይደርሳል።'}
                 </p>
               </div>
 
               <span className="px-3 py-1 rounded-full bg-red-50 text-red-900 border border-red-200 text-xs font-bold">
-                {isTeacher ? 'የመምህራን ይፋዊ መዝገብ' : 'ቀጥታ ለዳይሬክተር'}
+                {isTeacher
+                  ? currentLang === 'om'
+                    ? 'Galmee Seera-qabeessa Barsiisotaa'
+                    : currentLang === 'en'
+                    ? 'Official Teacher Log'
+                    : 'የመምህራን ይፋዊ መዝገብ'
+                  : currentLang === 'om'
+                  ? 'Kallattiin Daarektaraaf'
+                  : currentLang === 'en'
+                  ? 'Direct to Principal'
+                  : 'ቀጥታ ለዳይሬክተር'}
               </span>
             </div>
 
@@ -910,14 +1214,18 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* 1. Target Student Display or Manual Entry */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  የስነ-ምግባር ችግር ያለበት ተማሪ ስም (Target Student) *
+                  {currentLang === 'om'
+                    ? 'Maqaa Barataa Rakkoon Naamusaa Irratti Mudate *'
+                    : currentLang === 'en'
+                    ? 'Target Student Name *'
+                    : 'የስነ-ምግባር ችግር ያለበት ተማሪ ስም (Target Student) *'}
                 </label>
                 {selectedTargetStudent ? (
                   <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl flex items-center justify-between">
                     <div>
                       <strong className="text-xs text-amber-950">{selectedTargetStudent.fullName}</strong>
                       <span className="text-[11px] text-amber-800 ml-2">
-                        (ክፍል {selectedTargetStudent.grade}-{selectedTargetStudent.section})
+                        ({currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} {selectedTargetStudent.grade}-{selectedTargetStudent.section})
                       </span>
                     </div>
                     <button
@@ -928,7 +1236,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                       }}
                       className="text-xs text-red-600 hover:underline font-bold"
                     >
-                      ሌላ ተማሪ ቀይር
+                      {currentLang === 'om' ? 'Barataa biroo jijjiiri' : currentLang === 'en' ? 'Change student' : 'ሌላ ተማሪ ቀይር'}
                     </button>
                   </div>
                 ) : (
@@ -938,11 +1246,21 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                       required
                       value={targetStudentNameManual}
                       onChange={(e) => setTargetStudentNameManual(e.target.value)}
-                      placeholder="የተማሪውን ሙሉ ስም ያስገቡ ወይም በግራ በኩል ካለው የክፍል ተማሪዎች ዝርዝር ይምረጡ..."
+                      placeholder={
+                        currentLang === 'om'
+                          ? 'Maqaa guutuu barataa galchaa ykn tarree bitaa irraa filadhaa...'
+                          : currentLang === 'en'
+                          ? 'Enter full student name or select from classmates list on the left...'
+                          : 'የተማሪውን ሙሉ ስም ያስገቡ ወይም በግራ በኩል ካለው የክፍል ተማሪዎች ዝርዝር ይምረጡ...'
+                      }
                       className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                     />
                     <span className="text-[10px] text-slate-400">
-                      * በግራ በኩል ካለው የክፍል ተማሪዎች ስም ዝርዝር ላይ ጠቅ በማድረግ በቅጽበት መምረጥ ይችላሉ።
+                      {currentLang === 'om'
+                        ? '* Tarree barattoota daree bitaa jiru cuqaasuun saffisaan filachuu dandeessu.'
+                        : currentLang === 'en'
+                        ? '* Click any student in the classmates roster on the left to select instantly.'
+                        : '* በግራ በኩል ካለው የክፍል ተማሪዎች ስም ዝርዝር ላይ ጠቅ በማድረግ በቅጽበት መምረጥ ይችላሉ።'}
                     </span>
                   </div>
                 )}
@@ -953,7 +1271,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>የጠቋሚው ማንነት እና የሚስጥር ጥበቃ ደረጃ *</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Eenyummaa Himataa fi Sadarkaa Iccitii *'
+                        : currentLang === 'en'
+                        ? 'Reporter Identity & Confidentiality *'
+                        : 'የጠቋሚው ማንነት እና የሚስጥር ጥበቃ ደረጃ *'}
+                    </span>
                   </label>
                   <label className="flex items-center gap-1.5 text-xs text-emerald-800 font-bold cursor-pointer">
                     <input
@@ -962,7 +1286,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                       onChange={(e) => setIsConfidential(e.target.checked)}
                       className="rounded text-emerald-700 focus:ring-emerald-500 w-4 h-4"
                     />
-                    <span>ሙሉ በሙሉ በሚስጥር ይያዝ (Confidential)</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Guutummaatti Iccitiin Qabami'
+                        : currentLang === 'en'
+                        ? 'Keep Confidential'
+                        : 'ሙሉ በሙሉ በሚስጥር ይያዝ (Confidential)'}
+                    </span>
                   </label>
                 </div>
 
@@ -979,7 +1309,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    🕵️ ሚስጥራዊ (ስም አልባ)
+                    🕵️ {currentLang === 'om' ? 'Iccitii (Maqaa Malee)' : currentLang === 'en' ? 'Anonymous' : 'ሚስጥራዊ (ስም አልባ)'}
                   </button>
 
                   <button
@@ -991,7 +1321,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    🎓 በተማሪ ስም
+                    🎓 {currentLang === 'om' ? 'Maqaa Barataatiin' : currentLang === 'en' ? 'As Student' : 'በተማሪ ስም'}
                   </button>
 
                   <button
@@ -1003,7 +1333,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    👨‍👩‍👧 በወላጅ ስም
+                    👨‍👩‍👧 {currentLang === 'om' ? 'Maqaa Maatiitiin' : currentLang === 'en' ? 'As Parent' : 'በወላጅ ስም'}
                   </button>
 
                   <button
@@ -1015,7 +1345,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    👨‍🏫 በመምህር ስም
+                    👨‍🏫 {currentLang === 'om' ? 'Maqaa Barsiisaatiin' : currentLang === 'en' ? 'As Teacher' : 'በመምህር ስም'}
                   </button>
                 </div>
 
@@ -1023,19 +1353,33 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        የጠቋሚው ሙሉ ስም (የአማራጭ)
+                        {currentLang === 'om'
+                          ? 'Maqaa Guutuu Himataa (Filannoo)'
+                          : currentLang === 'en'
+                          ? 'Reporter Full Name (Optional)'
+                          : 'የጠቋሚው ሙሉ ስም (የአማራጭ)'}
                       </label>
                       <input
                         type="text"
                         value={reporterNameInput}
                         onChange={(e) => setReporterNameInput(e.target.value)}
-                        placeholder="ስምዎን ያስገቡ..."
+                        placeholder={
+                          currentLang === 'om'
+                            ? 'Maqaa keessan galchaa...'
+                            : currentLang === 'en'
+                            ? 'Enter your name...'
+                            : 'ስምዎን ያስገቡ...'
+                        }
                         className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        ስልክ ቁጥር (ዳይሬክተሩ ለመደወል)
+                        {currentLang === 'om'
+                          ? 'Lakkoofsa Bilbilaa (Daarektarri akka bilbilu)'
+                          : currentLang === 'en'
+                          ? 'Phone Number (for Principal contact)'
+                          : 'ስልክ ቁጥር (ዳይሬክተሩ ለመደወል)'}
                       </label>
                       <input
                         type="tel"
@@ -1052,7 +1396,11 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* 3. Misconduct Category Grid Selector */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                  የስነ-ምግባር ችግር አይነት (Misconduct Category) *
+                  {currentLang === 'om'
+                    ? 'Gosa Rakkina Naamusaa (Misconduct Category) *'
+                    : currentLang === 'en'
+                    ? 'Misconduct Category *'
+                    : 'የስነ-ምግባር ችግር አይነት (Misconduct Category) *'}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {misconductCategories.map((cat) => {
@@ -1073,11 +1421,11 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className="text-base">{cat.icon}</span>
                           <span className="text-xs font-black text-slate-900 leading-tight">
-                            {cat.titleAm}
+                            {currentLang === 'om' ? cat.titleOm : currentLang === 'en' ? cat.titleEn : cat.titleAm}
                           </span>
                         </div>
                         <p className="text-[10px] text-slate-500 line-clamp-2 leading-tight">
-                          {cat.description}
+                          {currentLang === 'om' ? cat.descriptionOm : currentLang === 'en' ? cat.descriptionEn : cat.description}
                         </p>
                       </div>
                     );
@@ -1089,23 +1437,23 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                    የችግሩ ክብደት (Severity)
+                    {currentLang === 'om' ? 'Ulfaatina Rakkichaa' : currentLang === 'en' ? 'Severity' : 'የችግሩ ክብደት (Severity)'}
                   </label>
                   <select
                     value={severity}
                     onChange={(e) => setSeverity(e.target.value as DisciplineReportSeverity)}
                     className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-hidden"
                   >
-                    <option value="low">ዝቅተኛ (Low)</option>
-                    <option value="medium">መካከለኛ (Medium)</option>
-                    <option value="high">ከፍተኛ (High)</option>
-                    <option value="critical">አስቸኳይ / አሳሳቢ (Critical)</option>
+                    <option value="low">{currentLang === 'om' ? 'Gadi-aanaa (Low)' : currentLang === 'en' ? 'Low' : 'ዝቅተኛ (Low)'}</option>
+                    <option value="medium">{currentLang === 'om' ? 'Giddu-galeessa (Medium)' : currentLang === 'en' ? 'Medium' : 'መካከለኛ (Medium)'}</option>
+                    <option value="high">{currentLang === 'om' ? 'Olaanaa (High)' : currentLang === 'en' ? 'High' : 'ከፍተኛ (High)'}</option>
+                    <option value="critical">{currentLang === 'om' ? 'Ariifachiisaa (Critical)' : currentLang === 'en' ? 'Critical' : 'አስቸኳይ / አሳሳቢ (Critical)'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                    የተከሰተበት ቀን
+                    {currentLang === 'om' ? 'Guyyaa Mudate' : currentLang === 'en' ? 'Incident Date' : 'የተከሰተበት ቀን'}
                   </label>
                   <input
                     type="date"
@@ -1118,26 +1466,26 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                    የተከሰተበት ሰዓት
+                    {currentLang === 'om' ? 'Sa\'aatii Mudate' : currentLang === 'en' ? 'Incident Time' : 'የተከሰተበት ሰዓት'}
                   </label>
                   <input
                     type="text"
                     value={incidentTime}
                     onChange={(e) => setIncidentTime(e.target.value)}
-                    placeholder="ምሳሌ፡ 4:30 ከሰዓት"
+                    placeholder={currentLang === 'om' ? 'Fkn: 10:30 WB' : currentLang === 'en' ? 'e.g. 4:30 PM' : 'ምሳሌ፡ 4:30 ከሰዓት'}
                     className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-hidden"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                    የተከሰተበት ቦታ
+                    {currentLang === 'om' ? 'Iddoo Mudate' : currentLang === 'en' ? 'Location' : 'የተከሰተበት ቦታ'}
                   </label>
                   <input
                     type="text"
                     value={incidentLocation}
                     onChange={(e) => setIncidentLocation(e.target.value)}
-                    placeholder="ምሳሌ፡ በክፍል ውስጥ..."
+                    placeholder={currentLang === 'om' ? 'Fkn: Daree keessatti...' : currentLang === 'en' ? 'e.g. Inside classroom...' : 'ምሳሌ፡ በክፍል ውስጥ...'}
                     className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-hidden"
                   />
                 </div>
@@ -1146,14 +1494,24 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* 5. Detailed Description */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  የስነ-ምግባር ችግሩ ዝርዝር መግለጫ (Detailed Description) *
+                  {currentLang === 'om'
+                    ? 'Ibsa Bal\'aa Rakkina Naamusaa (Detailed Description) *'
+                    : currentLang === 'en'
+                    ? 'Detailed Incident Description *'
+                    : 'የስነ-ምግባር ችግሩ ዝርዝር መግለጫ (Detailed Description) *'}
                 </label>
                 <textarea
                   rows={4}
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="የተማሪውን የስነ-ምግባር ችግር ሁኔታ በዝርዝር ይግለጹ (ምን ተከሰተ? ከማን ጋር? ምን አይነት ድርጊት ተፈጸመ?)..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Haala rakkina naamusaa mudate bal\'inaan ibsaa (Maal ta\'e? Eenyu waliin? Gochi akkamii raawwatame?)...'
+                      : currentLang === 'en'
+                      ? 'Describe the incident in detail (What happened? Who was involved? What actions occurred?)...'
+                      : 'የተማሪውን የስነ-ምግባር ችግር ሁኔታ በዝርዝር ይግለጹ (ምን ተከሰተ? ከማን ጋር? ምን አይነት ድርጊት ተፈጸመ?)...'
+                  }
                   className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-2xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden leading-relaxed"
                 />
               </div>
@@ -1161,22 +1519,45 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* 6. Witnesses */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  የዓይን እማኞች / አብረው የነበሩ ተማሪዎች ወይም መምህራን (Witnesses - አማራጭ)
+                  {currentLang === 'om'
+                    ? 'Ragoota Ijaa / Barattoota ykn Barsiisota Turan (Filannoo)'
+                    : currentLang === 'en'
+                    ? 'Witnesses (Students / Teachers present - Optional)'
+                    : 'የዓይን እማኞች / አብረው የነበሩ ተማሪዎች ወይም መምህራን (Witnesses - አማራጭ)'}
                 </label>
                 <input
                   type="text"
                   value={witnesses}
                   onChange={(e) => setWitnesses(e.target.value)}
-                  placeholder="ምሳሌ፡ የክፍሉ ተማሪዎች፣ የግቢው ጥበቃ፣ የክፍል ተጠሪ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Fkn: Barattoota daree, waardiyyaa, itti-gaafatamaa daree...'
+                      : currentLang === 'en'
+                      ? 'e.g. Classmates, campus guard, homeroom teacher...'
+                      : 'ምሳሌ፡ የክፍሉ ተማሪዎች፣ የግቢው ጥበቃ፣ የክፍል ተጠሪ...'
+                  }
                   className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                 />
               </div>
+
+              {tipOffError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-800 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{tipOffError}</span>
+                </div>
+              )}
 
               {/* Submit Button */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-[11px] text-slate-500">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>ጥቆማው ለትምህርት ቤቱ ዳይሬክተር በቀጥታ ይላካል፤ ለተጠቆመበት ተማሪ ማንነትዎ አይገለጽም።</span>
+                  <span>
+                    {currentLang === 'om'
+                      ? 'Himannaan kun kallattiin gara Daarektara Mana Barnootaatti ergama; eenyummaan keessan eegamaadha.'
+                      : currentLang === 'en'
+                      ? 'This misconduct report is sent directly to the principal; your identity is confidential.'
+                      : 'ጥቆማው ለትምህርት ቤቱ ዳይሬክተር በቀጥታ ይላካል፤ ለተጠቆመበት ተማሪ ማንነትዎ አይገለጽም።'}
+                  </span>
                 </div>
 
                 <button
@@ -1185,7 +1566,19 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
-                  <span>{isSubmitting ? 'በመላክ ላይ...' : 'ጥቆማውን ለዳይሬክተር ላክ (Submit)'}</span>
+                  <span>
+                    {isSubmitting
+                      ? currentLang === 'om'
+                        ? 'Ergaa jira...'
+                        : currentLang === 'en'
+                        ? 'Submitting...'
+                        : 'በመላክ ላይ...'
+                      : currentLang === 'om'
+                      ? 'Himannaa Daarektaraaf Ergi (Submit)'
+                      : currentLang === 'en'
+                      ? 'Submit Report to Principal'
+                      : 'ጥቆማውን ለዳይሬክተር ላክ (Submit)'}
+                  </span>
                 </button>
               </div>
             </form>
@@ -1203,16 +1596,26 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-amber-600" />
                 <h3 className="text-base font-black text-slate-900">
-                  አብረው የሚማሩ የክፍል ተማሪዎች ስም ዝርዝር (Classmates Roster)
+                  {currentLang === 'om'
+                    ? 'Tarree Maqaa Barattoota Daree Waliin Baratanii (Classmates Roster)'
+                    : currentLang === 'en'
+                    ? 'Classmates Roster'
+                    : 'አብረው የሚማሩ የክፍል ተማሪዎች ስም ዝርዝር (Classmates Roster)'}
                 </h3>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                በተመረጠው የክፍል ደረጃና ሴክሽን ውስጥ የሚገኙ ተማሪዎች ዝርዝር።
+                {currentLang === 'om'
+                  ? 'Tarree barattoota kutaa fi daree filatame keessatti argamanii.'
+                  : currentLang === 'en'
+                  ? 'List of students enrolled in the selected grade and section.'
+                  : 'በተመረጠው የክፍል ደረጃና ሴክሽን ውስጥ የሚገኙ ተማሪዎች ዝርዝር።'}
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-600">ክፍል፡</span>
+              <span className="text-xs font-bold text-slate-600">
+                {currentLang === 'om' ? 'Kutaa:' : currentLang === 'en' ? 'Grade:' : 'ክፍል፡'}
+              </span>
               <select
                 value={formGrade}
                 onChange={(e) => setFormGrade(Number(e.target.value))}
@@ -1220,12 +1623,14 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               >
                 {availableGrades.map((g) => (
                   <option key={g} value={g}>
-                    ክፍል {g}
+                    {currentLang === 'om' ? `Kutaa ${g}` : currentLang === 'en' ? `Grade ${g}` : `ክፍል ${g}`}
                   </option>
                 ))}
               </select>
 
-              <span className="text-xs font-bold text-slate-600 ml-2">ሴክሽን፡</span>
+              <span className="text-xs font-bold text-slate-600 ml-2">
+                {currentLang === 'om' ? 'Daree:' : currentLang === 'en' ? 'Section:' : 'ሴክሽን፡'}
+              </span>
               <select
                 value={formSection}
                 onChange={(e) => setFormSection(e.target.value)}
@@ -1233,7 +1638,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               >
                 {availableSections.map((sec) => (
                   <option key={sec} value={sec}>
-                    ሴክሽን {sec}
+                    {currentLang === 'om' ? `Daree ${sec}` : currentLang === 'en' ? `Section ${sec}` : `ሴክሽን ${sec}`}
                   </option>
                 ))}
               </select>
@@ -1247,7 +1652,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               type="text"
               value={classmatesSearch}
               onChange={(e) => setClassmatesSearch(e.target.value)}
-              placeholder="ተማሪዎችን በስም ወይም መታወቂያ ፈልግ..."
+              placeholder={
+                currentLang === 'om'
+                  ? 'Barattoota maqaa ykn ID tiin barbaadi...'
+                  : currentLang === 'en'
+                  ? 'Search students by name or ID...'
+                  : 'ተማሪዎችን በስም ወይም መታወቂያ ፈልግ...'
+              }
               className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden bg-slate-50"
             />
           </div>
@@ -1285,12 +1696,15 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    ስነ-ምግባር፡ {st.conduct}
+                    {currentLang === 'om' ? 'Naamusa:' : currentLang === 'en' ? 'Conduct:' : 'ስነ-ምግባር፡'} {st.conduct}
                   </span>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-600">
-                  <span>መገኘት፡ <strong>{st.attendanceRate}%</strong></span>
+                  <span>
+                    {currentLang === 'om' ? 'Hirmaannaa:' : currentLang === 'en' ? 'Attendance:' : 'መገኘት፡'}{' '}
+                    <strong>{st.attendanceRate}%</strong>
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
@@ -1300,7 +1714,9 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                     className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>ጥቆማ ስጥበት</span>
+                    <span>
+                      {currentLang === 'om' ? 'Himannaa Kenni' : currentLang === 'en' ? 'Report' : 'ጥቆማ ስጥበት'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1317,27 +1733,43 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
           {/* Stats Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">ጠቅላላ ጥቆማዎች</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                {currentLang === 'om' ? 'Himannaa Waliigalaa' : currentLang === 'en' ? 'Total Reports' : 'ጠቅላላ ጥቆማዎች'}
+              </span>
               <div className="text-xl sm:text-2xl font-black text-slate-900">{stats.total}</div>
-              <span className="text-[10px] text-slate-500">ከሁሉም ክፍሎች የተላኩ</span>
+              <span className="text-[10px] text-slate-500">
+                {currentLang === 'om' ? 'Kutaawwan hunda irraa ergaman' : currentLang === 'en' ? 'From all classes' : 'ከሁሉም ክፍሎች የተላኩ'}
+              </span>
             </div>
 
             <div className="bg-red-50 p-4 rounded-2xl border border-red-200 shadow-2xs space-y-1">
-              <span className="text-[10px] uppercase font-bold text-red-700 block">አዲስ ያልታዩ (Pending)</span>
+              <span className="text-[10px] uppercase font-bold text-red-700 block">
+                {currentLang === 'om' ? 'Haaraa Hin Ilaalamin (Pending)' : currentLang === 'en' ? 'New / Pending' : 'አዲስ ያልታዩ (Pending)'}
+              </span>
               <div className="text-xl sm:text-2xl font-black text-red-900">{stats.pending}</div>
-              <span className="text-[10px] text-red-600 font-medium">የዳይሬክተር እርምጃ የሚጠብቁ</span>
+              <span className="text-[10px] text-red-600 font-medium">
+                {currentLang === 'om' ? 'Tarkaanfii Daarektaraa kan eegan' : currentLang === 'en' ? 'Awaiting principal action' : 'የዳይሬክተር እርምጃ የሚጠብቁ'}
+              </span>
             </div>
 
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-2xs space-y-1">
-              <span className="text-[10px] uppercase font-bold text-amber-700 block">በምርመራ / በውይይት ላይ</span>
+              <span className="text-[10px] uppercase font-bold text-amber-700 block">
+                {currentLang === 'om' ? 'Qorannoo / Marii Irra Jiran' : currentLang === 'en' ? 'Investigating / Conference' : 'በምርመራ / በውይይት ላይ'}
+              </span>
               <div className="text-xl sm:text-2xl font-black text-amber-900">{stats.investigating}</div>
-              <span className="text-[10px] text-amber-600 font-medium">ከወላጅ ጋር ቀጠሮ የተያዘላቸው</span>
+              <span className="text-[10px] text-amber-600 font-medium">
+                {currentLang === 'om' ? 'Beellama maatii waliin qabame' : currentLang === 'en' ? 'Parent meetings scheduled' : 'ከወላጅ ጋር ቀጠሮ የተያዘላቸው'}
+              </span>
             </div>
 
             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-2xs space-y-1">
-              <span className="text-[10px] uppercase font-bold text-emerald-700 block">መፍትሔ ያገኙ (Resolved)</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-700 block">
+                {currentLang === 'om' ? 'Furmaata Argatan (Resolved)' : currentLang === 'en' ? 'Resolved Cases' : 'መፍትሔ ያገኙ (Resolved)'}
+              </span>
               <div className="text-xl sm:text-2xl font-black text-emerald-900">{stats.resolved}</div>
-              <span className="text-[10px] text-emerald-600 font-medium">እርምጃና ምክር የተሰጣቸው</span>
+              <span className="text-[10px] text-emerald-600 font-medium">
+                {currentLang === 'om' ? 'Tarkaanfii fi gorsa kenname' : currentLang === 'en' ? 'Action & counseling completed' : 'እርምጃና ምክር የተሰጣቸው'}
+              </span>
             </div>
           </div>
 
@@ -1349,7 +1781,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 type="text"
                 value={boardSearch}
                 onChange={(e) => setBoardSearch(e.target.value)}
-                placeholder="በተማሪ ስም፣ መግለጫ ወይም ጠቋሚ ፈልግ..."
+                placeholder={
+                  currentLang === 'om'
+                    ? 'Maqaa barataa, ibsa ykn himataatiin barbaadi...'
+                    : currentLang === 'en'
+                    ? 'Search by student name, description, or reporter...'
+                    : 'በተማሪ ስም፣ መግለጫ ወይም ጠቋሚ ፈልግ...'
+                }
                 className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-hidden"
               />
             </div>
@@ -1360,13 +1798,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 onChange={(e) => setBoardStatusFilter(e.target.value)}
                 className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-hidden cursor-pointer"
               >
-                <option value="all">ሁሉንም ሁኔታዎች</option>
-                <option value="pending_review">አዲስ (Pending Review)</option>
-                <option value="under_investigation">በምርመራ ላይ</option>
-                <option value="parent_conference">የወላጅ ውይይት</option>
-                <option value="counseling_given">ምክር የተሰጣቸው</option>
-                <option value="action_taken">እርምጃ የተወሰደባቸው</option>
-                <option value="resolved_closed">የተዘጉ</option>
+                <option value="all">{currentLang === 'om' ? 'Haalawwan Hunda' : currentLang === 'en' ? 'All Statuses' : 'ሁሉንም ሁኔታዎች'}</option>
+                <option value="pending_review">{currentLang === 'om' ? 'Haaraa (Pending Review)' : currentLang === 'en' ? 'Pending Review' : 'አዲስ (Pending Review)'}</option>
+                <option value="under_investigation">{currentLang === 'om' ? 'Qorannoo irra jira' : currentLang === 'en' ? 'Under Investigation' : 'በምርመራ ላይ'}</option>
+                <option value="parent_conference">{currentLang === 'om' ? 'Marii Maatii' : currentLang === 'en' ? 'Parent Conference' : 'የወላጅ ውይይት'}</option>
+                <option value="counseling_given">{currentLang === 'om' ? 'Gorsi Kennameera' : currentLang === 'en' ? 'Counseling Given' : 'ምክር የተሰጣቸው'}</option>
+                <option value="action_taken">{currentLang === 'om' ? 'Tarkaanfiin Fudhatameera' : currentLang === 'en' ? 'Action Taken' : 'እርምጃ የተወሰደባቸው'}</option>
+                <option value="resolved_closed">{currentLang === 'om' ? 'Kan Cufaman' : currentLang === 'en' ? 'Resolved & Closed' : 'የተዘጉ'}</option>
               </select>
 
               <select
@@ -1374,14 +1812,14 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 onChange={(e) => setBoardCategoryFilter(e.target.value)}
                 className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-hidden cursor-pointer"
               >
-                <option value="all">ሁሉም የጥሰት አይነቶች</option>
-                <option value="fighting_violence">ፀብ እና ጥቃት</option>
-                <option value="classroom_disruption">የክፍል ረብሻ</option>
-                <option value="verbal_abuse_harassment">ስድብና ዛቻ</option>
-                <option value="substance_smoking_khat">ጫት/ሲጋራ/እፅ</option>
-                <option value="property_damage_vandalism">ንብረት ማውደም</option>
-                <option value="truancy_skipping_class">ማምለጥ/መቅረት</option>
-                <option value="exam_cheating">ፈተና ማጭበርበር</option>
+                <option value="all">{currentLang === 'om' ? 'Gosa Balleessaa Hunda' : currentLang === 'en' ? 'All Categories' : 'ሁሉም የጥሰት አይነቶች'}</option>
+                <option value="fighting_violence">{currentLang === 'om' ? 'Wal-loluu fi Miidhaa' : currentLang === 'en' ? 'Fighting & Violence' : 'ፀብ እና ጥቃት'}</option>
+                <option value="classroom_disruption">{currentLang === 'om' ? 'Jeequmsa Daree' : currentLang === 'en' ? 'Classroom Disruption' : 'የክፍል ረብሻ'}</option>
+                <option value="verbal_abuse_harassment">{currentLang === 'om' ? 'Arrabsoo fi Doorsisa' : currentLang === 'en' ? 'Verbal Abuse' : 'ስድብና ዛቻ'}</option>
+                <option value="substance_smoking_khat">{currentLang === 'om' ? 'Jimaa / Tamboo / Baala' : currentLang === 'en' ? 'Substances / Khat' : 'ጫት/ሲጋራ/እፅ'}</option>
+                <option value="property_damage_vandalism">{currentLang === 'om' ? 'Qabeenya Balleessuu' : currentLang === 'en' ? 'Property Damage' : 'ንብረት ማውደም'}</option>
+                <option value="truancy_skipping_class">{currentLang === 'om' ? 'Baduu / Daree Hafuu' : currentLang === 'en' ? 'Truancy / Skipping' : 'ማምለጥ/መቅረት'}</option>
+                <option value="exam_cheating">{currentLang === 'om' ? 'Qormaata Hatuu' : currentLang === 'en' ? 'Exam Cheating' : 'ፈተና ማጭበርበር'}</option>
               </select>
             </div>
           </div>
@@ -1391,18 +1829,37 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
             <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Scale className="w-5 h-5 text-amber-400" />
-                <h4 className="text-sm font-black">የተማሪዎች ስነ-ምግባር ጥቆማዎች መዝገብ</h4>
+                <h4 className="text-sm font-black">
+                  {currentLang === 'om'
+                    ? 'Galmee Himannaa Naamusaa Barattootaa'
+                    : currentLang === 'en'
+                    ? 'Student Conduct & Incident Registry'
+                    : 'የተማሪዎች ስነ-ምግባር ጥቆማዎች መዝገብ'}
+                </h4>
               </div>
               <span className="text-xs text-slate-300">
-                የተገኙ ጥቆማዎች፡ <strong>{filteredReports.length}</strong>
+                {currentLang === 'om' ? 'Himannaa Argaman:' : currentLang === 'en' ? 'Found Reports:' : 'የተገኙ ጥቆማዎች፡'}{' '}
+                <strong>{filteredReports.length}</strong>
               </span>
             </div>
 
             {filteredReports.length === 0 ? (
               <div className="p-10 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-                <p className="text-sm font-bold text-slate-700">ምንም የተመዘገበ የስነ-ምግባር ጥቆማ የለም</p>
-                <p className="text-xs text-slate-400">ለዚህ ማጣሪያ የሚስማማ ሪፖርት አልተገኘም።</p>
+                <p className="text-sm font-bold text-slate-700">
+                  {currentLang === 'om'
+                    ? 'Himannaan naamusaa galmaa\'e hin jiru'
+                    : currentLang === 'en'
+                    ? 'No behavioral reports recorded'
+                    : 'ምንም የተመዘገበ የስነ-ምግባር ጥቆማ የለም'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {currentLang === 'om'
+                    ? 'Gabaasni calallii kanaan walsimu hin argamne.'
+                    : currentLang === 'en'
+                    ? 'No reports match the selected filter.'
+                    : 'ለዚህ ማጣሪያ የሚስማማ ሪፖርት አልተገኘም።'}
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -1418,7 +1875,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                       <div className="space-y-2 min-w-0 max-w-3xl">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase">
-                            ክፍል {rep.grade} - {rep.section}
+                            {currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} {rep.grade} - {rep.section}
                           </span>
 
                           <span
@@ -1430,7 +1887,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                                 : 'bg-amber-100 text-amber-900 border border-amber-200'
                             }`}
                           >
-                            ክብደት፡ {rep.severity}
+                            {currentLang === 'om' ? 'Ulfaatina:' : currentLang === 'en' ? 'Severity:' : 'ክብደት፡'} {rep.severity}
                           </span>
 
                           <span
@@ -1445,27 +1902,55 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                             }`}
                           >
                             {rep.status === 'pending_review'
-                              ? '🚨 አዲስ ጥቆማ (Pending)'
+                              ? currentLang === 'om'
+                                ? '🚨 Himannaa Haaraa (Pending)'
+                                : currentLang === 'en'
+                                ? '🚨 New Tip (Pending)'
+                                : '🚨 አዲስ ጥቆማ (Pending)'
                               : rep.status === 'under_investigation'
-                              ? '🔍 በምርመራ ላይ'
+                              ? currentLang === 'om'
+                                ? '🔍 Qorannoo irra'
+                                : currentLang === 'en'
+                                ? '🔍 Under Investigation'
+                                : '🔍 በምርመራ ላይ'
                               : rep.status === 'parent_conference'
-                              ? '👨‍👩‍👦 የወላጅ ውይይት'
+                              ? currentLang === 'om'
+                                ? '👨‍👩‍👦 Marii Maatii'
+                                : currentLang === 'en'
+                                ? '👨‍👩‍👦 Parent Conference'
+                                : '👨‍👩‍👦 የወላጅ ውይይት'
                               : rep.status === 'counseling_given'
-                              ? '🤝 ምክር ተሰጥቷል'
+                              ? currentLang === 'om'
+                                ? '🤝 Gorsi Kenname'
+                                : currentLang === 'en'
+                                ? '🤝 Counseling Given'
+                                : '🤝 ምክር ተሰጥቷል'
                               : rep.status === 'action_taken'
-                              ? '⚖️ እርምጃ ተወስዷል'
+                              ? currentLang === 'om'
+                                ? '⚖️ Tarkaanfii Fudhatame'
+                                : currentLang === 'en'
+                                ? '⚖️ Action Taken'
+                                : '⚖️ እርምጃ ተወስዷል'
+                              : currentLang === 'om'
+                              ? '✅ Cufameera'
+                              : currentLang === 'en'
+                              ? '✅ Closed'
                               : '✅ ተዘግቷል'}
                           </span>
 
                           <span className="text-[11px] text-slate-400">
-                            ቀን፡ {rep.incidentDate} ({rep.incidentTime || ''})
+                            {currentLang === 'om' ? 'Guyyaa:' : currentLang === 'en' ? 'Date:' : 'ቀን፡'} {rep.incidentDate} ({rep.incidentTime || ''})
                           </span>
 
                           {rep.isAcknowledged ? (
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 shadow-2xs">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                               <span>
-                                በዳይሬክተር ታይቶ ዕውቅና ተሰጥቷል (Acknowledged)
+                                {currentLang === 'om'
+                                  ? 'Daarektaraan Mirkanaa\'eera (Acknowledged)'
+                                  : currentLang === 'en'
+                                  ? 'Acknowledged by Director'
+                                  : 'በዳይሬክተር ታይቶ ዕውቅና ተሰጥቷል (Acknowledged)'}
                               </span>
                               {rep.directorAcknowledgedAt && (
                                 <span className="font-mono text-[9px] text-emerald-700 ml-1">
@@ -1476,14 +1961,21 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                           ) : (
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
                               <Clock className="w-3 h-3 text-amber-600" />
-                              <span>የዳይሬክተር ዕውቅና ይጠብቃል (Pending Review/Ack)</span>
+                              <span>
+                                {currentLang === 'om'
+                                  ? 'Mirkaneessa Daarektaraa Eeggataa Jira'
+                                  : currentLang === 'en'
+                                  ? 'Pending Director Review/Ack'
+                                  : 'የዳይሬክተር ዕውቅና ይጠብቃል (Pending Review/Ack)'}
+                              </span>
                             </span>
                           )}
                         </div>
 
                         <div>
                           <h4 className="text-sm font-black text-slate-900">
-                            የተጠቆመው ተማሪ፡ <span className="text-amber-950 underline">{rep.targetStudentName}</span>
+                            {currentLang === 'om' ? 'Barataa Himatame:' : currentLang === 'en' ? 'Reported Student:' : 'የተጠቆመው ተማሪ፡'}{' '}
+                            <span className="text-amber-950 underline">{rep.targetStudentName}</span>
                           </h4>
                           <p className="text-xs text-slate-700 mt-1 line-clamp-2 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-slate-200">
                             {rep.description}
@@ -1492,22 +1984,29 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
 
                         <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
                           <span>
-                            መዝጋቢ/ጠቋሚ፡{' '}
+                            {currentLang === 'om' ? 'Galmeessaa/Himataa:' : currentLang === 'en' ? 'Reporter:' : 'መዝጋቢ/ጠቋሚ፡'}{' '}
                             <strong>
                               {rep.reporterType === 'teacher'
-                                ? `👨‍🏫 ${rep.reporterName || 'መምህር'} (Teacher Log)`
+                                ? `👨‍🏫 ${rep.reporterName || (currentLang === 'om' ? 'Barsiisaa' : currentLang === 'en' ? 'Teacher' : 'መምህር')} (Teacher Log)`
                                 : rep.isConfidential
-                                ? '🕵️ ሚስጥራዊ ጥቆማ'
-                                : rep.reporterName || 'ተማሪ/ወላጅ'}
+                                ? currentLang === 'om'
+                                  ? '🕵️ Himannaa Iccitii'
+                                  : currentLang === 'en'
+                                  ? '🕵️ Confidential Tip'
+                                  : '🕵️ ሚስጥራዊ ጥቆማ'
+                                : rep.reporterName || (currentLang === 'om' ? 'Barataa/Maatii' : currentLang === 'en' ? 'Student/Parent' : 'ተማሪ/ወላጅ')}
                             </strong>
                           </span>
                           <span>·</span>
-                          <span>ቦታ፡ <strong>{rep.incidentLocation || 'በት/ቤት'}</strong></span>
+                          <span>
+                            {currentLang === 'om' ? 'Iddoo:' : currentLang === 'en' ? 'Location:' : 'ቦታ፡'}{' '}
+                            <strong>{rep.incidentLocation || (currentLang === 'om' ? 'Mooraa M/B' : currentLang === 'en' ? 'Campus' : 'በት/ቤት')}</strong>
+                          </span>
                           {rep.actionTaken && (
                             <>
                               <span>·</span>
                               <span className="text-emerald-800 font-bold">
-                                የተወሰደ እርምጃ፡ {rep.actionTaken}
+                                {currentLang === 'om' ? 'Tarkaanfii Fudhatame:' : currentLang === 'en' ? 'Action Taken:' : 'የተወሰደ እርምጃ፡'} {rep.actionTaken}
                               </span>
                             </>
                           )}
@@ -1515,7 +2014,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                             <>
                               <span>·</span>
                               <span className="text-slate-700 italic">
-                                የዳይሬክተር ማስታወሻ፡ {rep.directorRemarks}
+                                {currentLang === 'om' ? 'Yaada Daarektaraa:' : currentLang === 'en' ? 'Director Remarks:' : 'የዳይሬክተር ማስታወሻ፡'} {rep.directorRemarks}
                               </span>
                             </>
                           )}
@@ -1533,10 +2032,10 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                               setQuickAcknowledgeRemarks('');
                             }}
                             className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer border border-amber-400"
-                            title="ዕውቅና ስጥ እና ሰዓት መዝግብ (Acknowledge with Timestamp)"
+                            title={currentLang === 'om' ? 'Mirkaneessi fi Sa\'aatii Galmeessi' : currentLang === 'en' ? 'Acknowledge with Timestamp' : 'ዕውቅና ስጥ እና ሰዓት መዝግብ (Acknowledge with Timestamp)'}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>ዕውቅና ስጥ (Acknowledge)</span>
+                            <span>{currentLang === 'om' ? 'Mirkaneessi (Acknowledge)' : currentLang === 'en' ? 'Acknowledge' : 'ዕውቅና ስጥ (Acknowledge)'}</span>
                           </button>
                         )}
 
@@ -1544,7 +2043,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                           type="button"
                           onClick={() => handlePrintReportLetter(rep)}
                           className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 cursor-pointer"
-                          title="የውሳኔ ሰነድ አትም / Print Incident Form"
+                          title={currentLang === 'om' ? 'Sanada Murtee Maxxansi' : currentLang === 'en' ? 'Print Incident Form' : 'የውሳኔ ሰነድ አትም / Print Incident Form'}
                         >
                           <Printer className="w-4 h-4" />
                         </button>
@@ -1555,17 +2054,38 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                           className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                         >
                           <Scale className="w-3.5 h-3.5" />
-                          <span>ምርመራ / እርምጃ ውሰድ</span>
+                          <span>
+                            {currentLang === 'om' ? 'Qorannoo / Tarkaanfii' : currentLang === 'en' ? 'Review / Take Action' : 'ምርመራ / እርምጃ ውሰድ'}
+                          </span>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteReport(rep.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
-                          title="መዝገብ ሰርዝ"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {confirmDeleteReportId === rep.id ? (
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReport(rep.id)}
+                              className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold rounded-xl transition-colors cursor-pointer"
+                            >
+                              {currentLang === 'om' ? 'Mirkaneessi' : currentLang === 'en' ? 'Confirm' : 'አረጋግጥ'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteReportId(null)}
+                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-xl transition-colors cursor-pointer"
+                            >
+                              {currentLang === 'om' ? 'Dhiisi' : currentLang === 'en' ? 'Cancel' : 'ተወው'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteReportId(rep.id)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                            title={currentLang === 'om' ? 'Galmee haqi' : currentLang === 'en' ? 'Delete record' : 'መዝገብ ሰርዝ'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1588,13 +2108,19 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
                     <Scale className="w-3 h-3 text-emerald-400" />
-                    <span>የዳይሬክተር ይፋዊ የስነ-ምግባር ግምገማና ውሳኔ ሰሌዳ</span>
+                    <span>
+                      {currentLang === 'om'
+                        ? 'Gabatee Gamaaggamaa fi Murtee Seera-qabeessa Daarektaraa'
+                        : currentLang === 'en'
+                        ? 'Official Director Conduct Review & Decision Board'
+                        : 'የዳይሬክተር ይፋዊ የስነ-ምግባር ግምገማና ውሳኔ ሰሌዳ'}
+                    </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-black text-white">
-                    ተማሪ {selectedReport.targetStudentName} (ክፍል {selectedReport.grade}-{selectedReport.section})
+                    {currentLang === 'om' ? 'Barataa' : currentLang === 'en' ? 'Student' : 'ተማሪ'} {selectedReport.targetStudentName} ({currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} {selectedReport.grade}-{selectedReport.section})
                   </h3>
                   <p className="text-xs text-emerald-200/90">
-                    የጥቆማ መለያ፡ {selectedReport.id} · የተመዘገበበት ቀን፡ {selectedReport.incidentDate}
+                    {currentLang === 'om' ? 'Koodii Himannaa:' : currentLang === 'en' ? 'Report ID:' : 'የጥቆማ መለያ፡'} {selectedReport.id} · {currentLang === 'om' ? 'Guyyaa Galmaa\'e:' : currentLang === 'en' ? 'Incident Date:' : 'የተመዘገበበት ቀን፡'} {selectedReport.incidentDate}
                   </p>
                 </div>
 
@@ -1613,15 +2139,22 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* Incident Summary Card */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between text-slate-600 text-[11px]">
-                  <span>የጥሰት አይነት፡ <strong className="text-slate-900">{selectedReport.category}</strong></span>
-                  <span>ክብደት፡ <strong className="text-red-700">{selectedReport.severity}</strong></span>
+                  <span>
+                    {currentLang === 'om' ? 'Gosa Balleessaa:' : currentLang === 'en' ? 'Category:' : 'የጥሰት አይነት፡'}{' '}
+                    <strong className="text-slate-900">{selectedReport.category}</strong>
+                  </span>
+                  <span>
+                    {currentLang === 'om' ? 'Ulfaatina:' : currentLang === 'en' ? 'Severity:' : 'ክብደት፡'}{' '}
+                    <strong className="text-red-700">{selectedReport.severity}</strong>
+                  </span>
                 </div>
                 <div className="text-slate-900 font-medium whitespace-pre-line bg-white p-3 rounded-xl border border-slate-200 leading-relaxed">
                   {selectedReport.description}
                 </div>
                 {selectedReport.witnesses && (
                   <p className="text-[11px] text-slate-500">
-                    የዓይን እማኞች፡ <strong>{selectedReport.witnesses}</strong>
+                    {currentLang === 'om' ? 'Ragoota Ijaa:' : currentLang === 'en' ? 'Witnesses:' : 'የዓይን እማኞች፡'}{' '}
+                    <strong>{selectedReport.witnesses}</strong>
                   </p>
                 )}
               </div>
@@ -1629,35 +2162,62 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* Status Selector */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                  የጉዳዩ ወቅታዊ ሁኔታ (Status) *
+                  {currentLang === 'om'
+                    ? 'Haala Dhimma Kanaa Ammaa (Status) *'
+                    : currentLang === 'en'
+                    ? 'Current Case Status *'
+                    : 'የጉዳዩ ወቅታዊ ሁኔታ (Status) *'}
                 </label>
                 <select
                   value={newStatusInput}
                   onChange={(e) => setNewStatusInput(e.target.value as DisciplineReportStatus)}
                   className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-emerald-700 focus:outline-hidden"
                 >
-                  <option value="under_investigation">🔍 በምርመራና በክትትል ላይ (Under Investigation)</option>
-                  <option value="parent_conference">👨‍👩‍👧 አስቸኳይ የወላጅ ውይይት መጥሪያ (Parent Conference)</option>
-                  <option value="counseling_given">🤝 የስነ-ልቦና ምክርና መመሪያ ተሰጥቷል (Counseling Given)</option>
-                  <option value="action_taken">⚖️ አስተዳደራዊ እርምጃ ተወስዷል (Disciplinary Action Taken)</option>
-                  <option value="resolved_closed">✅ ስነ-ምግባሩ ተስተካክሎ ጉዳዩ ተዘግቷል (Resolved & Closed)</option>
+                  <option value="under_investigation">{currentLang === 'om' ? '🔍 Qorannoo fi hordoffii irra jira' : currentLang === 'en' ? '🔍 Under Investigation' : '🔍 በምርመራና በክትትል ላይ (Under Investigation)'}</option>
+                  <option value="parent_conference">{currentLang === 'om' ? '👨‍👩‍👧 Waamicha Marii Maatii Ariifachiisaa' : currentLang === 'en' ? '👨‍👩‍👧 Urgent Parent Conference' : '👨‍👩‍👧 አስቸኳይ የወላጅ ውይይት መጥሪያ (Parent Conference)'}</option>
+                  <option value="counseling_given">{currentLang === 'om' ? '🤝 Gorsi xiinsammuu fi qajeelfamni kennameera' : currentLang === 'en' ? '🤝 Counseling & Guidance Given' : '🤝 የስነ-ልቦና ምክርና መመሪያ ተሰጥቷል (Counseling Given)'}</option>
+                  <option value="action_taken">{currentLang === 'om' ? '⚖️ Tarkaanfiin bulchiinsaa fudhatameera' : currentLang === 'en' ? '⚖️ Disciplinary Action Taken' : '⚖️ አስተዳደራዊ እርምጃ ተወስዷል (Disciplinary Action Taken)'}</option>
+                  <option value="resolved_closed">{currentLang === 'om' ? '✅ Naamusni sirreeffamee dhimmi cufameera' : currentLang === 'en' ? '✅ Resolved & Closed' : '✅ ስነ-ምግባሩ ተስተካክሎ ጉዳዩ ተዘግቷል (Resolved & Closed)'}</option>
                 </select>
               </div>
 
               {/* Action Taken Presets */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                  የተወሰደው ይፋዊ እርምጃ (Action Taken) *
+                  {currentLang === 'om'
+                    ? 'Tarkaanfii Seera-qabeessa Fudhatame (Action Taken) *'
+                    : currentLang === 'en'
+                    ? 'Official Action Taken *'
+                    : 'የተወሰደው ይፋዊ እርምጃ (Action Taken) *'}
                 </label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  {[
-                    'የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል',
-                    'የወላጅ ውይይት ተደርጎ የጽሑፍ ቃልኪዳን ተፈርሟል',
-                    'የመጀመሪያ ዙር የጽሑፍ ማስጠንቀቂያ በፋይል ተመዝግቧል',
-                    'የትምህርት ቤት ማህበረሰብ አገልግሎት (3 ቀናት)',
-                    'ጊዜያዊ እገዳ (3 የትምህርት ቀናት)',
-                    'ምንም ጥፋት ባለመገኘቱ ጥቆማው ውድቅ ሆኗል'
-                  ].map((preset) => (
+                  {(currentLang === 'om'
+                    ? [
+                        'Akeekkachiisa afaanii fi gorsa naamusaa kennameera',
+                        'Mariin maatii gaggeeffamee waadaan barreeffamaa mallatteeffameera',
+                        'Akeekkachiisni barreeffamaa marsaa 1ffaa faayila keessatti galmaa\'eera',
+                        'Tajaajila hawaasa mana barumsaa (Guyyaa 3)',
+                        'Dhorkaa yeroo gabaabaa (Guyyaa barumsaa 3)',
+                        'Balleessaan waan hin argamneef himannaan kufaa ta\'eera'
+                      ]
+                    : currentLang === 'en'
+                    ? [
+                        'Verbal warning and behavioral counseling given',
+                        'Parent conference held and written pledge signed',
+                        'First written warning recorded in student file',
+                        'School community service (3 days)',
+                        'Temporary suspension (3 school days)',
+                        'No violation found; report dismissed'
+                      ]
+                    : [
+                        'የቃል ማስጠንቀቂያና የስነ-ምግባር ምክር ተሰጥቷል',
+                        'የወላጅ ውይይት ተደርጎ የጽሑፍ ቃልኪዳን ተፈርሟል',
+                        'የመጀመሪያ ዙር የጽሑፍ ማስጠንቀቂያ በፋይል ተመዝግቧል',
+                        'የትምህርት ቤት ማህበረሰብ አገልግሎት (3 ቀናት)',
+                        'ጊዜያዊ እገዳ (3 የትምህርት ቀናት)',
+                        'ምንም ጥፋት ባለመገኘቱ ጥቆማው ውድቅ ሆኗል'
+                      ]
+                  ).map((preset) => (
                     <button
                       key={preset}
                       type="button"
@@ -1673,7 +2233,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   required
                   value={actionTakenInput}
                   onChange={(e) => setActionTakenInput(e.target.value)}
-                  placeholder="የተወሰደውን እርምጃ ያስገቡ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Tarkaanfii fudhatame galchaa...'
+                      : currentLang === 'en'
+                      ? 'Enter action taken...'
+                      : 'የተወሰደውን እርምጃ ያስገቡ...'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden"
                 />
               </div>
@@ -1681,13 +2247,23 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               {/* Director Findings & Remarks */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  የርዕሰ መምህር / ዳይሬክተር ግምገማና ውሳኔ (Director Remarks & Findings) *
+                  {currentLang === 'om'
+                    ? 'Gamaaggamaa fi Murtee Daarektaraa (Director Remarks & Findings) *'
+                    : currentLang === 'en'
+                    ? 'Director Remarks & Findings *'
+                    : 'የርዕሰ መምህር / ዳይሬክተር ግምገማና ውሳኔ (Director Remarks & Findings) *'}
                 </label>
                 <textarea
                   rows={3}
                   value={directorRemarksInput}
                   onChange={(e) => setDirectorRemarksInput(e.target.value)}
-                  placeholder="ከተማሪው፣ ከወላጆች ወይም ከክፍል ተጠሪው ጋር የተደረገውን ውይይት ውጤት እና የዳይሬክተሩን ውሳኔ እዚህ ይመዝግቡ..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Bu\'aa marii barataa, maatii ykn itti-gaafatamaa daree waliin taasifamee fi murtee Daarektaraa asitti galmeessaa...'
+                      : currentLang === 'en'
+                      ? 'Record discussion outcomes with student, parents, or homeroom teacher and the Director\'s decision here...'
+                      : 'ከተማሪው፣ ከወላጆች ወይም ከክፍል ተጠሪው ጋር የተደረገውን ውይይት ውጤት እና የዳይሬክተሩን ውሳኔ እዚህ ይመዝግቡ...'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-hidden leading-relaxed"
                 />
               </div>
@@ -1701,7 +2277,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-slate-600" />
-                <span>ይፋዊ ሰነድ አትም</span>
+                <span>{currentLang === 'om' ? 'Sanada Seeraa Maxxansi' : currentLang === 'en' ? 'Print Official Form' : 'ይፋዊ ሰነድ አትም'}</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -1710,7 +2286,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   onClick={() => setSelectedReport(null)}
                   className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
-                  ሰርዝ
+                  {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
                 </button>
                 <button
                   type="button"
@@ -1718,7 +2294,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   className="px-5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4 stroke-[3]" />
-                  <span>ውሳኔውን መዝግብ (Save Resolution)</span>
+                  <span>{currentLang === 'om' ? 'Murtee Galmeessi (Save Resolution)' : currentLang === 'en' ? 'Save Resolution' : 'ውሳኔውን መዝግብ (Save Resolution)'}</span>
                 </button>
               </div>
             </div>
@@ -1740,10 +2316,14 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                   </div>
                   <div>
                     <h3 className="text-base font-black text-white">
-                      የዳይሬክተር ይፋዊ ዕውቅና ማረጋገጫ (Acknowledge Incident)
+                      {currentLang === 'om'
+                        ? 'Mirkaneessa Seera-qabeessa Daarektaraa (Acknowledge Incident)'
+                        : currentLang === 'en'
+                        ? 'Official Director Acknowledgment'
+                        : 'የዳይሬክተር ይፋዊ ዕውቅና ማረጋገጫ (Acknowledge Incident)'}
                     </h3>
                     <p className="text-xs text-amber-300 font-mono mt-0.5">
-                      ይፋዊ ሰዓት (Timestamp)፡ {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                      {currentLang === 'om' ? 'Sa\'aatii Seeraa (Timestamp):' : currentLang === 'en' ? 'Timestamp:' : 'ይፋዊ ሰዓት (Timestamp)፡'} {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
@@ -1761,30 +2341,45 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               <div className="bg-amber-50/80 p-3.5 rounded-2xl border border-amber-200 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-slate-900">
-                    ተማሪ፡ {acknowledgingReport.targetStudentName}
+                    {currentLang === 'om' ? 'Barataa:' : currentLang === 'en' ? 'Student:' : 'ተማሪ፡'} {acknowledgingReport.targetStudentName}
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white font-mono text-[10px]">
-                    ክፍል {acknowledgingReport.grade}-{acknowledgingReport.section}
+                    {currentLang === 'om' ? 'Kutaa' : currentLang === 'en' ? 'Grade' : 'ክፍል'} {acknowledgingReport.grade}-{acknowledgingReport.section}
                   </span>
                 </div>
                 <p className="text-slate-600 line-clamp-2 italic">
                   "{acknowledgingReport.description}"
                 </p>
                 <div className="text-[10px] text-slate-500 pt-1 border-t border-amber-200/60 flex items-center justify-between">
-                  <span>መዝጋቢ፡ {acknowledgingReport.reporterName || 'መምህር/ተማሪ'}</span>
-                  <span>ክስተት ቀን፡ {acknowledgingReport.incidentDate}</span>
+                  <span>
+                    {currentLang === 'om' ? 'Galmeessaa:' : currentLang === 'en' ? 'Reporter:' : 'መዝጋቢ፡'}{' '}
+                    {acknowledgingReport.reporterName || (currentLang === 'om' ? 'Barsiisaa/Barataa' : currentLang === 'en' ? 'Teacher/Student' : 'መምህር/ተማሪ')}
+                  </span>
+                  <span>
+                    {currentLang === 'om' ? 'Guyyaa Gochaa:' : currentLang === 'en' ? 'Incident Date:' : 'ክስተት ቀን፡'} {acknowledgingReport.incidentDate}
+                  </span>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  የርዕሰ መምህር / ዳይሬክተር ዕውቅና ማስታወሻ (Director Acknowledgment Note)
+                  {currentLang === 'om'
+                    ? 'Yaadannoo Mirkaneessa Daarektaraa (Director Acknowledgment Note)'
+                    : currentLang === 'en'
+                    ? 'Director Acknowledgment Note'
+                    : 'የርዕሰ መምህር / ዳይሬክተር ዕውቅና ማስታወሻ (Director Acknowledgment Note)'}
                 </label>
                 <textarea
                   rows={3}
                   value={quickAcknowledgeRemarks}
                   onChange={(e) => setQuickAcknowledgeRemarks(e.target.value)}
-                  placeholder="የስነ-ምግባር ክስተቱ መዝገብ በዳይሬክተር ታይቷል፤ አስፈላጊው ክትትል እንዲደረግ ለክፍል ተጠሪው መመሪያ ተላልፏል..."
+                  placeholder={
+                    currentLang === 'om'
+                      ? 'Galmeen gocha naamusaa kun Daarektaraan ilaalameera; hordoffiin barbaachisu akka taasifamu itti-gaafatamaa dareetti qajeelfamni darbeera...'
+                      : currentLang === 'en'
+                      ? 'Incident record reviewed by the Principal; follow-up instructions dispatched to homeroom teacher...'
+                      : 'የስነ-ምግባር ክስተቱ መዝገብ በዳይሬክተር ታይቷል፤ አስፈላጊው ክትትል እንዲደረግ ለክፍል ተጠሪው መመሪያ ተላልፏል...'
+                  }
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-hidden leading-relaxed"
                 />
               </div>
@@ -1792,7 +2387,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
               <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-[11px] text-emerald-900 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-emerald-700 shrink-0" />
                 <span>
-                  ይህንን ሲያረጋግጡ የዳይሬክተሩ ስም (<strong>{currentUser?.name || 'School Director'}</strong>) እና አሁን ያለው ሰዓት (Timestamp) በስርዓቱ ላይ በቋሚነት ይመዘገባል።
+                  {currentLang === 'om' ? (
+                    <>Yeroo kana mirkaneessitan maqaan Daarektaraa (<strong>{currentUser?.name || 'School Director'}</strong>) fi sa&apos;aatiin ammaa (Timestamp) sirna irratti dhaabbataan ni galmaa&apos;a.</>
+                  ) : currentLang === 'en' ? (
+                    <>Confirming will permanently log the Principal&apos;s name (<strong>{currentUser?.name || 'School Director'}</strong>) and current timestamp.</>
+                  ) : (
+                    <>ይህንን ሲያረጋግጡ የዳይሬክተሩ ስም (<strong>{currentUser?.name || 'School Director'}</strong>) እና አሁን ያለው ሰዓት (Timestamp) በስርዓቱ ላይ በቋሚነት ይመዘገባል።</>
+                  )}
                 </span>
               </div>
             </div>
@@ -1803,7 +2404,7 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 onClick={() => setAcknowledgingReport(null)}
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                ሰርዝ
+                {currentLang === 'om' ? 'Haqi' : currentLang === 'en' ? 'Cancel' : 'ሰርዝ'}
               </button>
               <button
                 type="button"
@@ -1811,7 +2412,13 @@ export const StudentDisciplineDesk: React.FC<StudentDisciplineDeskProps> = ({
                 className="px-5 py-2 bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <Check className="w-4 h-4 stroke-[3]" />
-                <span>ዕውቅና ስጥ እና ሰዓት መዝግብ (Acknowledge with Timestamp)</span>
+                <span>
+                  {currentLang === 'om'
+                    ? 'Mirkaneessi & Sa\'aatii Galmeessi'
+                    : currentLang === 'en'
+                    ? 'Acknowledge with Timestamp'
+                    : 'ዕውቅና ስጥ እና ሰዓት መዝግብ (Acknowledge with Timestamp)'}
+                </span>
               </button>
             </div>
           </div>
